@@ -9,6 +9,7 @@ export const RewardsColors = {
   text: '#ffffff',
   textMuted: '#6D625B',
   textSoft: 'rgba(255, 255, 255, 0.85)',
+  textDim: 'rgba(255, 255, 255, 0.5)',
   track: 'rgba(255, 255, 255, 0.25)',
   cardBorder: '#F3F4F6',
 } as const;

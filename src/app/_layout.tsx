@@ -22,9 +22,9 @@ const AppLightTheme: Theme = {
 export default function RootLayout() {
   return (
     <ThemeProvider value={AppLightTheme}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" translucent={true} />
       <AnimatedSplashOverlay />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BrandColors.tertiary } }} />
+      <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: BrandColors.tertiary } }} />
     </ThemeProvider>
   );
 }

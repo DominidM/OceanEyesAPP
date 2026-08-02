@@ -1,12 +1,23 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 
 export function TopBar() {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.topBar}>
+    <View
+      style={[
+        styles.topBar,
+        {
+          paddingTop: insets.top,
+          height: 72 + insets.top,
+        },
+      ]}
+    >
       <View style={styles.brandGroup}>
         <View style={styles.logoMark}>
           <AppSymbol
@@ -45,16 +56,14 @@ function PendingBadge() {
 
 const styles = StyleSheet.create({
   topBar: {
-    height: 70,
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.two,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#D9CFC5',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: BrandColors.tertiary,
+    backgroundColor: 'rgba(239, 235, 227, 0.95)',
+    zIndex: 2,
   },
   brandGroup: {
     flexDirection: 'row',

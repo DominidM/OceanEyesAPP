@@ -3,17 +3,14 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
+import { SectionHeader } from '@/shared/components/section-header';
 
 export function ProfileSection() {
   const insets = useSafeAreaInsets();
 
   return (
     <>
-      <View style={styles.header}>
-        <Text style={styles.title}>Perfil</Text>
-        <Text style={styles.subtitle}>Tu cuenta y configuracion</Text>
-      </View>
-
+      <SectionHeader title="Perfil" />
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -32,31 +29,6 @@ export function ProfileSection() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-  },
-  header: {
-    height: 110,
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.two,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: BrandColors.tertiary,
-    justifyContent: 'center',
-    gap: Spacing.one,
-  },
-  title: {
-    color: BrandColors.neutral,
-    fontFamily: Fonts.headline,
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 35,
-  },
-  subtitle: {
-    color: 'rgba(44, 44, 44, 0.62)',
-    fontFamily: Fonts.body,
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 21,
   },
   body: {
     paddingHorizontal: Spacing.three,

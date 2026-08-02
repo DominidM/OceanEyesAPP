@@ -1,6 +1,5 @@
 import React, { PropsWithChildren } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomTabBar } from '@/shared/components/bottom-tab-bar';
 import { getMainTabs, MAIN_FAB, MainTabKey } from '@/shared/config/main-tabs';
@@ -17,12 +16,11 @@ export function PhoneFrame({ children, section, onSectionChange }: PhoneFramePro
 
   return (
     <View style={styles.screen}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={[styles.phoneFrame, { maxWidth: contentWidth }]}>
-          {children}
-          <BottomTabBar items={getMainTabs(section, onSectionChange)} fab={MAIN_FAB} />
-        </View>
-      </SafeAreaView>
+      {/* Eliminamos SafeAreaView superior para permitir diseño Edge-to-Edge */}
+      <View style={[styles.phoneFrame, { maxWidth: contentWidth }]}>
+        {children}
+        <BottomTabBar items={getMainTabs(section, onSectionChange)} fab={MAIN_FAB} />
+      </View>
     </View>
   );
 }
@@ -32,12 +30,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     overflow: 'hidden',
-    alignItems: 'center',
-    backgroundColor: BrandColors.tertiary,
-  },
-  safeArea: {
-    flex: 1,
-    width: '100%',
     alignItems: 'center',
     backgroundColor: BrandColors.tertiary,
   },

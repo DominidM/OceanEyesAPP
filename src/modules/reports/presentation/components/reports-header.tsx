@@ -1,9 +1,8 @@
-import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
+import { SectionHeader } from '@/shared/components/section-header';
 
 import { SurfaceColors } from '../theme';
 
@@ -20,18 +19,7 @@ type ReportsHeaderProps = {
 
 export function ReportsHeader({ chips }: ReportsHeaderProps) {
   return (
-    <View style={styles.header}>
-      <View style={styles.headerTop}>
-        <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}>
-          <AppSymbol
-            name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-            color={BrandColors.neutral}
-            size={22}
-          />
-        </Pressable>
-        <Text style={styles.headerTitle}>Reportes</Text>
-      </View>
-
+    <SectionHeader title="Reportes">
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -54,44 +42,11 @@ export function ReportsHeader({ chips }: ReportsHeaderProps) {
           </Pressable>
         ))}
       </ScrollView>
-    </View>
+    </SectionHeader>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    height: 133,
-    borderBottomWidth: 1,
-    borderBottomColor: SurfaceColors.border,
-    backgroundColor: 'rgba(239, 235, 227, 0.95)',
-    zIndex: 2,
-  },
-  headerTop: {
-    height: 72,
-    paddingTop: 16,
-    paddingBottom: 8,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 48,
-    height: 48,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    flex: 1,
-    paddingRight: 48,
-    color: BrandColors.neutral,
-    fontFamily: Fonts.headline,
-    fontSize: 20,
-    fontWeight: '700',
-    lineHeight: 25,
-    letterSpacing: -0.5,
-    textAlign: 'center',
-  },
   chipScroll: {
     height: 60,
   },

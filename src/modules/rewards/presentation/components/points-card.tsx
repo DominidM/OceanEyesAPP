@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   balanceLabel: {
-    color: RewardsColors.textSoft,
+    color: RewardsColors.textDim,
     fontFamily: Fonts.body,
     fontSize: 14,
     fontWeight: '500',

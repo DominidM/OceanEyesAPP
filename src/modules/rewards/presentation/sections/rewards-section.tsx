@@ -3,15 +3,15 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
+import { SectionHeader } from '@/shared/components/section-header';
 
 import { PointsCard } from '../components/points-card';
 import { RecentFooter } from '../components/recent-footer';
-import { RewardsHeader } from '../components/rewards-header';
 import { RewardItem } from '../components/reward-item';
 import { SectionTabs, RewardsTab } from '../components/section-tabs';
 import { RECENT_CLAIMS, REWARDS } from '../data/rewards';
 
-export function ZonesSection() {
+export function RewardsSection() {
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<RewardsTab>('recompensas');
 
@@ -19,7 +19,7 @@ export function ZonesSection() {
 
   return (
     <View style={styles.root}>
-      <RewardsHeader />
+      <SectionHeader title="Recompensas" />
 
       <ScrollView
         style={styles.scroll}

@@ -1,7 +1,7 @@
 import { BottomTabItem, BottomTabBarProps } from '@/shared/components/bottom-tab-bar';
 import { SymbolName } from '@/shared/components/app-symbol';
 
-export type MainTabKey = 'inicio' | 'reportes' | 'zonas' | 'perfil';
+export type MainTabKey = 'inicio' | 'reportes' | 'recompensas' | 'perfil';
 
 type MainTabDefinition = {
   key: MainTabKey;
@@ -21,9 +21,9 @@ const MAIN_TABS: MainTabDefinition[] = [
     icon: { ios: 'doc.text.fill', android: 'article', web: 'article' },
   },
   {
-    key: 'zonas',
-    label: 'Zonas',
-    icon: { ios: 'safari.fill', android: 'explore', web: 'explore' },
+    key: 'recompensas',
+    label: 'Recompensas',
+    icon: { ios: 'gift.fill', android: 'redeem', web: 'redeem' },
   },
   {
     key: 'perfil',
@@ -42,6 +42,6 @@ export function getMainTabs(active: MainTabKey, onSelect: (key: MainTabKey) => v
 }
 
 export const MAIN_FAB: NonNullable<BottomTabBarProps['fab']> = {
-  icon: { ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' } as SymbolName,
+  icon: { ios: 'plus', android: 'add', web: 'add' } as SymbolName,
   afterIndex: 1,
 };

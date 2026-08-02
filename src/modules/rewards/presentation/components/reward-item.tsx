@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
-import { AppFonts as Fonts } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { Reward } from '../data/rewards';
 import { RewardsColors } from '../theme';
 
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   title: {
-    color: RewardsColors.text,
+    color: BrandColors.neutral,
     fontFamily: Fonts.label,
     fontSize: 16,
     fontWeight: '700',

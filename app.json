@@ -2,13 +2,16 @@
   "expo": {
     "name": "OceanEyes",
     "slug": "OceanEyes",
+    "backgroundColor": "#0A0F1D",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "oceaneyes",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "backgroundColor": "#0A0F1D",
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {

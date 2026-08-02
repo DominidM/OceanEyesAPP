@@ -63,11 +63,9 @@ const reports: Report[] = [
 
 export function ReportsSection() {
   const insets = useSafeAreaInsets();
-
   return (
     <>
       <ReportsHeader chips={chips} />
-
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}

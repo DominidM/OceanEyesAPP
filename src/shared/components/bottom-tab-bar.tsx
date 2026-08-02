@@ -42,7 +42,7 @@ export function BottomTabBar({ items, fab }: BottomTabBarProps) {
                   accessibilityRole="button"
                   onPress={fab.onPress}
                   style={({ pressed }) => [styles.fab, pressed && styles.pressed]}>
-                  <AppSymbol name={fab.icon} color="#FFFFFF" size={22} />
+                  <AppSymbol name={fab.icon} color="#FFFFFF" size={24} />
                 </Pressable>
               </View>
             ) : null}
@@ -57,8 +57,14 @@ function BottomTabButton({ label, icon, active, onPress }: BottomTabItem) {
   const color = active ? BrandColors.primary : INACTIVE_COLOR;
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.navItem}>
-      <AppSymbol name={icon} color={color} size={23} />
-      <Text style={[styles.navLabel, { color }, active && styles.navLabelActive]}>{label}</Text>
+      <AppSymbol name={icon} color={color} size={25} />
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.9}
+        style={[styles.navLabel, { color }, active && styles.navLabelActive]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -69,7 +75,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 84,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingVertical: 28,
     borderTopWidth: 1,
     borderTopColor: '#D9CFC5',
@@ -77,7 +83,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    gap: 20,
+    gap: 8,
   },
   bottomNavShadow: {
     ...StyleSheet.absoluteFillObject,
@@ -88,7 +94,7 @@ const styles = StyleSheet.create({
   },
   navItem: {
     flex: 1,
-    maxWidth: 72,
+    maxWidth: 80,
     alignItems: 'center',
     gap: 1,
   },
@@ -109,10 +115,10 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    top: -32,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    top: -38,
+    width: 64,
+    height: 64,
+    borderRadius: 38,
     borderWidth: 4,
     borderColor: BrandColors.tertiary,
     alignItems: 'center',
