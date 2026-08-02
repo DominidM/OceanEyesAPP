@@ -1,14 +1,17 @@
-import React, { PropsWithChildren, ReactNode } from 'react';
+import React, { PropsWithChildren } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BottomTabBar } from '@/shared/components/bottom-tab-bar';
+import { getMainTabs, MAIN_FAB, MainTabKey } from '@/shared/config/main-tabs';
 import { BrandColors, MaxPhoneWidth } from '@/constants/theme';
 
 type PhoneFrameProps = PropsWithChildren<{
-  bottomBar?: ReactNode;
+  section: MainTabKey;
+  onSectionChange: (key: MainTabKey) => void;
 }>;
 
-export function PhoneFrame({ children, bottomBar }: PhoneFrameProps) {
+export function PhoneFrame({ children, section, onSectionChange }: PhoneFrameProps) {
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, MaxPhoneWidth);
 
@@ -17,7 +20,7 @@ export function PhoneFrame({ children, bottomBar }: PhoneFrameProps) {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={[styles.phoneFrame, { maxWidth: contentWidth }]}>
           {children}
-          {bottomBar}
+          <BottomTabBar items={getMainTabs(section, onSectionChange)} fab={MAIN_FAB} />
         </View>
       </SafeAreaView>
     </View>
@@ -36,6 +39,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     alignItems: 'center',
+    backgroundColor: BrandColors.tertiary,
   },
   phoneFrame: {
     flex: 1,

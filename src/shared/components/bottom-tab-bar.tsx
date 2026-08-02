@@ -2,8 +2,8 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BrandColors, AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
-import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 
 export type BottomTabItem = {
   label: string;
@@ -12,7 +12,7 @@ export type BottomTabItem = {
   onPress?: () => void;
 };
 
-type BottomTabBarProps = {
+export type BottomTabBarProps = {
   items: BottomTabItem[];
   fab?: {
     icon: SymbolName;
@@ -28,7 +28,7 @@ export function BottomTabBar({ items, fab }: BottomTabBarProps) {
   const fabIndex = fab?.afterIndex ?? Math.floor(items.length / 2);
 
   return (
-    <View style={[styles.bottomNav, { bottom: insets.bottom }]}>
+    <View style={[styles.bottomNav, { bottom: insets.bottom - 32.8 }]}>
       <View style={styles.bottomNavShadow} />
       {items.map((item, index) => {
         const isFabSlot = index === fabIndex;
@@ -55,10 +55,9 @@ export function BottomTabBar({ items, fab }: BottomTabBarProps) {
 
 function BottomTabButton({ label, icon, active, onPress }: BottomTabItem) {
   const color = active ? BrandColors.primary : INACTIVE_COLOR;
-
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.navItem}>
-      <AppSymbol name={icon} color={color} size={20} />
+      <AppSymbol name={icon} color={color} size={23} />
       <Text style={[styles.navLabel, { color }, active && styles.navLabelActive]}>{label}</Text>
     </Pressable>
   );
@@ -69,19 +68,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 25,
-    height: 64,
+    height: 84,
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingVertical: 28,
     borderTopWidth: 1,
     borderTopColor: '#D9CFC5',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
+    gap: 20,
   },
   bottomNavShadow: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 25 },
     shadowOpacity: 0.25,
@@ -91,11 +90,11 @@ const styles = StyleSheet.create({
     flex: 1,
     maxWidth: 72,
     alignItems: 'center',
-    gap: 4,
+    gap: 1,
   },
   navLabel: {
     fontFamily: Fonts.label,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     lineHeight: 15,
   },

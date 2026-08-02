@@ -56,3 +56,5 @@ export const Spacing = {
 } as const;
 
 export const BottomBarHeight = 64;
+
+export const MaxPhoneWidth = 430;

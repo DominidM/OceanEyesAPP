@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: BrandColors.tertiary,
   },
   pendingOverlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.24)',

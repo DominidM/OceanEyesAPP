@@ -1,6 +1,5 @@
-import { router, type Href } from 'expo-router';
-
-import { BottomTabItem } from '@/shared/components/bottom-tab-bar';
+import { BottomTabItem, BottomTabBarProps } from '@/shared/components/bottom-tab-bar';
+import { SymbolName } from '@/shared/components/app-symbol';
 
 export type MainTabKey = 'inicio' | 'reportes' | 'zonas' | 'perfil';
 
@@ -8,7 +7,6 @@ type MainTabDefinition = {
   key: MainTabKey;
   label: string;
   icon: BottomTabItem['icon'];
-  href: Href;
 };
 
 const MAIN_TABS: MainTabDefinition[] = [
@@ -16,33 +14,34 @@ const MAIN_TABS: MainTabDefinition[] = [
     key: 'inicio',
     label: 'Inicio',
     icon: { ios: 'house.fill', android: 'home', web: 'home' },
-    href: '/',
   },
   {
     key: 'reportes',
     label: 'Reportes',
     icon: { ios: 'doc.text.fill', android: 'article', web: 'article' },
-    href: '/reporter',
   },
   {
     key: 'zonas',
     label: 'Zonas',
     icon: { ios: 'safari.fill', android: 'explore', web: 'explore' },
-    href: '/explore',
   },
   {
     key: 'perfil',
     label: 'Perfil',
     icon: { ios: 'person.fill', android: 'person', web: 'person' },
-    href: '/perfil',
   },
 ];
 
-export function getMainTabs(active: MainTabKey): BottomTabItem[] {
-  return MAIN_TABS.map(({ key, label, icon, href }) => ({
+export function getMainTabs(active: MainTabKey, onSelect: (key: MainTabKey) => void): BottomTabItem[] {
+  return MAIN_TABS.map(({ key, label, icon }) => ({
     label,
     icon,
     active: key === active,
-    onPress: () => router.navigate(href),
+    onPress: () => onSelect(key),
   }));
 }
+
+export const MAIN_FAB: NonNullable<BottomTabBarProps['fab']> = {
+  icon: { ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' } as SymbolName,
+  afterIndex: 1,
+};

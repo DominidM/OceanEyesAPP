@@ -2,10 +2,6 @@ import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomTabBar } from '@/shared/components/bottom-tab-bar';
-import { PhoneFrame } from '@/shared/components/phone-frame';
-import { SymbolName } from '@/shared/components/app-symbol';
-import { getMainTabs } from '@/shared/config/main-tabs';
 import { BottomBarHeight } from '@/constants/theme';
 
 import { ReportCard, Report } from '../components/report-card';
@@ -65,20 +61,11 @@ const reports: Report[] = [
   },
 ];
 
-const fabIcon: SymbolName = {
-  ios: 'camera.fill',
-  android: 'photo_camera',
-  web: 'photo_camera',
-};
-
-export function ReportsScreen() {
+export function ReportsSection() {
   const insets = useSafeAreaInsets();
 
   return (
-    <PhoneFrame
-      bottomBar={
-        <BottomTabBar items={getMainTabs('reportes')} fab={{ icon: fabIcon, afterIndex: 1 }} />
-      }>
+    <>
       <ReportsHeader chips={chips} />
 
       <ScrollView
@@ -94,11 +81,9 @@ export function ReportsScreen() {
           ))}
         </View>
       </ScrollView>
-    </PhoneFrame>
+    </>
   );
 }
-
-export default ReportsScreen;
 
 const styles = StyleSheet.create({
   scroll: {

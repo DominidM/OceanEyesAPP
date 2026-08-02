@@ -52,11 +52,11 @@ const styles = StyleSheet.create({
     marginTop: 36,
   },
   mapImage: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
   mapFallback: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
   },
   mapBand: {
     position: 'absolute',
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     borderColor: BrandColors.tertiary,
   },
   mapOverlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     zIndex: 2,
     alignItems: 'center',
     justifyContent: 'center',

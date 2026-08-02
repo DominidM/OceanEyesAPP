@@ -1,7 +1,15 @@
-import { SymbolView } from 'expo-symbols';
+import { SymbolView, type SFSymbol } from 'expo-symbols';
 import React from 'react';
+import { Platform } from 'react-native';
 
-export type SymbolName = React.ComponentProps<typeof SymbolView>['name'];
+export type PlatformIcon = {
+  ios: SFSymbol;
+  android?: string;
+  web?: string;
+  default?: string;
+};
+
+export type SymbolName = SFSymbol | PlatformIcon;
 
 type AppSymbolProps = {
   name: SymbolName;
@@ -10,5 +18,6 @@ type AppSymbolProps = {
 };
 
 export function AppSymbol({ name, color, size = 20 }: AppSymbolProps) {
-  return <SymbolView name={name} tintColor={color} size={size} />;
+  const resolved = typeof name === 'string' ? name : Platform.select(name) ?? name.ios;
+  return <SymbolView name={resolved as SFSymbol} tintColor={color} size={size} />;
 }

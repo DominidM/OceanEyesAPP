@@ -2,16 +2,13 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomTabBar } from '@/shared/components/bottom-tab-bar';
-import { PhoneFrame } from '@/shared/components/phone-frame';
-import { getMainTabs } from '@/shared/config/main-tabs';
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
 
-export function ProfileScreen() {
+export function ProfileSection() {
   const insets = useSafeAreaInsets();
 
   return (
-    <PhoneFrame bottomBar={<BottomTabBar items={getMainTabs('perfil')} />}>
+    <>
       <View style={styles.header}>
         <Text style={styles.title}>Perfil</Text>
         <Text style={styles.subtitle}>Tu cuenta y configuracion</Text>
@@ -28,11 +25,9 @@ export function ProfileScreen() {
           </Text>
         </View>
       </ScrollView>
-    </PhoneFrame>
+    </>
   );
 }
-
-export default ProfileScreen;
 
 const styles = StyleSheet.create({
   scroll: {
