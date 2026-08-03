@@ -6,16 +6,12 @@ import { Platform } from 'react-native';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { BrandColors } from '@/constants/theme';
 import { useAppFonts } from '@/hooks/useAppFonts';
-import { useAuth } from '@/shared/firebase/auth-context';
 
 export default function MobileLayout() {
   const { loaded } = useAppFonts();
-  const { user, loading } = useAuth();
 
   if (Platform.OS === 'web') return <Redirect href="/" />;
   if (!loaded) return null;
-  if (loading) return null;
-  if (!user) return <Redirect href="/mobile/login" />;
 
   return (
     <>
