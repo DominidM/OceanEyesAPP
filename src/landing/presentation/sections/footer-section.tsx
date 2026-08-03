@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 
 export function FooterSection() {
   return (

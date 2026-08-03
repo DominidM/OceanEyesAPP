@@ -2,33 +2,28 @@ import React from 'react';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { LANDING_NAV_LINKS, type LandingNavPressKey } from '@landing/config/landing-nav';
 
-type LandingNavBarProps = {
-  onFeaturesPress?: () => void;
-  onHowItWorksPress?: () => void;
-  onDownloadPress?: () => void;
-};
-
-const navLinks: { label: string; onPressKey: keyof LandingNavBarProps }[] = [
-  { label: 'Características', onPressKey: 'onFeaturesPress' },
-  { label: 'Cómo funciona', onPressKey: 'onHowItWorksPress' },
-  { label: 'Descargar', onPressKey: 'onDownloadPress' },
-];
+export type LandingNavBarProps = Record<LandingNavPressKey, () => void>;
 
 export function LandingNavBar({
   onFeaturesPress,
   onHowItWorksPress,
   onDownloadPress,
 }: LandingNavBarProps) {
-  const actions = { onFeaturesPress, onHowItWorksPress, onDownloadPress };
+  const actions: Record<LandingNavPressKey, () => void> = {
+    onFeaturesPress,
+    onHowItWorksPress,
+    onDownloadPress,
+  };
 
   return (
     <View style={styles.bar}>
       <View style={styles.inner}>
         <Text style={styles.brand}>OceanEyes</Text>
         <View style={styles.links}>
-          {navLinks.map((link) => (
+          {LANDING_NAV_LINKS.map((link) => (
             <Pressable key={link.label} onPress={actions[link.onPressKey]} hitSlop={8}>
               <Text style={styles.link}>{link.label}</Text>
             </Pressable>

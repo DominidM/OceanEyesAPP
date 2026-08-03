@@ -2,7 +2,7 @@ import { Redirect } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
 
-import { LandingScreen } from '@landing/presentation/screens/landing-screen';
+import { LandingScreen } from '@landing/index';
 
 export default function RootIndex() {
   if (Platform.OS === 'web') return <LandingScreen />;

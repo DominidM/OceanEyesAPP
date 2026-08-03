@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppFonts as Fonts, BrandColors, Fonts as TypeFonts, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors, Fonts as TypeFonts, Spacing } from '@landing/config/theme';
 
 type HeroSectionProps = {
   onDownloadPress?: () => void;
