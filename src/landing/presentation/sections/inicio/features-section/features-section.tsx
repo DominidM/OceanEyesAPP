@@ -9,8 +9,7 @@ const anonimoIcon = require('../../../../../../assets/icons/anonimo-icon.png');
 const camaraIcon = require('../../../../../../assets/icons/camara-icon.png');
 const offlineIcon = require('../../../../../../assets/icons/offline-icon.png');
 const ubicacionIcon = require('../../../../../../assets/icons/ubicacion-icon.png');
-const alertaIcon = require('../../../../../../assets/icons/alerta-icon.png');
-const aguaIcon = require('../../../../../../assets/icons/agua-icon.png');
+const mobileOcean = require('../../../../../../assets/images/MOBILE-OCEAN.jpeg');
 
 const features = [
   { icon: anonimoIcon, title: 'Reportes Anónimos', description: 'Tu identidad está protegida. Solo usamos DNI para validar, nunca se comparte.' },
@@ -39,17 +38,7 @@ export function FeaturesSection() {
         <View style={styles.columnCenter}>
           <View style={styles.phone}>
             <View style={styles.phoneScreen}>
-              <Text style={styles.phoneHeader}>Ocean Eyes</Text>
-              <View style={styles.phoneContent}>
-                <View style={styles.phoneBtnPrimary}>
-                  <Image source={alertaIcon} style={styles.phoneBtnIcon} contentFit="contain" />
-                  <Text style={styles.phoneBtnTextPrimary}>{'REPORTAR\nPESCA ILEGAL'}</Text>
-                </View>
-                <View style={styles.phoneBtnSecondary}>
-                  <Image source={aguaIcon} style={styles.phoneBtnIcon} contentFit="contain" />
-                  <Text style={styles.phoneBtnTextSecondary}>{'MEJOR CALIDAD\nDEL AGUA'}</Text>
-                </View>
-              </View>
+              <Image source={mobileOcean} style={styles.phoneImage} contentFit="cover" />
             </View>
           </View>
         </View>
@@ -121,78 +110,18 @@ const styles = StyleSheet.create({
   phone: {
     width: 280,
     height: 560,
-    backgroundColor: BrandColors.primary,
-    borderRadius: 32,
-    padding: 12,
+    backgroundColor: '#0D1B2A',
+    borderRadius: 40,
+    padding: 10,
   },
   phoneScreen: {
     flex: 1,
-    backgroundColor: '#134E5E',
-    borderRadius: 24,
+    backgroundColor: '#0D1B2A',
+    borderRadius: 32,
     overflow: 'hidden',
   },
-  phoneHeader: {
-    paddingTop: 24,
-    paddingBottom: 10,
-    textAlign: 'center',
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
-    fontFamily: Fonts.body,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  phoneContent: {
-    flex: 1,
-    alignItems: 'center',
-    gap: Spacing.three,
-    padding: Spacing.three,
-    paddingTop: Spacing.three,
-  },
-  phoneBtnPrimary: {
+  phoneImage: {
     width: '100%',
-    maxWidth: 220,
-    paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#FF6B35',
-    minHeight: 85,
-  },
-  phoneBtnSecondary: {
-    width: '100%',
-    maxWidth: 220,
-    paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    minHeight: 85,
-  },
-  phoneBtnIcon: {
-    width: 28,
-    height: 28,
-  },
-  phoneBtnTextPrimary: {
-    fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 14,
-    fontFamily: Fonts.label,
-    color: '#FFFFFF',
-  },
-  phoneBtnTextSecondary: {
-    fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 14,
-    fontFamily: Fonts.label,
-    color: '#FFFFFF',
+    height: '100%',
   },
 });

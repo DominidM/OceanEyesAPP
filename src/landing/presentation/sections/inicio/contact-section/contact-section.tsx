@@ -75,6 +75,7 @@ const styles = StyleSheet.create({
     fontSize: 48,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontStyle: 'italic',
   },
   text: {
     fontFamily: Fonts.body,

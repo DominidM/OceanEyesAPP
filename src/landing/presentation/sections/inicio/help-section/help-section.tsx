@@ -62,12 +62,14 @@ const styles = StyleSheet.create({
     color: BrandColors.primary,
     fontWeight: '700',
     marginBottom: Spacing.three,
+    fontStyle: 'italic',
   },
   subtitle: {
-    fontFamily: Fonts.body,
+    fontFamily: Fonts.headline,
     fontSize: 18,
     color: BrandColors.neutral,
     opacity: 0.72,
+    fontStyle: 'italic',
   },
   grid: {
     flexDirection: 'row',

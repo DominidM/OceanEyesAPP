@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
     color: '#0D1B2A',
     fontWeight: '700',
     flex: 1,
+    fontStyle: 'italic',
   },
   features: {
     gap: Spacing.three,
