@@ -1,6 +1,7 @@
-import { Stack } from 'expo-router';
+import { Slot, Stack } from 'expo-router';
 import { DefaultTheme, Theme, ThemeProvider } from '@react-navigation/native';
 import React from 'react';
+import { Platform } from 'react-native';
 
 import { BrandColors } from '@/constants/theme';
 
@@ -17,7 +18,7 @@ const AppLightTheme: Theme = {
 export default function RootLayout() {
   return (
     <ThemeProvider value={AppLightTheme}>
-      <Stack screenOptions={{ headerShown: false }} />
+      {Platform.OS === 'web' ? <Slot /> : <Stack screenOptions={{ headerShown: false }} />}
     </ThemeProvider>
   );
 }
