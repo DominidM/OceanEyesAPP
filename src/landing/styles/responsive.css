@@ -1,0 +1,11 @@
+@media (max-width: 640px) {
+  /* Mobile-first overrides for landing sections */
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Tablet overrides */
+}
+
+@media (min-width: 1025px) {
+  /* Desktop overrides */
+}

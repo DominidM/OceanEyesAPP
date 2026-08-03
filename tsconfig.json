@@ -15,6 +15,9 @@
       ],
       "@admin/*": [
         "./src/admin/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
       ]
     }
   },
