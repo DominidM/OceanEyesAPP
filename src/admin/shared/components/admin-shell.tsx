@@ -61,6 +61,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     backgroundColor: BrandColors.tertiary,
+    cursor: 'auto',
   },
   sidebar: {
     width: 240,
@@ -94,6 +95,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three - 4,
+    cursor: 'pointer',
   },
   navItemActive: {
     backgroundColor: 'rgba(239, 235, 227, 0.14)',

@@ -92,6 +92,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: BrandColors.primary,
     padding: Spacing.five,
+    cursor: 'auto',
   },
   brandBlock: {
     alignItems: 'center',
@@ -162,6 +163,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
+    userSelect: 'auto',
+    cursor: 'text',
   },
   submit: {
     alignItems: 'center',
@@ -169,6 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     marginTop: Spacing.one,
     paddingVertical: Spacing.three,
+    cursor: 'pointer',
   },
   submitLabel: {
     color: BrandColors.tertiary,
