@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { AdminColors, AdminThemeMode, darkColors, lightColors } from './colors';
 
 type AdminThemeContextValue = {
@@ -16,17 +16,8 @@ const AdminThemeContext = createContext<AdminThemeContextValue>({
 export function AdminThemeProvider({ children }: React.PropsWithChildren) {
   const [mode, setMode] = useState<AdminThemeMode>('light');
 
-  useEffect(() => {
-    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('admin-theme') : null;
-    if (stored === 'dark') setMode('dark');
-  }, []);
-
   const toggle = () => {
-    setMode((prev) => {
-      const next = prev === 'light' ? 'dark' : 'light';
-      if (typeof window !== 'undefined') window.localStorage.setItem('admin-theme', next);
-      return next;
-    });
+    setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   const colors = mode === 'dark' ? darkColors : lightColors;

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppFonts as Fonts, Spacing } from '@/constants/theme';
 import { useAdminTheme } from '@admin/shared/theme/context';
 import { AdminNavItem, ADMIN_NAV } from '@admin/shared/config/admin-nav';
+import { logout } from '@/shared/firebase/auth';
 
 type AdminShellProps = PropsWithChildren<{
   title: string;
@@ -13,6 +14,11 @@ type AdminShellProps = PropsWithChildren<{
 export function AdminShell({ children, title }: AdminShellProps) {
   const pathname = usePathname();
   const { colors, mode, toggle } = useAdminTheme();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/admin/login');
+  };
 
   return (
     <View style={[styles.shell, { backgroundColor: colors.appBg }]}>
@@ -31,17 +37,20 @@ export function AdminShell({ children, title }: AdminShellProps) {
             />
           ))}
         </View>
-        <View style={styles.sidebarFooter}>
-          <Pressable onPress={toggle} style={[styles.themeToggle, { backgroundColor: colors.sidebarActiveBg }]}>
-            <Text style={[styles.themeToggleLabel, { color: colors.sidebarText }]}>
-              {mode === 'light' ? '🌙 Oscuro' : '☀️ Claro'}
-            </Text>
-          </Pressable>
-        </View>
       </View>
       <View style={[styles.main, { backgroundColor: colors.contentBg }]}>
         <View style={[styles.topbar, { borderBottomColor: colors.topbarBorder }]}>
           <Text style={[styles.topbarTitle, { color: colors.contentText }]}>{title}</Text>
+          <View style={styles.topbarActions}>
+            <Pressable onPress={toggle} style={[styles.topBtn, { borderColor: colors.cardBorder }]}>
+              <Text style={[styles.topBtnLabel, { color: colors.contentText }]}>
+                {mode === 'light' ? '🌙' : '☀️'}
+              </Text>
+            </Pressable>
+            <Pressable onPress={handleLogout} style={[styles.topBtn, { borderColor: colors.dangerBg }]}>
+              <Text style={[styles.topBtnLabel, { color: colors.danger }]}>Salir</Text>
+            </Pressable>
+          </View>
         </View>
         <View style={styles.content}>{children}</View>
       </View>
@@ -88,8 +97,6 @@ const styles = StyleSheet.create({
   sidebar: {
     width: 240,
     paddingTop: Spacing.five,
-    paddingBottom: Spacing.three,
-    justifyContent: 'space-between',
   },
   brandBlock: {
     gap: Spacing.one,
@@ -129,38 +136,39 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
-  sidebarFooter: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.four,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
-    marginHorizontal: Spacing.three,
-  },
-  themeToggle: {
-    alignItems: 'center',
-    borderRadius: 8,
-    paddingVertical: Spacing.two,
-    cursor: 'pointer',
-  },
-  themeToggleLabel: {
-    fontFamily: Fonts.label,
-    fontSize: 13,
-    fontWeight: '600',
-  },
   main: {
     flex: 1,
     minWidth: 0,
   },
   topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderBottomWidth: 1,
     paddingHorizontal: Spacing.five,
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.two,
   },
   topbarTitle: {
     fontFamily: Fonts.headline,
     fontSize: 20,
     fontWeight: '700',
     letterSpacing: -0.3,
+  },
+  topbarActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  topBtn: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    cursor: 'pointer',
+  },
+  topBtnLabel: {
+    fontFamily: Fonts.label,
+    fontSize: 13,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
