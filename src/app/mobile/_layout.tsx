@@ -7,27 +7,40 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { BrandColors } from '@/constants/theme';
 import { useAppFonts } from '@/hooks/useAppFonts';
 import { useAuth } from '@/shared/firebase/auth-context';
+import { isFirebaseConfigured } from '@/shared/firebase/config';
 
 export default function MobileLayout() {
   const { loaded } = useAppFonts();
   const { user, loading } = useAuth();
+  const firebaseReady = isFirebaseConfigured();
 
   if (Platform.OS === 'web') return <Redirect href="/" />;
+
   if (!loaded) return null;
-  if (loading) return null;
-  if (!user) return <Redirect href="/mobile/login" />;
 
   return (
     <>
       <StatusBar style="light" translucent={true} />
       <AnimatedSplashOverlay />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'fade',
-          contentStyle: { backgroundColor: BrandColors.tertiary },
-        }}
-      />
+      {!firebaseReady ? (
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade',
+            contentStyle: { backgroundColor: BrandColors.tertiary },
+          }}
+        />
+      ) : loading ? null : user ? (
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade',
+            contentStyle: { backgroundColor: BrandColors.tertiary },
+          }}
+        />
+      ) : (
+        <Redirect href="/mobile/login" />
+      )}
     </>
   );
 }
