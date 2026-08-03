@@ -1,13 +1,11 @@
 import { Stack } from 'expo-router';
 import { DefaultTheme, Theme, ThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import * as SplashScreen from 'expo-splash-screen';
 import React from 'react';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { BrandColors } from '@/constants/theme';
-
-SplashScreen.preventAutoHideAsync();
+import { useAppFonts } from '@/hooks/useAppFonts';
 
 const AppLightTheme: Theme = {
   ...DefaultTheme,
@@ -20,6 +18,10 @@ const AppLightTheme: Theme = {
 };
 
 export default function RootLayout() {
+  const { loaded } = useAppFonts();
+
+  if (!loaded) return null;
+
   return (
     <ThemeProvider value={AppLightTheme}>
       <StatusBar style="light" translucent={true} />

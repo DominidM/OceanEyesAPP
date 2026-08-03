@@ -5,6 +5,7 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { Reward } from '../data/rewards';
 import { RewardsColors } from '../theme';
+import { shadow } from '@/shared/utils/shadows';
 
 type RewardItemProps = {
   reward: Reward;
@@ -54,11 +55,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: RewardsColors.cardBorder,
     backgroundColor: RewardsColors.surface,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    ...shadow('subtle'),
   },
   cardSubdued: {
     borderStyle: 'dashed',
@@ -95,6 +92,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
+    includeFontPadding: false,
   },
   pointsRow: {
     marginTop: 8,
@@ -112,6 +110,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
+    includeFontPadding: false,
   },
   button: {
     minWidth: 80,
@@ -133,6 +132,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   buttonTextSubdued: {
     color: RewardsColors.textMuted,

@@ -5,6 +5,7 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 
 import { SurfaceColors } from '../theme';
+import { shadow } from '@/shared/utils/shadows';
 
 export function SyncWarning({ onSync }: { onSync?: () => void }) {
   return (
@@ -12,7 +13,7 @@ export function SyncWarning({ onSync }: { onSync?: () => void }) {
       <View style={styles.syncInfo}>
         <View style={styles.syncIconWrap}>
           <AppSymbol
-            name={{ ios: 'wifi.exclamationmark', android: 'wifi_off', web: 'wifi_off' }}
+            name={{ ios: 'wifi.exclamationmark', android: 'wifi-off', web: 'wifi-off' }}
             color={BrandColors.primary}
             size={24}
           />
@@ -50,10 +51,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(19, 78, 94, 0.3)',
     backgroundColor: 'rgba(19, 78, 94, 0.08)',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    ...shadow('subtle'),
   },
   syncInfo: {
     width: '100%',
@@ -80,6 +78,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 20,
+    includeFontPadding: false,
   },
   syncDescription: {
     color: SurfaceColors.mutedText,
@@ -87,6 +86,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 21,
+    includeFontPadding: false,
   },
   syncButton: {
     width: '100%',
@@ -98,10 +98,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: BrandColors.primary,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    ...shadow('medium'),
   },
   syncButtonText: {
     color: '#FFFFFF',
@@ -109,6 +106,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 21,
+    includeFontPadding: false,
   },
   pressed: {
     opacity: 0.78,

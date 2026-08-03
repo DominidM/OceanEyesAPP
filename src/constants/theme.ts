@@ -40,7 +40,7 @@ export const Fonts = Platform.select({
 });
 
 export const AppFonts = {
-  headline: Fonts.serif,
+  headline: Platform.select({ ios: Fonts.serif, default: Fonts.sans })!,
   body: Fonts.sans,
   label: Fonts.sans,
 } as const;

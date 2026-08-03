@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { RewardsColors } from '../theme';
+import { shadow } from '@/shared/utils/shadows';
 
 export type RewardsTab = 'recompensas' | 'recientes';
 
@@ -49,10 +50,7 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     backgroundColor: BrandColors.primary,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    ...shadow('subtle'),
   },
   tabInactive: {
     backgroundColor: RewardsColors.surfaceMuted,
@@ -62,6 +60,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 21,
+    includeFontPadding: false,
   },
   tabTextActive: {
     color: '#FFFFFF',

@@ -5,7 +5,8 @@ import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts } from '@/constants/theme';
 import { LEVEL_BADGE, POINTS_BALANCE, PROGRESS } from '../data/rewards';
 import { RewardsColors } from '../theme';
-const arrowIcon: SymbolName = { ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_forward' };
+import { shadow } from '@/shared/utils/shadows';
+const arrowIcon: SymbolName = { ios: 'arrow.right', android: 'arrow-forward', web: 'arrow-forward' };
 
 export function PointsCard() {
   return (
@@ -44,11 +45,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     backgroundColor: RewardsColors.cardSolid,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.1,
-    shadowRadius: 25,
-    elevation: 10,
+    ...shadow('lift'),
   },
   topRow: {
     flexDirection: 'row',
@@ -74,6 +71,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 40,
     letterSpacing: -1.8,
+    includeFontPadding: false,
   },
   levelPill: {
     flexDirection: 'row',
@@ -98,6 +96,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   statsRow: {
     marginTop: 20,
@@ -114,6 +113,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   track: {
     marginTop: 8,
@@ -144,5 +144,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
+    includeFontPadding: false,
   },
 });

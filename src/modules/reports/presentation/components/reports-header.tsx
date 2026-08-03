@@ -5,6 +5,7 @@ import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { SectionHeader } from '@/shared/components/section-header';
 
 import { SurfaceColors } from '../theme';
+import { shadow } from '@/shared/utils/shadows';
 
 export type ReportChip = {
   label: string;
@@ -67,10 +68,7 @@ const styles = StyleSheet.create({
   chipActive: {
     paddingHorizontal: 20,
     backgroundColor: BrandColors.primary,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    ...shadow('subtle'),
   },
   chipInactive: {
     backgroundColor: SurfaceColors.pale,
@@ -79,6 +77,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.label,
     fontSize: 14,
     lineHeight: 21,
+    includeFontPadding: false,
   },
   chipTextActive: {
     color: '#FFFFFF',
@@ -102,5 +101,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     lineHeight: 15,
+    includeFontPadding: false,
   },
 });

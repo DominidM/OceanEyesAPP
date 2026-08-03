@@ -56,7 +56,7 @@ const reports: Report[] = [
     status: 'Pendiente de envio',
     statusBg: SurfaceColors.pendingBg,
     statusText: SurfaceColors.pendingText,
-    statusIcon: { ios: 'icloud.slash.fill', android: 'cloud_off', web: 'cloud_off' },
+    statusIcon: { ios: 'icloud.slash.fill', android: 'cloud-off', web: 'cloud-off' },
     thumbnail: 'pending',
   },
 ];

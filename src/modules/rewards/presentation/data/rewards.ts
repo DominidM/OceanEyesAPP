@@ -22,7 +22,7 @@ export const REWARDS: Reward[] = [
     title: 'Medir calidad del agua',
     subtitle: 'Conecta el sensor 10 veces',
     points: '120',
-    icon: { ios: 'drop.fill', android: 'water_drop', web: 'water_drop' },
+    icon: { ios: 'drop.fill', android: 'water-drop', web: 'water-drop' },
   },
   {
     id: 'safety',
@@ -49,14 +49,14 @@ export const RECENT_CLAIMS: Reward[] = [
     title: 'Bono de combustible',
     subtitle: 'Canjeado hace 2 dias',
     points: '200',
-    icon: { ios: 'fuelpump.fill', android: 'local_gas_station', web: 'local_gas_station' },
+    icon: { ios: 'fuelpump.fill', android: 'local-gas-station', web: 'local-gas-station' },
   },
   {
     id: 'claim-double',
     title: 'Puntos dobles',
     subtitle: 'Canjeado hace 1 semana',
     points: '80',
-    icon: { ios: 'plus.circle.fill', android: 'add_circle', web: 'add_circle' },
+    icon: { ios: 'plus.circle.fill', android: 'add-circle', web: 'add-circle' },
   },
 ];
 

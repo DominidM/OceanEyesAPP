@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandColors, AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
+import { shadow } from '@/shared/utils/shadows';
 
 export type BottomTabItem = {
   label: string;
@@ -28,7 +29,7 @@ export function BottomTabBar({ items, fab }: BottomTabBarProps) {
   const fabIndex = fab?.afterIndex ?? Math.floor(items.length / 2);
 
   return (
-    <View style={[styles.bottomNav, { bottom: insets.bottom - 32.8 }]}>
+    <View style={[styles.bottomNav, { bottom: 0, height: 76 + insets.bottom, paddingBottom: insets.bottom }]}>
       <View style={styles.bottomNavShadow} />
       {items.map((item, index) => {
         const isFabSlot = index === fabIndex;
@@ -74,9 +75,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 84,
     paddingHorizontal: 16,
-    paddingVertical: 28,
+    paddingVertical: 24,
     borderTopWidth: 1,
     borderTopColor: '#D9CFC5',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -87,10 +87,7 @@ const styles = StyleSheet.create({
   },
   bottomNavShadow: {
     ...StyleSheet.absoluteFillObject,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 25 },
-    shadowOpacity: 0.25,
-    shadowRadius: 50,
+    ...shadow('lift'),
   },
   navItem: {
     flex: 1,
@@ -103,6 +100,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
     lineHeight: 15,
+    includeFontPadding: false,
   },
   navLabelActive: {
     color: BrandColors.primary,
@@ -124,10 +122,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: BrandColors.primary,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
+    ...shadow('fab'),
   },
   pressed: {
     opacity: 0.78,

@@ -29,7 +29,7 @@ export function ReportThumbnail({ type }: { type: ThumbnailType }) {
       {type === 'pending' ? (
         <View style={styles.pendingOverlay}>
           <AppSymbol
-            name={{ ios: 'icloud.slash.fill', android: 'cloud_off', web: 'cloud_off' }}
+            name={{ ios: 'icloud.slash.fill', android: 'cloud-off', web: 'cloud-off' }}
             color="#FFFFFF"
             size={24}
           />

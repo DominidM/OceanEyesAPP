@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   statValue: {
     color: BrandColors.neutral,
@@ -73,5 +74,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     lineHeight: 30,
+    includeFontPadding: false,
   },
 });

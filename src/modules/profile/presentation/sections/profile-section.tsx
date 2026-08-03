@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
 import { SectionHeader } from '@/shared/components/section-header';
+import { shadow } from '@/shared/utils/shadows';
 
 export function ProfileSection() {
   const insets = useSafeAreaInsets();
@@ -44,10 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     padding: Spacing.four,
     gap: Spacing.two,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    ...shadow('subtle'),
   },
   placeholderTitle: {
     color: BrandColors.neutral,
@@ -55,6 +53,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 24,
+    includeFontPadding: false,
   },
   placeholderText: {
     color: 'rgba(44, 44, 44, 0.72)',
@@ -62,5 +61,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 21,
+    includeFontPadding: false,
   },
 });

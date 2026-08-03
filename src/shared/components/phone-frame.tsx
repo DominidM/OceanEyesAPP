@@ -4,6 +4,7 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { BottomTabBar } from '@/shared/components/bottom-tab-bar';
 import { getMainTabs, MAIN_FAB, MainTabKey } from '@/shared/config/main-tabs';
 import { BrandColors, MaxPhoneWidth } from '@/constants/theme';
+import { shadow } from '@/shared/utils/shadows';
 
 type PhoneFrameProps = PropsWithChildren<{
   section: MainTabKey;
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     width: '100%',
-    overflow: 'hidden',
+    overflow: 'visible',
     alignItems: 'center',
     backgroundColor: BrandColors.tertiary,
   },
@@ -39,10 +40,6 @@ const styles = StyleSheet.create({
     minHeight: 0,
     width: '100%',
     backgroundColor: BrandColors.tertiary,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 25 },
-    shadowOpacity: 0.25,
-    shadowRadius: 50,
-    elevation: 10,
+    ...shadow('lift'),
   },
 });

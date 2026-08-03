@@ -40,7 +40,7 @@ export function HomeSection({ onReportPress }: HomeSectionProps) {
         <View style={styles.headlineRow}>
           <Text style={styles.headline}>Hola, Pescador</Text>
           <AppSymbol
-            name={{ ios: 'sailboat.fill', android: 'directions_boat', web: 'directions_boat' }}
+            name={{ ios: 'sailboat.fill', android: 'directions-boat', web: 'directions-boat' }}
             color={BrandColors.primary}
             size={30}
           />
@@ -52,7 +52,7 @@ export function HomeSection({ onReportPress }: HomeSectionProps) {
             subtitle="Captura foto y envia"
             color={BrandColors.primary}
             onPress={onReportPress}
-            helperIcon={{ ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' }}
+            helperIcon={{ ios: 'camera.fill', android: 'photo-camera', web: 'photo-camera' }}
             icon={{ ios: 'exclamationmark.triangle.fill', android: 'emergency', web: 'emergency' }}
           />
 
@@ -63,10 +63,10 @@ export function HomeSection({ onReportPress }: HomeSectionProps) {
             height={147}
             helperIcon={{
               ios: 'dot.radiowaves.left.and.right',
-              android: 'bluetooth_connected',
-              web: 'bluetooth_connected',
+              android: 'bluetooth-connected',
+              web: 'bluetooth-connected',
             }}
-            icon={{ ios: 'drop.fill', android: 'water_drop', web: 'water_drop' }}
+            icon={{ ios: 'drop.fill', android: 'water-drop', web: 'water-drop' }}
           />
         </View>
 
@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 35,
+    includeFontPadding: false,
   },
   actionsStack: {
     gap: 16,
@@ -110,6 +111,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 22,
     letterSpacing: -0.27,
+    includeFontPadding: false,
     marginTop: 50,
     marginBottom: 32,
   },

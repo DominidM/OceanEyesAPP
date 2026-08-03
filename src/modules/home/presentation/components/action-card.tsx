@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
+import { shadow } from '@/shared/utils/shadows';
 
 type ActionCardProps = {
   title: string;
@@ -41,7 +42,7 @@ export function ActionCard({
         <View style={styles.actionIconRow}>
           <AppSymbol name={helperIcon} color={BrandColors.tertiary} size={22} />
           <AppSymbol
-            name={{ ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_right_alt' }}
+            name={{ ios: 'arrow.right', android: 'arrow-forward', web: 'arrow-right-alt' }}
             color={BrandColors.tertiary}
             size={18}
           />
@@ -64,11 +65,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 5,
+    ...shadow('card'),
   },
   pressed: {
     opacity: 0.78,
@@ -87,6 +84,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     lineHeight: 25,
     letterSpacing: 0.5,
+    includeFontPadding: false,
   },
   actionSubtitle: {
     color: 'rgba(255, 255, 255, 0.82)',
@@ -94,6 +92,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 21,
+    includeFontPadding: false,
   },
   actionIconRow: {
     flexDirection: 'row',

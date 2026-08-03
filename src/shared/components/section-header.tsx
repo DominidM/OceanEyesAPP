@@ -43,5 +43,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 25,
     letterSpacing: -0.5,
+    includeFontPadding: false,
   },
 });

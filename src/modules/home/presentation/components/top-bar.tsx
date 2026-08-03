@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 22,
+    includeFontPadding: false,
     width: 64,
   },
   headerActions: {
@@ -110,6 +111,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   pendingBadge: {
     height: 38,
@@ -129,5 +131,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     letterSpacing: -0.25,
     textTransform: 'uppercase',
+    includeFontPadding: false,
   },
 });

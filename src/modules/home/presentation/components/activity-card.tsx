@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
+import { shadow } from '@/shared/utils/shadows';
 
 export type ActivityStat = {
   label: string;
@@ -28,7 +29,7 @@ export function ActivityCard({ stats }: { stats: ActivityStat[] }) {
       <View style={styles.levelRow}>
         <Text style={styles.levelText}>Nivel: Guardian del Mar</Text>
         <AppSymbol
-          name={{ ios: 'medal.fill', android: 'military_tech', web: 'workspace_premium' }}
+          name={{ ios: 'medal.fill', android: 'military-tech', web: 'workspace-premium' }}
           color={BrandColors.primary}
           size={24}
         />
@@ -46,11 +47,7 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
     padding: Spacing.four,
     justifyContent: 'space-between',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    ...shadow('subtle'),
   },
   statsGrid: {
     height: 47,
@@ -72,6 +69,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     lineHeight: 32,
+    includeFontPadding: false,
   },
   statLabel: {
     color: 'rgba(44, 44, 44, 0.62)',
@@ -81,6 +79,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     letterSpacing: -0.5,
     textTransform: 'uppercase',
+    includeFontPadding: false,
   },
   levelRow: {
     paddingTop: Spacing.three,
@@ -97,5 +96,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
+    includeFontPadding: false,
   },
 });

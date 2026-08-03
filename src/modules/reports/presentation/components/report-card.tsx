@@ -6,6 +6,7 @@ import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 
 import { SurfaceColors } from '../theme';
 import { ReportThumbnail, ThumbnailType } from './report-thumbnail';
+import { shadow } from '@/shared/utils/shadows';
 
 export type Report = {
   title: string;
@@ -32,11 +33,11 @@ export function ReportCard({ report }: { report: Report }) {
         </View>
 
         <DetailRow
-          icon={{ ios: 'mappin.and.ellipse', android: 'location_on', web: 'location_on' }}
+          icon={{ ios: 'mappin.and.ellipse', android: 'location-on', web: 'location-on' }}
           text={report.location}
         />
         <DetailRow
-          icon={{ ios: 'calendar', android: 'calendar_today', web: 'calendar_today' }}
+          icon={{ ios: 'calendar', android: 'calendar-today', web: 'calendar-today' }}
           text={report.date}
         />
 
@@ -95,10 +96,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SurfaceColors.border,
     backgroundColor: SurfaceColors.card,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    ...shadow('subtle'),
   },
   reportContent: {
     flex: 1,
@@ -119,6 +117,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 24,
+    includeFontPadding: false,
   },
   reportTime: {
     color: SurfaceColors.mutedText,
@@ -126,6 +125,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '500',
     lineHeight: 15,
+    includeFontPadding: false,
   },
   detailRow: {
     height: 16,
@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
+    includeFontPadding: false,
   },
   statusWrap: {
     height: 28,
@@ -159,5 +160,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 16,
+    includeFontPadding: false,
   },
 });
