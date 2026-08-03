@@ -9,6 +9,21 @@ body,
 html,
 body {
   overflow-x: hidden;
+  cursor: none;
+}
+
+a, button, [role="button"], input, select, textarea, label {
+  cursor: none;
+}
+
+::selection {
+  background: #134E5E;
+  color: #EFEBE3;
+}
+
+::-moz-selection {
+  background: #134E5E;
+  color: #EFEBE3;
 }
 
 :root {

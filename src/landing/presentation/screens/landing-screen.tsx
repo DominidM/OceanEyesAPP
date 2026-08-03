@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { BrandColors } from '@landing/config/theme';
 import { LandingFooter } from '@landing/layout/footer/landing-footer';
 import { LandingLayout } from '@landing/layout/landing-layout';
+import { CustomCursor } from '../components/custom-cursor';
 import { useLandingScroll } from '../hooks/useLandingScroll';
 import {
   HeroSection,
@@ -24,6 +25,7 @@ export function LandingScreen() {
 
   return (
     <View style={styles.screen}>
+      <CustomCursor />
       <LandingLayout
         scrolled={scrolled}
         scrollRef={scrollRef}
