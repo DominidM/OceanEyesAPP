@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'user'
+        && request.resource.data.pointsBalance == 0;
+      allow update: if isAdmin() || (isOwner(userId)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.pointsBalance == resource.data.pointsBalance
+        && request.resource.data.totalPointsEarned == resource.data.totalPointsEarned
+        && request.resource.data.verifiedReportsCount == resource.data.verifiedReportsCount);
+      allow delete: if isAdmin();
+    }
+
+    match /reports/{reportId} {
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid)
+        || (resource.data.status == 'verified' && resource.data.visibility == 'public');
+      allow update: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin();
+
+      match /private/{privateId} {
+        allow read: if isAdmin()
+          || (signedIn() && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid);
+        allow create: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid
+            && request.resource.data.userId == request.auth.uid);
+        allow update, delete: if isAdmin();
+      }
+
+      match /statusHistory/{historyId} {
+        allow read: if isAdmin()
+          || (signedIn() && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid);
+        allow write: if isAdmin();
+      }
+    }
+
+    match /pointTransactions/{transactionId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /rewards/{rewardId} {
+      allow read: if signedIn() && resource.data.active == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /rewardRedemptions/{redemptionId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}

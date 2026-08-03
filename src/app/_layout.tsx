@@ -4,6 +4,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 
 import { BrandColors } from '@/constants/theme';
+import { AuthProvider } from '@/shared/firebase/auth-context';
 
 const AppLightTheme: Theme = {
   ...DefaultTheme,
@@ -18,7 +19,9 @@ const AppLightTheme: Theme = {
 export default function RootLayout() {
   return (
     <ThemeProvider value={AppLightTheme}>
-      {Platform.OS === 'web' ? <Slot /> : <Stack screenOptions={{ headerShown: false }} />}
+      <AuthProvider>
+        {Platform.OS === 'web' ? <Slot /> : <Stack screenOptions={{ headerShown: false }} />}
+      </AuthProvider>
     </ThemeProvider>
   );
 }

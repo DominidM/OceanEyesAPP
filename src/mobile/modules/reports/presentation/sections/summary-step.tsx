@@ -22,6 +22,8 @@ type SummaryStepProps = {
   onBack: () => void;
   onEdit: () => void;
   onSend: () => void;
+  sending?: boolean;
+  sendError?: string;
 };
 
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -47,7 +49,7 @@ function formatDuration(millis: number): string {
   ).padStart(2, '0')}`;
 }
 
-export function SummaryStep({ photo, location, incident, audio, createdAt, onBack, onEdit, onSend }: SummaryStepProps) {
+export function SummaryStep({ photo, location, incident, audio, createdAt, onBack, onEdit, onSend, sending = false, sendError = '' }: SummaryStepProps) {
   const insets = useSafeAreaInsets();
   const [verified, setVerified] = useState(false);
   const network = useNetworkState();
@@ -194,13 +196,14 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        {!!sendError && <Text style={styles.sendError}>{sendError}</Text>}
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: !verified }}
-          disabled={!verified}
+          disabled={!verified || sending}
           onPress={onSend}
           style={({ pressed }) => [styles.primaryButton, !verified && styles.primaryDisabled, pressed && styles.pressed]}>
-          <Text style={styles.primaryLabel}>Enviar reporte</Text>
+          <Text style={styles.primaryLabel}>{sending ? 'Enviando reporte...' : 'Enviar reporte'}</Text>
         </Pressable>
 
         <Pressable
@@ -577,6 +580,13 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     textAlign: 'center',
     includeFontPadding: false,
+  },
+  sendError: {
+    color: '#B42318',
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.78,
