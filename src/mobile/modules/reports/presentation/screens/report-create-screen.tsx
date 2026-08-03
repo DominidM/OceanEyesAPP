@@ -14,6 +14,8 @@ import type { CaptureMedia } from '../sections/media-preview';
 import { ReportTopBar } from '../sections/report-top-bar';
 import { SummaryStep } from '../sections/summary-step';
 import { ReportFlowColors as C, SummaryColors as SC } from '../theme';
+import { createReport } from '@/shared/firebase/reports';
+import type { ReportCategory } from '@/shared/firebase/types';
 
 const TOTAL_STEPS = 5;
 const STEP_PROGRESS = 20;
@@ -24,11 +26,14 @@ export function ReportCreateScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [dni, setDni] = useState('');
   const [consent, setConsent] = useState(false);
+  const [anonymous, setAnonymous] = useState(true);
   const [media, setMedia] = useState<CaptureMedia | null>(null);
   const [location, setLocation] = useState<ReportLocation | null>(null);
   const [incident, setIncident] = useState<IncidentSelection['incident'] | null>(null);
   const [audio, setAudio] = useState<ReportAudio | null>(null);
   const [createdAt] = useState(() => new Date());
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
 
   const handleDniChange = (value: string) => {
     setDni(value.replace(/\D/g, ''));
@@ -36,7 +41,7 @@ export function ReportCreateScreen() {
 
   const handleConsentToggle = () => setConsent((current) => !current);
 
-  const canContinue = dni.length === 8 && consent;
+  const canContinue = consent && (anonymous || dni.length === 8);
 
   const handleContinue = () => {
     setStep((current) => Math.min(current + 1, TOTAL_STEPS));
@@ -59,8 +64,36 @@ export function ReportCreateScreen() {
     setStep(5);
   };
 
-  const handleSend = () => {
-    setSubmitted(true);
+  const handleSend = async () => {
+    if (!incident || sending) return;
+    setSendError('');
+    setSending(true);
+    try {
+      const categoryByIncident: Record<string, ReportCategory> = {
+        fishing: 'illegal_fishing',
+        spill: 'pollution',
+        pollution: 'pollution',
+        wildlife: 'protected_species',
+        vessel: 'suspicious_activity',
+        debris: 'pollution',
+      };
+      await createReport({
+        category: categoryByIncident[incident.id] ?? 'other',
+        title: incident.label,
+        isAnonymous: anonymous,
+        visibility: anonymous ? 'restricted' : 'public',
+        location:
+          location?.latitude != null && location.longitude != null
+            ? { latitude: location.latitude, longitude: location.longitude, address: location.placeName ?? undefined }
+            : undefined,
+        evidence: media ? [{ uri: media.uri, type: media.type === 'photo' ? 'image' : 'video' }] : undefined,
+      });
+      setSubmitted(true);
+    } catch {
+      setSendError('No se pudo enviar el reporte. Revisa tu conexión e inténtalo nuevamente.');
+    } finally {
+      setSending(false);
+    }
   };
 
   if (submitted) {
@@ -109,6 +142,8 @@ export function ReportCreateScreen() {
           onBack={() => setStep(4)}
           onEdit={() => setStep(4)}
           onSend={handleSend}
+          sending={sending}
+          sendError={sendError}
         />
       ) : (
         <View style={styles.frame}>
@@ -123,6 +158,8 @@ export function ReportCreateScreen() {
               onDniChange={handleDniChange}
               consent={consent}
               onConsentToggle={handleConsentToggle}
+              anonymous={anonymous}
+              onAnonymousToggle={() => setAnonymous((value) => !value)}
               canContinue={canContinue}
               onContinue={handleContinue}
               onCancel={handleCancel}

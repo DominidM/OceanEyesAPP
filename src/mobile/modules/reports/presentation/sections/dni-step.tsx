@@ -14,20 +14,24 @@ type DniStepProps = {
   onDniChange: (value: string) => void;
   consent: boolean;
   onConsentToggle: () => void;
+  anonymous: boolean;
+  onAnonymousToggle: () => void;
   canContinue: boolean;
   onContinue: () => void;
   onCancel: () => void;
 };
 
-const BODY_TEXT = 'Para enviar tu reporte, confirma tu DNI. Solo lo usamos para verificar tu identidad.';
+const BODY_TEXT = 'Puedes reportar como ciudadano o pescador. Tu identidad no se publicará en la incidencia.';
 const CHECKBOX_LABEL = 'Acepto que mi ubicación se comparta con las autoridades para validar este reporte.';
-const SECURITY_NOTE = 'Tus datos se comparten solo con las autoridades. Nunca publicaremos tu DNI.';
+const SECURITY_NOTE = 'Tu identidad queda protegida y separada del contenido del reporte.';
 
 export function DniStep({
   dni,
   onDniChange,
   consent,
   onConsentToggle,
+  anonymous,
+  onAnonymousToggle,
   canContinue,
   onContinue,
   onCancel,
@@ -48,7 +52,8 @@ export function DniStep({
       <Text style={styles.body}>{BODY_TEXT}</Text>
 
       <View style={styles.form}>
-        <DniInput value={dni} onChangeText={onDniChange} />
+        <ConsentCheckbox checked={anonymous} onToggle={onAnonymousToggle} label="Enviar como reporte anónimo" />
+        {!anonymous && <DniInput value={dni} onChangeText={onDniChange} />}
         <ConsentCheckbox checked={consent} onToggle={onConsentToggle} label={CHECKBOX_LABEL} />
       </View>
 

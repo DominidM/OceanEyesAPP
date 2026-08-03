@@ -3,13 +3,30 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
+import { isFirebaseConfigured } from '@/shared/firebase/config';
+import { loginWithEmail } from '@/shared/firebase/auth';
 
 export function AdminLoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const handleSubmit = () => {
-    router.replace('/admin');
+  const handleSubmit = async () => {
+    setError('');
+    if (!isFirebaseConfigured()) {
+      setError('Firebase aún no está configurado.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await loginWithEmail(email.trim(), password);
+      router.replace('/admin');
+    } catch {
+      setError('Credenciales inválidas o usuario sin permisos.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -53,8 +70,9 @@ export function AdminLoginScreen() {
           </View>
 
           <Pressable onPress={handleSubmit} style={styles.submit}>
-            <Text style={styles.submitLabel}>Entrar al panel</Text>
+            <Text style={styles.submitLabel}>{busy ? 'Validando...' : 'Entrar al panel'}</Text>
           </Pressable>
+          {!!error && <Text style={styles.error}>{error}</Text>}
         </View>
 
         <Text style={styles.demoNote}>Modo demostración: no se validan credenciales todavía.</Text>
@@ -164,6 +182,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: Spacing.four,
     opacity: 0.55,
+    textAlign: 'center',
+  },
+  error: {
+    color: '#B42318',
+    fontFamily: Fonts.body,
+    fontSize: 13,
     textAlign: 'center',
   },
   footer: {

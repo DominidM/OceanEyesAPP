@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,6 +10,9 @@ import { StatsStrip, ReportStat } from '../components/stats-strip';
 import { SyncWarning } from '../components/sync-warning';
 import { HistoryHeader } from '../components/history-header';
 import { SurfaceColors } from '../theme';
+import { isFirebaseConfigured } from '@/shared/firebase/config';
+import { getMyReports } from '@/shared/firebase/reports';
+import type { Report as FirestoreReport } from '@/shared/firebase/types';
 
 const chips: ReportChip[] = [
   { label: 'Todos', active: true },
@@ -25,7 +28,7 @@ const stats: ReportStat[] = [
   { label: 'Puntos', value: '120', icon: { ios: 'star.fill', android: 'star', web: 'star' } },
 ];
 
-const reports: Report[] = [
+const demoReports: Report[] = [
   {
     title: 'Red ilegal',
     time: 'Hace 2 horas',
@@ -63,6 +66,12 @@ const reports: Report[] = [
 
 export function ReportsSection() {
   const insets = useSafeAreaInsets();
+  const [reports, setReports] = useState<Report[]>(demoReports);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return;
+    getMyReports().then((items) => setReports(items.map(toCardReport))).catch(() => undefined);
+  }, []);
   return (
     <>
       <ReportsHeader chips={chips} />
@@ -81,6 +90,29 @@ export function ReportsSection() {
       </ScrollView>
     </>
   );
+}
+
+function toCardReport(report: FirestoreReport): Report {
+  const date = report.createdAt?.toDate?.() ?? new Date();
+  const status = {
+    pending: { label: 'Pendiente', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
+    in_review: { label: 'En revisión', bg: SurfaceColors.reviewBg, text: SurfaceColors.reviewText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
+    verified: { label: 'Verificado', bg: SurfaceColors.successBg, text: SurfaceColors.successText, icon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' } },
+    rejected: { label: 'Rechazado', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'xmark.seal.fill', android: 'cancel', web: 'cancel' } },
+  }[report.status];
+  const statusIcon = status.icon as Report['statusIcon'];
+
+  return {
+    title: report.title,
+    time: date.toLocaleDateString(),
+    location: report.location?.address ?? 'Ubicación confirmada',
+    date: date.toLocaleDateString(),
+    status: status.label,
+    statusBg: status.bg,
+    statusText: status.text,
+    statusIcon,
+    thumbnail: report.category === 'illegal_fishing' ? 'net' : report.category === 'suspicious_activity' ? 'boat' : 'pending',
+  };
 }
 
 const styles = StyleSheet.create({
