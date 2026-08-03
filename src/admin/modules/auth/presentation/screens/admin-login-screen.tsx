@@ -5,12 +5,30 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { loginWithEmail } from '@/shared/firebase/auth';
+import { seedAdminAndTestData } from '@/shared/firebase/seed';
 
 export function AdminLoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@oceaneyes.com');
+  const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [setupMsg, setSetupMsg] = useState('');
+
+  const handleSetup = async () => {
+    setSetupMsg('');
+    setBusy(true);
+    try {
+      await import('@/shared/firebase/seed').then((m) => m.seedRewards());
+      await seedAdminAndTestData(email.trim() || 'admin@oceaneyes.com', password.trim() || 'admin123');
+      setSetupMsg('Admin creado. Ahora haz clic en Entrar al panel.');
+      setEmail('admin@oceaneyes.com');
+      setPassword('admin123');
+    } catch (e: any) {
+      setSetupMsg(e?.message ?? 'Error');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setError('');
@@ -73,9 +91,12 @@ export function AdminLoginScreen() {
             <Text style={styles.submitLabel}>{busy ? 'Validando...' : 'Entrar al panel'}</Text>
           </Pressable>
           {!!error && <Text style={styles.error}>{error}</Text>}
+          {!!setupMsg && <Text style={styles.setupMsg}>{setupMsg}</Text>}
         </View>
 
-        <Text style={styles.demoNote}>Modo demostración: no se validan credenciales todavía.</Text>
+        <Pressable onPress={handleSetup} style={styles.setup}>
+          <Text style={styles.setupLabel}>{busy ? 'Creando admin...' : 'Primera vez? Crear admin y datos de prueba'}</Text>
+        </Pressable>
       </View>
 
       <Text style={styles.footer}>OceanEyes · Gestión de vigilancia marina</Text>
@@ -200,5 +221,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: Spacing.five,
     opacity: 0.8,
+  },
+  setup: {
+    alignItems: 'center',
+    backgroundColor: BrandColors.secondary,
+    borderRadius: 999,
+    marginTop: Spacing.four,
+    paddingVertical: Spacing.three,
+    cursor: 'pointer',
+  },
+  setupLabel: {
+    color: BrandColors.neutral,
+    fontFamily: Fonts.label,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  setupMsg: {
+    color: BrandColors.secondary,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: Spacing.two,
   },
 });
