@@ -4,6 +4,7 @@ import {
   doc,
   getDocs,
   increment,
+  onSnapshot,
   orderBy,
   query,
   runTransaction,
@@ -12,8 +13,18 @@ import {
   where,
 } from 'firebase/firestore';
 
+import { isFirebaseConfigured } from './config';
+
 import { firebaseAuth, firestore } from './app';
-import { REPORT_CATEGORIES, type Report, type ReportCategory, type ReportInput } from './types';
+import { REPORT_CATEGORIES, type Report, type ReportInput } from './types';
+
+import { stageMedia, uploadMediaToStorage } from '@/shared/offline/media';
+import {
+  enqueueReport,
+  type PendingMedia,
+  type PendingReport,
+  updatePendingReport,
+} from '@/shared/offline/outbox';
 
 export async function createReport(input: ReportInput): Promise<string> {
   const user = firebaseAuth?.currentUser;
@@ -36,6 +47,59 @@ export async function createReport(input: ReportInput): Promise<string> {
   return ref.id;
 }
 
+export async function saveReportOfflineFirst(
+  input: ReportInput,
+  media?: { uri: string; kind: 'photo' | 'video' }[],
+): Promise<string> {
+  const staged: PendingMedia[] = [];
+  for (const item of media ?? []) {
+    try {
+      staged.push({ localUri: await stageMedia(item.uri, item.kind), kind: item.kind });
+    } catch {
+      staged.push({ localUri: item.uri, kind: item.kind });
+    }
+  }
+  const pending = await enqueueReport(input, staged);
+  return pending.id;
+}
+
+export async function publishPendingReport(pending: PendingReport): Promise<void> {
+  const user = firebaseAuth?.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
+
+  let reportId = pending.remoteId;
+  if (!reportId) {
+    const ref = await addDoc(collection(firestore, 'reports'), {
+      userId: user.uid,
+      category: pending.input.category,
+      title: pending.input.title,
+      description: pending.input.description ?? null,
+      isAnonymous: pending.input.isAnonymous,
+      location: pending.input.location ?? null,
+      photoURLs: [],
+      status: 'pendiente',
+      pointsAwarded: 0,
+      createdAt: serverTimestamp(),
+      submittedAt: serverTimestamp(),
+    });
+    reportId = ref.id;
+    await updatePendingReport(pending.id, { remoteId: reportId });
+  }
+
+  const photoURLs: string[] = [];
+  for (let index = 0; index < pending.media.length; index += 1) {
+    const media = pending.media[index];
+    const url = await uploadMediaToStorage({
+      localUri: media.localUri,
+      kind: media.kind,
+      reportId,
+      mediaId: `${pending.id}-${index}`,
+    });
+    photoURLs.push(url);
+  }
+  await updateDoc(doc(firestore, 'reports', reportId), { photoURLs });
+}
+
 export async function getMyReports(): Promise<Report[]> {
   const user = firebaseAuth?.currentUser;
   if (!user) return [];
@@ -51,6 +115,17 @@ export async function getAllReports(): Promise<Report[]> {
     query(collection(firestore, 'reports'), orderBy('createdAt', 'desc')),
   );
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report);
+}
+
+export function subscribeReports(callback: (reports: Report[]) => void): () => void {
+  if (!isFirebaseConfigured()) return () => undefined;
+
+  return onSnapshot(
+    query(collection(firestore, 'reports'), orderBy('createdAt', 'desc')),
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report));
+    },
+  );
 }
 
 export async function verifyReport(reportId: string, adminUid: string): Promise<void> {

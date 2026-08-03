@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
+import { isFirebaseConfigured } from '@/shared/firebase/config';
+import { subscribeReports } from '@/shared/firebase/reports';
+import type { Report as FirestoreReport } from '@/shared/firebase/types';
 
 import { ActionCard } from '../components/action-card';
 import { ActivityCard, ActivityStat } from '../components/activity-card';
-import { MapPreview, MapPin } from '../components/map-preview';
+import { MapPreview } from '../components/map-preview';
+import type { MapReport } from '../components/real-time-map';
 import { TopBar } from '../components/top-bar';
 
 const activityStats: ActivityStat[] = [
@@ -16,18 +20,19 @@ const activityStats: ActivityStat[] = [
   { label: 'Puntos', value: '120', color: BrandColors.neutral },
 ];
 
-const mapPins: MapPin[] = [
-  { left: 82, top: 36 },
-  { left: 184, top: 78 },
-  { left: 292, top: 44 },
-];
-
 type HomeSectionProps = {
   onReportPress?: () => void;
+  onExpandMap?: () => void;
 };
 
-export function HomeSection({ onReportPress }: HomeSectionProps) {
+export function HomeSection({ onReportPress, onExpandMap }: HomeSectionProps) {
   const insets = useSafeAreaInsets();
+  const [reports, setReports] = useState<MapReport[]>([]);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return;
+    return subscribeReports((items) => setReports(items.map(toMapReport).filter(isMapReport)));
+  }, []);
 
   return (
     <>
@@ -72,10 +77,27 @@ export function HomeSection({ onReportPress }: HomeSectionProps) {
 
         <Text style={styles.sectionTitle}>Tu Actividad</Text>
         <ActivityCard stats={activityStats} />
-        <MapPreview pins={mapPins} />
+        <MapPreview reports={reports} onExpand={onExpandMap} />
       </ScrollView>
     </>
   );
+}
+
+function toMapReport(report: FirestoreReport): MapReport | null {
+  const latitude = report.location?.latitude;
+  const longitude = report.location?.longitude;
+  if (latitude == null || longitude == null) return null;
+  return {
+    id: report.id,
+    latitude,
+    longitude,
+    category: report.category,
+    status: report.status,
+  };
+}
+
+function isMapReport(report: MapReport | null): report is MapReport {
+  return report != null;
 }
 
 const styles = StyleSheet.create({
@@ -107,12 +129,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: BrandColors.neutral,
     fontFamily: Fonts.headline,
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '700',
     lineHeight: 22,
     letterSpacing: -0.27,
     includeFontPadding: false,
-    marginTop: 50,
-    marginBottom: 32,
+    marginTop: 20,
+    marginBottom: 20,
   },
 });
