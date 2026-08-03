@@ -1,26 +1,42 @@
 import React from 'react';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 
-const navLinks = ['Características', 'Cómo funciona', 'Descargar'];
-
 type LandingNavBarProps = {
+  onFeaturesPress?: () => void;
+  onHowItWorksPress?: () => void;
   onDownloadPress?: () => void;
 };
 
-export function LandingNavBar({ onDownloadPress }: LandingNavBarProps) {
+const navLinks: { label: string; onPressKey: keyof LandingNavBarProps }[] = [
+  { label: 'Características', onPressKey: 'onFeaturesPress' },
+  { label: 'Cómo funciona', onPressKey: 'onHowItWorksPress' },
+  { label: 'Descargar', onPressKey: 'onDownloadPress' },
+];
+
+export function LandingNavBar({
+  onFeaturesPress,
+  onHowItWorksPress,
+  onDownloadPress,
+}: LandingNavBarProps) {
+  const actions = { onFeaturesPress, onHowItWorksPress, onDownloadPress };
+
   return (
     <View style={styles.bar}>
       <View style={styles.inner}>
         <Text style={styles.brand}>OceanEyes</Text>
         <View style={styles.links}>
           {navLinks.map((link) => (
-            <Text key={link} style={styles.link}>
-              {link}
-            </Text>
+            <Pressable key={link.label} onPress={actions[link.onPressKey]} hitSlop={8}>
+              <Text style={styles.link}>{link.label}</Text>
+            </Pressable>
           ))}
         </View>
+        <Pressable style={styles.adminLink} onPress={() => router.push('/admin/login')} hitSlop={8}>
+          <Text style={styles.adminLabel}>Admin</Text>
+        </Pressable>
         <Pressable style={styles.cta} onPress={onDownloadPress} hitSlop={8}>
           <Text style={styles.ctaLabel}>Descargar</Text>
         </Pressable>
@@ -69,6 +85,19 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two + 2,
+  },
+  adminLink: {
+    borderColor: BrandColors.primary,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  adminLabel: {
+    color: BrandColors.primary,
+    fontFamily: Fonts.label,
+    fontSize: 13,
+    fontWeight: '700',
   },
   ctaLabel: {
     color: BrandColors.tertiary,

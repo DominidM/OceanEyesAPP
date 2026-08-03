@@ -12,13 +12,25 @@ import { HeroSection } from '../sections/hero-section';
 export function LandingScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
+  const scrollToFeatures = () => {
+    scrollRef.current?.scrollTo({ y: 420, animated: true });
+  };
+
+  const scrollToHowItWorks = () => {
+    scrollRef.current?.scrollTo({ y: 760, animated: true });
+  };
+
   const scrollToDownload = () => {
     scrollRef.current?.scrollTo({ y: Number.MAX_SAFE_INTEGER, animated: true });
   };
 
   return (
     <View style={styles.screen}>
-      <LandingNavBar onDownloadPress={scrollToDownload} />
+      <LandingNavBar
+        onFeaturesPress={scrollToFeatures}
+        onHowItWorksPress={scrollToHowItWorks}
+        onDownloadPress={scrollToDownload}
+      />
       <ScrollView ref={scrollRef} style={styles.scroll} contentContainerStyle={styles.content}>
         <HeroSection onDownloadPress={scrollToDownload} />
         <FeaturesSection />

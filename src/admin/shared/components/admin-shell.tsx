@@ -1,4 +1,4 @@
-import { Link, usePathname } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import React, { PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -47,11 +47,12 @@ function NavItem({ item, active }: { item: AdminNavItem; active: boolean }) {
   }
 
   return (
-    <Link href={item.href} asChild>
-      <Pressable style={[styles.navItem, active && styles.navItemActive]}>
-        <Text style={[styles.navLabel, active && styles.navLabelActive]}>{item.label}</Text>
-      </Pressable>
-    </Link>
+    <Pressable
+      style={[styles.navItem, active && styles.navItemActive]}
+      onPress={() => router.push(item.href!)}
+    >
+      <Text style={[styles.navLabel, active && styles.navLabelActive]}>{item.label}</Text>
+    </Pressable>
   );
 }
 
