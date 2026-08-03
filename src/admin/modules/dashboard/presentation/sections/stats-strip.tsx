@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { firestore } from '@/shared/firebase/app';
-import { BrandColors } from '@/constants/theme';
+import { useAdminTheme } from '@admin/shared/theme/context';
 
 import { StatCard } from '../components/stat-card';
 
 export function StatsStrip() {
+  const { colors } = useAdminTheme();
   const [total, setTotal] = useState<number | null>(null);
   const [verificados, setVerificados] = useState<number | null>(null);
   const [pendientes, setPendientes] = useState<number | null>(null);
@@ -30,10 +31,10 @@ export function StatsStrip() {
   }, []);
 
   const stats = [
-    { label: 'Reportes totales', value: String(total ?? '...'), accent: BrandColors.primary },
-    { label: 'Verificados', value: String(verificados ?? '...'), accent: BrandColors.secondary },
-    { label: 'Pendientes', value: String(pendientes ?? '...'), accent: '#8A6D1D' },
-    { label: 'Usuarios activos', value: String(usuarios ?? '...'), accent: BrandColors.neutral },
+    { label: 'Reportes totales', value: String(total ?? '...'), accent: colors.primary },
+    { label: 'Verificados', value: String(verificados ?? '...'), accent: colors.success },
+    { label: 'Pendientes', value: String(pendientes ?? '...'), accent: colors.warning },
+    { label: 'Usuarios activos', value: String(usuarios ?? '...'), accent: colors.contentText },
   ];
 
   return (

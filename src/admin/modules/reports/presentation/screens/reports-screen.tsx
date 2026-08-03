@@ -11,10 +11,10 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, Spacing } from '@/constants/theme';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
 import type { ReportStatus } from '@/shared/firebase/types';
-
+import { useAdminTheme } from '@admin/shared/theme/context';
 import { AdminShell } from '@admin/shared/components/admin-shell';
 
 type AdminReport = {
@@ -28,6 +28,7 @@ type AdminReport = {
 };
 
 export function ReportsScreen() {
+  const { colors } = useAdminTheme();
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,15 +40,13 @@ export function ReportsScreen() {
       const snapshot = await getDocs(query(collection(firestore, 'reports'), orderBy('createdAt', 'desc')));
       setReports(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as AdminReport));
     } catch {
-      setError('No se pudieron cargar los reportes. Verifica que tu usuario tenga permisos de admin.');
+      setError('No se pudieron cargar los reportes.');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadReports();
-  }, [loadReports]);
+  useEffect(() => { loadReports(); }, [loadReports]);
 
   const changeStatus = async (report: AdminReport, status: Extract<ReportStatus, 'en_revision' | 'verificado' | 'descartado'>) => {
     await updateDoc(doc(firestore, 'reports', report.id), {
@@ -69,26 +68,40 @@ export function ReportsScreen() {
     <AdminShell title="Reportes">
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.title}>Moderación de incidencias</Text>
-          <Text style={styles.subtitle}>Revisa reportes de pesca, desmontes y otras incidencias ambientales.</Text>
+          <Text style={[styles.title, { color: colors.contentText }]}>Moderación de incidencias</Text>
+          <Text style={[styles.subtitle, { color: colors.contentTextMuted }]}>Revisa reportes de pesca, basura marina y variaciones del mar.</Text>
         </View>
-        <Pressable onPress={loadReports} style={styles.refresh}><Text style={styles.refreshLabel}>Actualizar</Text></Pressable>
+        <Pressable onPress={loadReports} style={[styles.refresh, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.refreshLabel, { color: colors.primaryText }]}>Actualizar</Text>
+        </Pressable>
       </View>
-      {loading && <Text style={styles.muted}>Cargando reportes...</Text>}
-      {!!error && <Text style={styles.error}>{error}</Text>}
-      {!loading && reports.length === 0 && !error && <Text style={styles.muted}>No hay reportes todavía.</Text>}
+      {loading && <Text style={[styles.muted, { color: colors.contentTextMuted }]}>Cargando reportes...</Text>}
+      {!!error && <Text style={[styles.err, { color: colors.danger }]}>{error}</Text>}
+      {!loading && reports.length === 0 && !error && <Text style={[styles.muted, { color: colors.contentTextMuted }]}>No hay reportes todavía.</Text>}
       <View style={styles.list}>
         {reports.map((report) => (
-          <View key={report.id} style={styles.card}>
+          <View key={report.id} style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
             <View style={styles.cardBody}>
-              <Text style={styles.cardTitle}>{report.title}</Text>
-              <Text style={styles.cardMeta}>{report.category} · {report.isAnonymous ? 'Denunciante anónimo' : 'Identidad disponible'}</Text>
-              <Text style={styles.cardStatus}>Estado: {report.status}</Text>
+              <Text style={[styles.cardTitle, { color: colors.cardText }]}>{report.title}</Text>
+              <Text style={[styles.cardMeta, { color: colors.contentTextMuted }]}>{report.category} · {report.isAnonymous ? 'Anónimo' : 'Identificado'}</Text>
+              <Text style={[styles.cardStatus, { color: colors.primary }]}>Estado: {report.status}</Text>
             </View>
             <View style={styles.actions}>
-              {report.status === 'pendiente' && <Pressable onPress={() => changeStatus(report, 'en_revision')} style={styles.secondary}><Text style={styles.secondaryLabel}>Revisar</Text></Pressable>}
-              {(report.status === 'pendiente' || report.status === 'en_revision') && <Pressable onPress={() => changeStatus(report, 'verificado')} style={styles.primary}><Text style={styles.primaryLabel}>Verificar</Text></Pressable>}
-              {(report.status === 'pendiente' || report.status === 'en_revision') && <Pressable onPress={() => changeStatus(report, 'descartado')} style={styles.reject}><Text style={styles.rejectLabel}>Rechazar</Text></Pressable>}
+              {report.status === 'pendiente' && (
+                <Pressable onPress={() => changeStatus(report, 'en_revision')} style={[styles.secondary, { borderColor: colors.primary }]}>
+                  <Text style={[styles.secondaryLabel, { color: colors.primary }]}>Revisar</Text>
+                </Pressable>
+              )}
+              {(report.status === 'pendiente' || report.status === 'en_revision') && (
+                <Pressable onPress={() => changeStatus(report, 'verificado')} style={[styles.primary, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.primaryLabel, { color: colors.primaryText }]}>Verificar</Text>
+                </Pressable>
+              )}
+              {(report.status === 'pendiente' || report.status === 'en_revision') && (
+                <Pressable onPress={() => changeStatus(report, 'descartado')} style={[styles.reject, { backgroundColor: colors.dangerBg }]}>
+                  <Text style={[styles.rejectLabel, { color: colors.danger }]}>Rechazar</Text>
+                </Pressable>
+              )}
             </View>
           </View>
         ))}
@@ -101,23 +114,23 @@ export default ReportsScreen;
 
 const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: Spacing.four },
-  title: { color: BrandColors.neutral, fontFamily: Fonts.headline, fontSize: 20, fontWeight: '700' },
-  subtitle: { color: BrandColors.neutral, fontFamily: Fonts.body, fontSize: 14, lineHeight: 21, opacity: 0.72, marginTop: 4 },
-  refresh: { backgroundColor: BrandColors.primary, borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  refreshLabel: { color: BrandColors.tertiary, fontFamily: Fonts.label, fontSize: 13, fontWeight: '700' },
+  title: { fontFamily: Fonts.headline, fontSize: 20, fontWeight: '700' },
+  subtitle: { fontFamily: Fonts.body, fontSize: 14, lineHeight: 21, marginTop: 4 },
+  refresh: { borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
+  refreshLabel: { fontFamily: Fonts.label, fontSize: 13, fontWeight: '700' },
   list: { gap: Spacing.two },
-  card: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.four, borderWidth: 1, borderColor: 'rgba(19, 78, 94, 0.12)', borderRadius: 12, padding: Spacing.four },
+  card: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.four, borderWidth: 1, borderRadius: 12, padding: Spacing.four },
   cardBody: { flex: 1, gap: 4 },
-  cardTitle: { color: BrandColors.neutral, fontFamily: Fonts.label, fontSize: 16, fontWeight: '700' },
-  cardMeta: { color: BrandColors.neutral, fontFamily: Fonts.body, fontSize: 13, opacity: 0.7 },
-  cardStatus: { color: BrandColors.primary, fontFamily: Fonts.body, fontSize: 13, fontWeight: '600' },
+  cardTitle: { fontFamily: Fonts.label, fontSize: 16, fontWeight: '700' },
+  cardMeta: { fontFamily: Fonts.body, fontSize: 13 },
+  cardStatus: { fontFamily: Fonts.body, fontSize: 13, fontWeight: '600' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: Spacing.one },
-  primary: { backgroundColor: BrandColors.primary, borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  primaryLabel: { color: BrandColors.tertiary, fontFamily: Fonts.label, fontSize: 12, fontWeight: '700' },
-  secondary: { borderWidth: 1, borderColor: BrandColors.primary, borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  secondaryLabel: { color: BrandColors.primary, fontFamily: Fonts.label, fontSize: 12, fontWeight: '700' },
-  reject: { backgroundColor: '#FDECEC', borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  rejectLabel: { color: '#B42318', fontFamily: Fonts.label, fontSize: 12, fontWeight: '700' },
-  muted: { color: BrandColors.neutral, fontFamily: Fonts.body, opacity: 0.65 },
-  error: { color: '#B42318', fontFamily: Fonts.body, fontSize: 14 },
+  primary: { borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
+  primaryLabel: { fontFamily: Fonts.label, fontSize: 12, fontWeight: '700' },
+  secondary: { borderWidth: 1, borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
+  secondaryLabel: { fontFamily: Fonts.label, fontSize: 12, fontWeight: '700' },
+  reject: { borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
+  rejectLabel: { fontFamily: Fonts.label, fontSize: 12, fontWeight: '700' },
+  muted: { fontFamily: Fonts.body },
+  err: { fontFamily: Fonts.body, fontSize: 14 },
 });

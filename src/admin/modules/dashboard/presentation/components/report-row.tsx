@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, Spacing } from '@/constants/theme';
+import { useAdminTheme } from '@admin/shared/theme/context';
 
 export type ReportStatus = 'pendiente' | 'verificado' | 'descartado';
 
@@ -12,37 +13,26 @@ type ReportRowProps = {
   date: string;
 };
 
-const statusStyles: Record<ReportStatus, { label: string; color: string; background: string }> = {
-  pendiente: {
-    label: 'Pendiente',
-    color: '#8A6D1D',
-    background: '#FBF3D5',
-  },
-  verificado: {
-    label: 'Verificado',
-    color: BrandColors.primary,
-    background: '#DCEBE6',
-  },
-  descartado: {
-    label: 'Descartado',
-    color: '#8A3B2E',
-    background: '#F6E0DB',
-  },
-};
-
 export function ReportRow({ id, title, status, date }: ReportRowProps) {
-  const statusStyle = statusStyles[status];
+  const { colors } = useAdminTheme();
+
+  const statusConfig: Record<ReportStatus, { label: string; color: string; bg: string }> = {
+    pendiente: { label: 'Pendiente', color: colors.warning, bg: colors.warningBg },
+    verificado: { label: 'Verificado', color: colors.success, bg: colors.successBg },
+    descartado: { label: 'Descartado', color: colors.danger, bg: colors.dangerBg },
+  };
+  const st = statusConfig[status];
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
       <View style={styles.main}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.meta}>
+        <Text style={[styles.title, { color: colors.cardText }]}>{title}</Text>
+        <Text style={[styles.meta, { color: colors.contentTextMuted }]}>
           #{id} · {date}
         </Text>
       </View>
-      <View style={[styles.status, { backgroundColor: statusStyle.background }]}>
-        <Text style={[styles.statusLabel, { color: statusStyle.color }]}>{statusStyle.label}</Text>
+      <View style={[styles.status, { backgroundColor: st.bg }]}>
+        <Text style={[styles.statusLabel, { color: st.color }]}>{st.label}</Text>
       </View>
     </View>
   );
@@ -53,8 +43,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
+    borderWidth: 1,
     gap: Spacing.three,
     padding: Spacing.three,
   },
@@ -63,16 +53,13 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   title: {
-    color: BrandColors.neutral,
     fontFamily: Fonts.body,
     fontSize: 15,
     fontWeight: '600',
   },
   meta: {
-    color: BrandColors.neutral,
     fontFamily: Fonts.body,
     fontSize: 13,
-    opacity: 0.6,
   },
   status: {
     borderRadius: 999,
