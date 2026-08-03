@@ -1,60 +1,113 @@
-import { collection, doc, getDocs, orderBy, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  increment,
+  orderBy,
+  query,
+  runTransaction,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 
-import { firebaseAuth, firestore, storage } from './app';
-import type { Report, ReportInput } from './types';
+import { firebaseAuth, firestore } from './app';
+import { REPORT_CATEGORIES, type Report, type ReportCategory, type ReportInput } from './types';
 
-async function uploadEvidence(reportId: string, evidence: NonNullable<ReportInput['evidence']>) {
-  return Promise.all(
-    evidence.map(async (item, index) => {
-      const response = await fetch(item.uri);
-      const blob = await response.blob();
-      const storagePath = `reports/${reportId}/${index}-${Date.now()}`;
-      const storageRef = ref(storage, storagePath);
-      await uploadBytes(storageRef, blob, { contentType: blob.type || item.type });
-      return { storagePath, type: item.type, downloadURL: await getDownloadURL(storageRef) };
-    }),
-  );
-}
-
-export async function createReport(input: ReportInput) {
+export async function createReport(input: ReportInput): Promise<string> {
   const user = firebaseAuth?.currentUser;
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
-  const reportReference = doc(collection(firestore, 'reports'));
-  await setDoc(reportReference, {
-    ...input,
+  const ref = await addDoc(collection(firestore, 'reports'), {
     userId: user.uid,
-    status: 'pending',
-    evidence: [],
-    evidenceCount: 0,
+    category: input.category,
+    title: input.title,
+    description: input.description ?? null,
+    isAnonymous: input.isAnonymous,
+    location: input.location ?? null,
+    photoURLs: input.photoURLs ?? [],
+    status: 'pendiente',
     pointsAwarded: 0,
     createdAt: serverTimestamp(),
     submittedAt: serverTimestamp(),
   });
 
-  const evidence = input.evidence ? await uploadEvidence(reportReference.id, input.evidence) : [];
-  await updateDoc(reportReference, {
-    evidence: evidence.map(({ downloadURL, ...item }) => item),
-    evidenceCount: evidence.length,
-    updatedAt: serverTimestamp(),
-  });
-
-  await setDoc(doc(firestore, 'reports', reportReference.id, 'private', 'reporter'), {
-    userId: user.uid,
-    displayName: input.isAnonymous ? null : user.displayName,
-    email: input.isAnonymous ? null : user.email,
-  });
-
-  return reportReference.id;
+  return ref.id;
 }
 
-export async function getMyReports() {
+export async function getMyReports(): Promise<Report[]> {
   const user = firebaseAuth?.currentUser;
   if (!user) return [];
 
   const snapshot = await getDocs(
     query(collection(firestore, 'reports'), where('userId', '==', user.uid), orderBy('createdAt', 'desc')),
   );
-  return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as Report);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report);
+}
+
+export async function getAllReports(): Promise<Report[]> {
+  const snapshot = await getDocs(
+    query(collection(firestore, 'reports'), orderBy('createdAt', 'desc')),
+  );
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report);
+}
+
+export async function verifyReport(reportId: string, adminUid: string): Promise<void> {
+  const reportRef = doc(firestore, 'reports', reportId);
+
+  await runTransaction(firestore, async (tx) => {
+    const snap = await tx.get(reportRef);
+    if (!snap.exists()) throw new Error('Reporte no encontrado.');
+
+    const report = snap.data() as Report;
+    const categoryPoints = REPORT_CATEGORIES[report.category]?.points ?? 0;
+    const userRef = doc(firestore, 'users', report.userId);
+    const userSnap = await tx.get(userRef);
+    const user = userSnap.data() as { pointsBalance: number; totalPointsEarned: number; verifiedReportsCount: number };
+
+    tx.update(reportRef, {
+      status: 'verificado',
+      pointsAwarded: categoryPoints,
+      reviewedAt: serverTimestamp(),
+      reviewedBy: adminUid,
+    });
+
+    const newBalance = (user.pointsBalance ?? 0) + categoryPoints;
+    tx.update(userRef, {
+      pointsBalance: increment(categoryPoints),
+      totalPointsEarned: increment(categoryPoints),
+      verifiedReportsCount: increment(1),
+    });
+
+    const txRef = doc(collection(firestore, 'pointTransactions'));
+    tx.set(txRef, {
+      userId: report.userId,
+      type: 'report_verified',
+      amount: categoryPoints,
+      reportId,
+      balanceBefore: user.pointsBalance ?? 0,
+      balanceAfter: newBalance,
+      createdAt: serverTimestamp(),
+    });
+  });
+}
+
+export async function updateReportStatus(
+  reportId: string,
+  status: 'en_revision' | 'verificado' | 'descartado',
+  options?: { adminUid?: string; reason?: string },
+): Promise<void> {
+  const reportRef = doc(firestore, 'reports', reportId);
+
+  if (status === 'verificado') {
+    return verifyReport(reportId, options?.adminUid ?? 'admin');
+  }
+
+  await updateDoc(reportRef, {
+    status,
+    reviewedAt: serverTimestamp(),
+    reviewedBy: options?.adminUid ?? null,
+    rejectionReason: status === 'descartado' ? options?.reason ?? null : null,
+  });
 }

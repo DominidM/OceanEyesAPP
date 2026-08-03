@@ -14,13 +14,15 @@ export type ReportAudio = {
   durationMillis: number;
 };
 
+import type { ReportCategory } from '@/shared/firebase/types';
+
 export type IncidentSelection = {
-  incident: { id: string; label: string };
+  incident: { id: ReportCategory; label: string };
   audio: ReportAudio | null;
 };
 
 type IncidentStepProps = {
-  initialIncidentId?: string;
+  initialIncidentId?: ReportCategory;
   onBack: () => void;
   onContinue: (selection: IncidentSelection) => void;
 };
@@ -28,7 +30,7 @@ type IncidentStepProps = {
 export function IncidentStep({ initialIncidentId, onBack, onContinue }: IncidentStepProps) {
   const insets = useSafeAreaInsets();
   const initialId = initialIncidentId ?? INCIDENT_TYPES[0].id;
-  const [selectedId, setSelectedId] = useState<string>(
+  const [selectedId, setSelectedId] = useState<ReportCategory>(
     getIncidentType(initialId) ? initialId : INCIDENT_TYPES[0].id,
   );
   const [micDenied, setMicDenied] = useState(false);

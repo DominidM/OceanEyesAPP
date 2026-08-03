@@ -1,7 +1,7 @@
 import type { Timestamp } from 'firebase/firestore';
 
-export type UserRole = 'user' | 'admin';
-export type ProfileType = 'fisher' | 'citizen' | 'other';
+export type UserRole = 'fisher' | 'citizen' | 'admin';
+export type ProfileType = 'fisher' | 'citizen';
 export type AccountStatus = 'active' | 'suspended';
 
 export type UserProfile = {
@@ -10,6 +10,7 @@ export type UserProfile = {
   displayName?: string;
   email: string;
   phone?: string;
+  walletAddress?: string;
   pointsBalance: number;
   totalPointsEarned: number;
   verifiedReportsCount: number;
@@ -18,40 +19,91 @@ export type UserProfile = {
   updatedAt: Timestamp;
 };
 
-export type ReportCategory =
-  | 'illegal_fishing'
-  | 'deforestation'
-  | 'pollution'
-  | 'protected_species'
-  | 'suspicious_activity'
-  | 'other';
+/* ── Reportes (3 categorías del hackathon) ── */
 
-export type ReportStatus = 'pending' | 'in_review' | 'verified' | 'rejected';
-export type ReportVisibility = 'public' | 'restricted' | 'private';
+export type ReportCategory = 'pesca_ilegal' | 'basura_marina' | 'variacion_mar';
+
+export const REPORT_CATEGORIES: Record<ReportCategory, { label: string; points: number }> = {
+  pesca_ilegal: { label: 'Pesca ilegal', points: 100 },
+  basura_marina: { label: 'Basura en el mar u orillas', points: 50 },
+  variacion_mar: { label: 'Variación del mar', points: 30 },
+};
+
+export type ReportStatus = 'pendiente' | 'en_revision' | 'verificado' | 'descartado';
 
 export type ReportInput = {
   category: ReportCategory;
   title: string;
   description?: string;
   isAnonymous: boolean;
-  visibility: ReportVisibility;
   location?: {
     latitude: number;
     longitude: number;
     address?: string;
   };
-  evidence?: { uri: string; type: 'image' | 'video' }[];
+  photoURLs?: string[];
 };
 
-export type Report = ReportInput & {
+export type Report = {
   id: string;
   userId: string;
+  category: ReportCategory;
+  title: string;
+  description?: string;
+  isAnonymous: boolean;
+  location?: { latitude: number; longitude: number; address?: string };
+  photoURLs: string[];
   status: ReportStatus;
-  evidenceCount: number;
   pointsAwarded: number;
+  txHash?: string;
   createdAt: Timestamp;
   submittedAt: Timestamp;
   reviewedAt?: Timestamp;
   reviewedBy?: string;
   rejectionReason?: string;
+};
+
+/* ── Recompensas ── */
+
+export type Reward = {
+  id: string;
+  title: string;
+  description: string;
+  pointsCost: number;
+  stock: number | null;
+  active: boolean;
+  sponsor?: string;
+  imageURL?: string;
+  createdAt: Timestamp;
+};
+
+/* ── Canjes ── */
+
+export type RedemptionStatus = 'pendiente' | 'entregado' | 'cancelado';
+
+export type Redemption = {
+  id: string;
+  userId: string;
+  rewardId: string;
+  pointsSpent: number;
+  status: RedemptionStatus;
+  claimedAt: Timestamp;
+  deliveredAt?: Timestamp;
+};
+
+/* ── Transacciones de puntos ── */
+
+export type PointTransactionType = 'report_verified' | 'redemption' | 'bonus';
+
+export type PointTransaction = {
+  id: string;
+  userId: string;
+  type: PointTransactionType;
+  amount: number;
+  reportId?: string;
+  rewardId?: string;
+  balanceBefore: number;
+  balanceAfter: number;
+  txHash?: string;
+  createdAt: Timestamp;
 };

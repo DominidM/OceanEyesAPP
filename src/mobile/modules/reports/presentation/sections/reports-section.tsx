@@ -12,7 +12,7 @@ import { HistoryHeader } from '../components/history-header';
 import { SurfaceColors } from '../theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { getMyReports } from '@/shared/firebase/reports';
-import type { Report as FirestoreReport } from '@/shared/firebase/types';
+import type { Report as FirestoreReport, ReportStatus } from '@/shared/firebase/types';
 
 const chips: ReportChip[] = [
   { label: 'Todos', active: true },
@@ -94,13 +94,14 @@ export function ReportsSection() {
 
 function toCardReport(report: FirestoreReport): Report {
   const date = report.createdAt?.toDate?.() ?? new Date();
-  const status = {
-    pending: { label: 'Pendiente', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
-    in_review: { label: 'En revisión', bg: SurfaceColors.reviewBg, text: SurfaceColors.reviewText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
-    verified: { label: 'Verificado', bg: SurfaceColors.successBg, text: SurfaceColors.successText, icon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' } },
-    rejected: { label: 'Rechazado', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'xmark.seal.fill', android: 'cancel', web: 'cancel' } },
-  }[report.status];
-  const statusIcon = status.icon as Report['statusIcon'];
+  const statusMap: Record<ReportStatus, { label: string; bg: string; text: string; icon: Report['statusIcon'] }> = {
+    pendiente: { label: 'Pendiente', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
+    en_revision: { label: 'En revisión', bg: SurfaceColors.reviewBg, text: SurfaceColors.reviewText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
+    verificado: { label: 'Verificado', bg: SurfaceColors.successBg, text: SurfaceColors.successText, icon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' } },
+    descartado: { label: 'Descartado', bg: 'rgba(254, 226, 226, 1.0)', text: '#991B1B', icon: { ios: 'xmark.seal.fill', android: 'cancel', web: 'cancel' } },
+  };
+  const status = statusMap[report.status] ?? statusMap.pendiente;
+  const statusIcon = status.icon;
 
   return {
     title: report.title,
@@ -111,7 +112,7 @@ function toCardReport(report: FirestoreReport): Report {
     statusBg: status.bg,
     statusText: status.text,
     statusIcon,
-    thumbnail: report.category === 'illegal_fishing' ? 'net' : report.category === 'suspicious_activity' ? 'boat' : 'pending',
+    thumbnail: report.category === 'pesca_ilegal' ? 'net' : report.category === 'basura_marina' ? 'boat' : 'pending',
   };
 }
 

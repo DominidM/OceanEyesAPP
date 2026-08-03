@@ -69,24 +69,15 @@ export function ReportCreateScreen() {
     setSendError('');
     setSending(true);
     try {
-      const categoryByIncident: Record<string, ReportCategory> = {
-        fishing: 'illegal_fishing',
-        spill: 'pollution',
-        pollution: 'pollution',
-        wildlife: 'protected_species',
-        vessel: 'suspicious_activity',
-        debris: 'pollution',
-      };
       await createReport({
-        category: categoryByIncident[incident.id] ?? 'other',
+        category: incident.id,
         title: incident.label,
         isAnonymous: anonymous,
-        visibility: anonymous ? 'restricted' : 'public',
         location:
           location?.latitude != null && location.longitude != null
             ? { latitude: location.latitude, longitude: location.longitude, address: location.placeName ?? undefined }
             : undefined,
-        evidence: media ? [{ uri: media.uri, type: media.type === 'photo' ? 'image' : 'video' }] : undefined,
+        photoURLs: media ? [media.uri] : undefined,
       });
       setSubmitted(true);
     } catch {

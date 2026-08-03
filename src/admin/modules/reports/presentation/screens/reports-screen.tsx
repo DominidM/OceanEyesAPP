@@ -49,7 +49,7 @@ export function ReportsScreen() {
     loadReports();
   }, [loadReports]);
 
-  const changeStatus = async (report: AdminReport, status: Extract<ReportStatus, 'in_review' | 'verified' | 'rejected'>) => {
+  const changeStatus = async (report: AdminReport, status: Extract<ReportStatus, 'en_revision' | 'verificado' | 'descartado'>) => {
     await updateDoc(doc(firestore, 'reports', report.id), {
       status,
       reviewedBy: firebaseAuth?.currentUser?.uid,
@@ -86,9 +86,9 @@ export function ReportsScreen() {
               <Text style={styles.cardStatus}>Estado: {report.status}</Text>
             </View>
             <View style={styles.actions}>
-              {report.status === 'pending' && <Pressable onPress={() => changeStatus(report, 'in_review')} style={styles.secondary}><Text style={styles.secondaryLabel}>Revisar</Text></Pressable>}
-              {(report.status === 'pending' || report.status === 'in_review') && <Pressable onPress={() => changeStatus(report, 'verified')} style={styles.primary}><Text style={styles.primaryLabel}>Verificar</Text></Pressable>}
-              {(report.status === 'pending' || report.status === 'in_review') && <Pressable onPress={() => changeStatus(report, 'rejected')} style={styles.reject}><Text style={styles.rejectLabel}>Rechazar</Text></Pressable>}
+              {report.status === 'pendiente' && <Pressable onPress={() => changeStatus(report, 'en_revision')} style={styles.secondary}><Text style={styles.secondaryLabel}>Revisar</Text></Pressable>}
+              {(report.status === 'pendiente' || report.status === 'en_revision') && <Pressable onPress={() => changeStatus(report, 'verificado')} style={styles.primary}><Text style={styles.primaryLabel}>Verificar</Text></Pressable>}
+              {(report.status === 'pendiente' || report.status === 'en_revision') && <Pressable onPress={() => changeStatus(report, 'descartado')} style={styles.reject}><Text style={styles.rejectLabel}>Rechazar</Text></Pressable>}
             </View>
           </View>
         ))}
