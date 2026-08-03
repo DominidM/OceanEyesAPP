@@ -9,9 +9,10 @@ import { shadow } from '@/shared/utils/shadows';
 type PhoneFrameProps = PropsWithChildren<{
   section: MainTabKey;
   onSectionChange: (key: MainTabKey) => void;
+  onFabPress?: () => void;
 }>;
 
-export function PhoneFrame({ children, section, onSectionChange }: PhoneFrameProps) {
+export function PhoneFrame({ children, section, onSectionChange, onFabPress }: PhoneFrameProps) {
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, MaxPhoneWidth);
 
@@ -20,7 +21,10 @@ export function PhoneFrame({ children, section, onSectionChange }: PhoneFramePro
       {/* Eliminamos SafeAreaView superior para permitir diseño Edge-to-Edge */}
       <View style={[styles.phoneFrame, { maxWidth: contentWidth }]}>
         {children}
-        <BottomTabBar items={getMainTabs(section, onSectionChange)} fab={MAIN_FAB} />
+        <BottomTabBar
+          items={getMainTabs(section, onSectionChange)}
+          fab={onFabPress ? { ...MAIN_FAB, onPress: onFabPress } : MAIN_FAB}
+        />
       </View>
     </View>
   );

@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 
 import { PhoneFrame } from '@/shared/components/phone-frame';
@@ -9,11 +10,14 @@ import { RewardsSection } from '@/modules/rewards/presentation/sections/rewards-
 import { ProfileSection } from '@/modules/profile/presentation/sections/profile-section';
 
 export function HomeScreen() {
+  const router = useRouter();
   const [section, setSection] = useState<MainTabKey>('inicio');
 
+  const openReportFlow = () => router.push('/mobile/report');
+
   return (
-    <PhoneFrame section={section} onSectionChange={setSection}>
-      {section === 'inicio' && <HomeSection onReportPress={() => setSection('reportes')} />}
+    <PhoneFrame section={section} onSectionChange={setSection} onFabPress={openReportFlow}>
+      {section === 'inicio' && <HomeSection onReportPress={openReportFlow} />}
       {section === 'reportes' && <ReportsSection />}
       {section === 'recompensas' && <RewardsSection />}
       {section === 'perfil' && <ProfileSection />}

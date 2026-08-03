@@ -29,11 +29,30 @@
     "plugins": [
       "expo-router",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "OceanEyes necesita acceso a la cámara para tomar la foto del reporte."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      "expo-video",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "OceanEyes necesita acceso a tu ubicación para confirmar el lugar del reporte."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "OceanEyes necesita acceso al micrófono para grabar el audio del reporte."
         }
       ]
     ],
