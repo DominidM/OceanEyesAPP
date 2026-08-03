@@ -1,18 +1,41 @@
-import React from 'react';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { firestore } from '@/shared/firebase/app';
 import { BrandColors } from '@/constants/theme';
 
 import { StatCard } from '../components/stat-card';
 
-const stats = [
-  { label: 'Reportes totales', value: '128', accent: BrandColors.primary },
-  { label: 'Verificados', value: '86', accent: BrandColors.secondary },
-  { label: 'Pendientes', value: '24', accent: '#8A6D1D' },
-  { label: 'Usuarios activos', value: '312', accent: BrandColors.neutral },
-];
-
 export function StatsStrip() {
+  const [total, setTotal] = useState<number | null>(null);
+  const [verificados, setVerificados] = useState<number | null>(null);
+  const [pendientes, setPendientes] = useState<number | null>(null);
+  const [usuarios, setUsuarios] = useState<number | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const [totalSnap, vSnap, pSnap, uSnap] = await Promise.all([
+        getDocs(query(collection(firestore, 'reports'))),
+        getDocs(query(collection(firestore, 'reports'), where('status', '==', 'verificado'))),
+        getDocs(query(collection(firestore, 'reports'), where('status', 'in', ['pendiente', 'en_revision']))),
+        getDocs(query(collection(firestore, 'users'), where('status', '==', 'active'))),
+      ]);
+      setTotal(totalSnap.size);
+      setVerificados(vSnap.size);
+      setPendientes(pSnap.size);
+      setUsuarios(uSnap.size);
+    };
+    load().catch(() => {});
+  }, []);
+
+  const stats = [
+    { label: 'Reportes totales', value: String(total ?? '...'), accent: BrandColors.primary },
+    { label: 'Verificados', value: String(verificados ?? '...'), accent: BrandColors.secondary },
+    { label: 'Pendientes', value: String(pendientes ?? '...'), accent: '#8A6D1D' },
+    { label: 'Usuarios activos', value: String(usuarios ?? '...'), accent: BrandColors.neutral },
+  ];
+
   return (
     <View style={styles.strip}>
       {stats.map((stat) => (
