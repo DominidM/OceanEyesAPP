@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { loginWithEmail } from '@/shared/firebase/auth';
+import { loginWithEmail, logout } from '@/shared/firebase/auth';
 import { seedAdminAndTestData } from '@/shared/firebase/seed';
 
 export function AdminLoginScreen() {
@@ -20,7 +20,8 @@ export function AdminLoginScreen() {
     try {
       await import('@/shared/firebase/seed').then((m) => m.seedRewards());
       await seedAdminAndTestData(email.trim() || 'admin@oceaneyes.com', password.trim() || 'admin123');
-      setSetupMsg('Admin creado. Ahora haz clic en Entrar al panel.');
+      await logout();
+      setSetupMsg('Listo. Ahora haz clic en Entrar al panel para ingresar.');
       setEmail('admin@oceaneyes.com');
       setPassword('admin123');
     } catch (e: any) {
