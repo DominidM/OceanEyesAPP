@@ -4,11 +4,17 @@
     "jsx": "react",
     "strict": true,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "@/*": [
+        "./src/mobile/*"
+      ],
+      "@landing/*": [
+        "./src/landing/*"
+      ],
+      "@admin/*": [
+        "./src/admin/*"
       ]
     }
   },

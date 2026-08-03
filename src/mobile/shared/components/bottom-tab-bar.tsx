@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandColors, AppFonts as Fonts } from '@/constants/theme';
@@ -23,13 +23,18 @@ export type BottomTabBarProps = {
 };
 
 const INACTIVE_COLOR = '#9CA3AF';
+const BASE_HEIGHT = Platform.select({ ios: 52, android: 68, default: 76 });
 
 export function BottomTabBar({ items, fab }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const fabIndex = fab?.afterIndex ?? Math.floor(items.length / 2);
 
   return (
-    <View style={[styles.bottomNav, { bottom: 0, height: 76 + insets.bottom, paddingBottom: insets.bottom }]}>
+    <View
+      style={[
+        styles.bottomNav,
+        { bottom: 0, height: (BASE_HEIGHT ?? 76) + insets.bottom, paddingBottom: insets.bottom },
+      ]}>
       <View style={styles.bottomNavShadow} />
       {items.map((item, index) => {
         const isFabSlot = index === fabIndex;
