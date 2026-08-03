@@ -1,6 +1,7 @@
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { firestore } from '../firebase/app';
+import { firebaseAuth, firestore } from '../firebase/app';
 import { registerUser } from '../firebase/auth';
+import { isFirebaseConfigured } from '../firebase/config';
 import type { ReportCategory } from '../firebase/types';
 
 /* ── Recompensas ── */
@@ -36,7 +37,13 @@ const TEST_REPORTS: { title: string; category: ReportCategory; description: stri
 ];
 
 export async function seedAdminAndTestData(adminEmail: string, adminPassword: string) {
-  // 1. Crear admin
+  if (!isFirebaseConfigured()) {
+    throw new Error('Firebase no está configurado. Revisa tu archivo .env.local');
+  }
+  if (!firebaseAuth) {
+    throw new Error('Firebase Auth no se inicializó. ¿Activaste Email/Password en Firebase Console?');
+  }
+
   let adminUid: string;
   try {
     const user = await registerUser({
@@ -47,8 +54,12 @@ export async function seedAdminAndTestData(adminEmail: string, adminPassword: st
     });
     adminUid = user.uid;
     await updateDoc(doc(firestore, 'users', adminUid), { role: 'admin' });
-  } catch {
-    throw new Error('El admin ya existe o hubo un error al crearlo. ¿Ya ejecutaste el seed antes?');
+  } catch (e: any) {
+    const raw = e?.code || e?.message || String(e);
+    if (raw === 'auth/email-already-in-use') {
+      throw new Error('El admin ya existe. Inicia sesión con las credenciales.');
+    }
+    throw new Error('Error al crear admin: ' + raw);
   }
 
   // 2. Crear reportes de prueba con diferentes estados
