@@ -3,46 +3,23 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
-import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { loginWithEmail, logout } from '@/shared/firebase/auth';
-import { seedAdminAndTestData } from '@/shared/firebase/seed';
+import { loginWithEmail } from '@/shared/firebase/auth';
 
 export function AdminLoginScreen() {
   const [email, setEmail] = useState('admin@oceaneyes.com');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [setupMsg, setSetupMsg] = useState('');
-
-  const handleSetup = async () => {
-    setSetupMsg('');
-    setBusy(true);
-    try {
-      await import('@/shared/firebase/seed').then((m) => m.seedRewards());
-      await seedAdminAndTestData(email.trim() || 'admin@oceaneyes.com', password.trim() || 'admin123');
-      await logout();
-      setSetupMsg('Listo. Ahora haz clic en Entrar al panel para ingresar.');
-      setEmail('admin@oceaneyes.com');
-      setPassword('admin123');
-    } catch (e: any) {
-      setSetupMsg(e?.message ?? 'Error');
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const handleSubmit = async () => {
     setError('');
-    if (!isFirebaseConfigured()) {
-      setError('Firebase aún no está configurado.');
-      return;
-    }
     setBusy(true);
     try {
       await loginWithEmail(email.trim(), password);
       router.replace('/admin');
-    } catch {
-      setError('Credenciales inválidas o usuario sin permisos.');
+    } catch (e: any) {
+      const msg = e?.code || e?.message || String(e);
+      setError(msg);
     } finally {
       setBusy(false);
     }
@@ -92,12 +69,7 @@ export function AdminLoginScreen() {
             <Text style={styles.submitLabel}>{busy ? 'Validando...' : 'Entrar al panel'}</Text>
           </Pressable>
           {!!error && <Text style={styles.error}>{error}</Text>}
-          {!!setupMsg && <Text style={styles.setupMsg}>{setupMsg}</Text>}
         </View>
-
-        <Pressable onPress={handleSetup} style={styles.setup}>
-          <Text style={styles.setupLabel}>{busy ? 'Creando admin...' : 'Primera vez? Crear admin y datos de prueba'}</Text>
-        </Pressable>
       </View>
 
       <Text style={styles.footer}>OceanEyes · Gestión de vigilancia marina</Text>
@@ -202,14 +174,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
-  demoNote: {
-    color: BrandColors.neutral,
-    fontFamily: Fonts.body,
-    fontSize: 12,
-    marginTop: Spacing.four,
-    opacity: 0.55,
-    textAlign: 'center',
-  },
   error: {
     color: '#B42318',
     fontFamily: Fonts.body,
@@ -222,26 +186,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: Spacing.five,
     opacity: 0.8,
-  },
-  setup: {
-    alignItems: 'center',
-    backgroundColor: BrandColors.secondary,
-    borderRadius: 999,
-    marginTop: Spacing.four,
-    paddingVertical: Spacing.three,
-    cursor: 'pointer',
-  },
-  setupLabel: {
-    color: BrandColors.neutral,
-    fontFamily: Fonts.label,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  setupMsg: {
-    color: BrandColors.secondary,
-    fontFamily: Fonts.body,
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: Spacing.two,
   },
 });
