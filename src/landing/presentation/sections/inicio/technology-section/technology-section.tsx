@@ -4,9 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 
-const boyasImg = require('../../../../../../assets/images/technology/boyas.jpg');
 const entornoImg = require('../../../../../../assets/images/technology/entorno-sucio.png');
-const masBoyasImg = require('../../../../../../assets/images/technology/mas-boyas.png');
 const internetImg = require('../../../../../../assets/images/technology/internet.png');
 
 const technologies = [
@@ -19,13 +17,6 @@ const technologies = [
   },
   {
     id: 2,
-    image: masBoyasImg,
-    title: 'Proyecto MAS BOYAS',
-    description: 'Red de boyas inteligentes para monitoreo continuo de calidad del agua.',
-    features: ['Sensores de pH y temperatura', 'Detección de clorofila', 'Transmisión en tiempo real'],
-  },
-  {
-    id: 3,
     image: internetImg,
     title: 'Datos Compartidos',
     description: 'Toda la información se comparte con entidades científicas y reguladoras.',
@@ -45,7 +36,7 @@ export function TechnologySection() {
 
       <View style={styles.content}>
         <View style={styles.main}>
-          <Image source={boyasImg} style={styles.mainImage} contentFit="cover" />
+          <Image source={entornoImg} style={styles.mainImage} contentFit="cover" />
           <View style={styles.mainOverlay}>
             <Text style={styles.mainTitle}>Monitoreo de Floramiento Algal</Text>
             <Text style={styles.mainDescription}>

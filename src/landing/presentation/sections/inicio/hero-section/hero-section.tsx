@@ -56,7 +56,7 @@ export function HeroSection({ onFeaturesPress, onDownloadPress }: HeroSectionPro
 const styles = StyleSheet.create({
   section: {
     position: 'relative',
-    minHeight: '100vh' as unknown as number,
+    minHeight: 760,
     justifyContent: 'flex-end',
     alignItems: 'center',
     overflow: 'hidden',

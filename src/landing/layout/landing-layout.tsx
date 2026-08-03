@@ -2,23 +2,23 @@ import React, { type ReactNode } from 'react';
 import type { ScrollView } from 'react-native';
 
 import { LandingHeader, type LandingHeaderProps } from './header/landing-header';
-import { LandingFooter } from './footer/landing-footer';
 
 type LandingLayoutProps = {
   children: ReactNode;
   scrollRef: React.RefObject<ScrollView | null>;
+  scrolled: boolean;
 } & LandingHeaderProps;
 
 export function LandingLayout({
   children,
   scrollRef,
+  scrolled,
   ...headerProps
 }: LandingLayoutProps) {
   return (
     <>
-      <LandingHeader {...headerProps} />
+      <LandingHeader scrolled={scrolled} {...headerProps} />
       {children}
-      <LandingFooter />
     </>
   );
 }
