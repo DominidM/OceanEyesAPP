@@ -42,8 +42,8 @@ export function AdminShell({ children, title }: AdminShellProps) {
         <View style={[styles.topbar, { borderBottomColor: colors.topbarBorder }]}>
           <Text style={[styles.topbarTitle, { color: colors.contentText }]}>{title}</Text>
           <View style={styles.topbarActions}>
-            <Pressable onPress={() => router.back()} style={[styles.topBtn, { borderColor: colors.cardBorder }]}>
-              <Text style={[styles.topBtnLabel, { color: colors.contentText }]}>← Volver</Text>
+            <Pressable onPress={() => router.push('/admin')} style={[styles.topBtn, { borderColor: colors.cardBorder }]}>
+              <Text style={[styles.topBtnLabel, { color: colors.contentText }]}>← Inicio</Text>
             </Pressable>
             <Pressable onPress={toggle} style={[styles.topBtn, { borderColor: colors.cardBorder }]}>
               <Text style={[styles.topBtnLabel, { color: colors.contentText }]}>
@@ -54,6 +54,11 @@ export function AdminShell({ children, title }: AdminShellProps) {
               <Text style={[styles.topBtnLabel, { color: colors.danger }]}>Salir</Text>
             </Pressable>
           </View>
+        </View>
+        <View style={[styles.breadcrumb, { borderBottomColor: colors.topbarBorder }]}>
+          <Text style={[styles.breadcrumbText, { color: colors.contentTextMuted }]}>
+            Panel / {title}
+          </Text>
         </View>
         <View style={styles.content}>{children}</View>
       </View>
@@ -177,5 +182,14 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.four,
     padding: Spacing.five,
+  },
+  breadcrumb: {
+    borderBottomWidth: 1,
+    paddingHorizontal: Spacing.five,
+    paddingVertical: Spacing.two,
+  },
+  breadcrumbText: {
+    fontFamily: Fonts.body,
+    fontSize: 13,
   },
 });
