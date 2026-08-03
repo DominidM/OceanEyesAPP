@@ -1,6 +1,6 @@
 import { router, usePathname } from 'expo-router';
 import React, { PropsWithChildren } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@/constants/theme';
 import { useAdminTheme } from '@admin/shared/theme/context';
@@ -60,7 +60,13 @@ export function AdminShell({ children, title }: AdminShellProps) {
             Panel / {title}
           </Text>
         </View>
-        <View style={styles.content}>{children}</View>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={{ gap: Spacing.four, paddingBottom: Spacing.five }}
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </ScrollView>
       </View>
     </View>
   );

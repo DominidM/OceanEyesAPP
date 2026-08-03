@@ -6,8 +6,7 @@ import { AppFonts as Fonts, Spacing } from '@/constants/theme';
 import { firestore } from '@/shared/firebase/app';
 import type { Report, ReportStatus } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/shared/theme/context';
-
-import { ReportRow } from '../components/report-row';
+import { SectionTitle, Badge } from '@admin/shared/ui';
 
 export function RecentReportsSection() {
   const { colors } = useAdminTheme();
@@ -23,30 +22,41 @@ export function RecentReportsSection() {
     load().catch(() => {});
   }, []);
 
-  const mapStatus = (status: ReportStatus): 'pendiente' | 'verificado' | 'descartado' => {
-    if (status === 'verificado') return 'verificado';
-    if (status === 'descartado') return 'descartado';
-    return 'pendiente';
+  const mapStatus = (status: ReportStatus) => {
+    switch (status) {
+      case 'verificado': return { label: 'Verificado', color: colors.success, bg: colors.successBg };
+      case 'descartado': return { label: 'Descartado', color: colors.danger, bg: colors.dangerBg };
+      case 'en_revision': return { label: 'En revisión', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' };
+      default: return { label: 'Pendiente', color: colors.warning, bg: colors.warningBg };
+    }
   };
 
   return (
     <View style={styles.section}>
-      <Text style={[styles.title, { color: colors.contentText }]}>Reportes recientes</Text>
+      <SectionTitle>Reportes recientes</SectionTitle>
       {reports.length === 0 ? (
         <Text style={[styles.empty, { color: colors.contentTextMuted }]}>
-          No hay reportes todavía. Los reportes aparecerán aquí cuando los usuarios empiecen a reportar.
+          No hay reportes todavía.
         </Text>
       ) : (
         <View style={styles.list}>
-          {reports.map((report) => (
-            <ReportRow
-              key={report.id}
-              id={report.id}
-              title={report.title}
-              status={mapStatus(report.status)}
-              date={report.createdAt?.toDate?.().toLocaleString() ?? ''}
-            />
-          ))}
+          {reports.map((report) => {
+            const st = mapStatus(report.status);
+            return (
+              <View
+                key={report.id}
+                style={[styles.row, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}
+              >
+                <View style={styles.rowMain}>
+                  <Text style={[styles.rowTitle, { color: colors.cardText }]}>{report.title}</Text>
+                  <Text style={[styles.rowMeta, { color: colors.contentTextMuted }]}>
+                    #{report.id.slice(0, 6)} · {report.createdAt?.toDate?.().toLocaleString() ?? ''}
+                  </Text>
+                </View>
+                <Badge label={st.label} color={st.color} bg={st.bg} />
+              </View>
+            );
+          })}
         </View>
       )}
     </View>
@@ -54,21 +64,19 @@ export function RecentReportsSection() {
 }
 
 const styles = StyleSheet.create({
-  section: {
+  section: { gap: Spacing.three },
+  empty: { fontFamily: Fonts.body, fontSize: 14 },
+  list: { gap: Spacing.two },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    borderWidth: 1,
     gap: Spacing.three,
+    padding: Spacing.three,
   },
-  title: {
-    fontFamily: Fonts.headline,
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  empty: {
-    fontFamily: Fonts.body,
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  list: {
-    gap: Spacing.two,
-  },
+  rowMain: { flex: 1, gap: Spacing.one },
+  rowTitle: { fontFamily: Fonts.body, fontSize: 15, fontWeight: '600' },
+  rowMeta: { fontFamily: Fonts.body, fontSize: 13 },
 });

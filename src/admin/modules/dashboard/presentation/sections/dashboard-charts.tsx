@@ -1,12 +1,13 @@
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { firestore } from '@/shared/firebase/app';
 import { useAdminTheme } from '@admin/shared/theme/context';
-import { AppFonts as Fonts, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { BarChart } from '@admin/shared/components/charts/bar-chart';
 import { DonutChart, DonutLegend } from '@admin/shared/components/charts/donut-chart';
+import { Card, SectionTitle, KpiStat } from '@admin/shared/ui';
 
 const CATEGORY_COLORS: Record<string, string> = {
   pesca_ilegal: '#EF4444',
@@ -40,7 +41,6 @@ export function DashboardCharts() {
       const reports = reportsSnap.docs.map((d) => d.data());
       setTotal(reports.length);
 
-      // Categorías
       const catCount: Record<string, number> = { pesca_ilegal: 0, basura_marina: 0, variacion_mar: 0 };
       const statusCount: Record<string, number> = { pendiente: 0, en_revision: 0, verificado: 0, descartado: 0 };
 
@@ -71,34 +71,27 @@ export function DashboardCharts() {
 
   return (
     <View style={styles.grid}>
-      <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-        <Text style={[styles.cardTitle, { color: colors.contentText }]}>Reportes por categoría</Text>
+      <Card>
+        <SectionTitle>Reportes por categoría</SectionTitle>
         <BarChart data={catData} width={chartW} height={200} />
-      </View>
+      </Card>
 
-      <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-        <Text style={[styles.cardTitle, { color: colors.contentText }]}>Distribución por estado</Text>
+      <Card>
+        <SectionTitle>Distribución por estado</SectionTitle>
         <View style={styles.donutRow}>
           <DonutChart data={statusData} size={140} />
           <DonutLegend data={statusData} />
         </View>
-      </View>
+      </Card>
 
       <View style={styles.kpiRow}>
-        <View style={[styles.kpiCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.kpiValue, { color: colors.primary }]}>{total}</Text>
-          <Text style={[styles.kpiLabel, { color: colors.contentTextMuted }]}>Reportes totales</Text>
-        </View>
-        <View style={[styles.kpiCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.kpiValue, { color: colors.success }]}>{usuarios}</Text>
-          <Text style={[styles.kpiLabel, { color: colors.contentTextMuted }]}>Usuarios activos</Text>
-        </View>
-        <View style={[styles.kpiCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.kpiValue, { color: colors.warning }]}>
-            {statusData.find((d) => d.label === 'Pendientes')?.value ?? 0}
-          </Text>
-          <Text style={[styles.kpiLabel, { color: colors.contentTextMuted }]}>Pendientes</Text>
-        </View>
+        <KpiStat value={total} label="Reportes totales" color={colors.primary} />
+        <KpiStat value={usuarios} label="Usuarios activos" color={colors.success} />
+        <KpiStat
+          value={statusData.find((d) => d.label === 'Pendientes')?.value ?? 0}
+          label="Pendientes"
+          color={colors.warning}
+        />
       </View>
     </View>
   );
@@ -106,43 +99,6 @@ export function DashboardCharts() {
 
 const styles = StyleSheet.create({
   grid: { gap: Spacing.four },
-  card: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
-  cardTitle: {
-    fontFamily: Fonts.headline,
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  donutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-  },
-  kpiRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  kpiCard: {
-    flex: 1,
-    minWidth: 140,
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: Spacing.four,
-    gap: Spacing.one,
-  },
-  kpiValue: {
-    fontFamily: Fonts.headline,
-    fontSize: 32,
-    fontWeight: '700',
-  },
-  kpiLabel: {
-    fontFamily: Fonts.body,
-    fontSize: 14,
-  },
+  donutRow: { flexDirection: 'row', alignItems: 'center', gap: 24 },
+  kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
 });
