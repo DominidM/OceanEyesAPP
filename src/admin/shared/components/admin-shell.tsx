@@ -42,6 +42,9 @@ export function AdminShell({ children, title }: AdminShellProps) {
         <View style={[styles.topbar, { borderBottomColor: colors.topbarBorder }]}>
           <Text style={[styles.topbarTitle, { color: colors.contentText }]}>{title}</Text>
           <View style={styles.topbarActions}>
+            <Pressable onPress={() => router.back()} style={[styles.topBtn, { borderColor: colors.cardBorder }]}>
+              <Text style={[styles.topBtnLabel, { color: colors.contentText }]}>← Volver</Text>
+            </Pressable>
             <Pressable onPress={toggle} style={[styles.topBtn, { borderColor: colors.cardBorder }]}>
               <Text style={[styles.topBtnLabel, { color: colors.contentText }]}>
                 {mode === 'light' ? '🌙' : '☀️'}
