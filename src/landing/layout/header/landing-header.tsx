@@ -5,13 +5,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { LANDING_NAV_LINKS, type LandingNavPressKey } from '@landing/config/landing-nav';
 
-export type LandingNavBarProps = Record<LandingNavPressKey, () => void>;
+export type LandingHeaderProps = Record<LandingNavPressKey, () => void>;
 
-export function LandingNavBar({
+export function LandingHeader({
   onFeaturesPress,
   onHowItWorksPress,
   onDownloadPress,
-}: LandingNavBarProps) {
+}: LandingHeaderProps) {
   const actions: Record<LandingNavPressKey, () => void> = {
     onFeaturesPress,
     onHowItWorksPress,

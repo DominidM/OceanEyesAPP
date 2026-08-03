@@ -1,33 +1,24 @@
 import React, { type ReactNode } from 'react';
 import type { ScrollView } from 'react-native';
 
-import { LandingNavBar } from '../presentation/components/landing-nav-bar';
-import { FooterSection } from '../presentation/sections/footer-section';
+import { LandingHeader, type LandingHeaderProps } from './header/landing-header';
+import { LandingFooter } from './footer/landing-footer';
 
 type LandingLayoutProps = {
   children: ReactNode;
   scrollRef: React.RefObject<ScrollView | null>;
-  onFeaturesPress: () => void;
-  onHowItWorksPress: () => void;
-  onDownloadPress: () => void;
-};
+} & LandingHeaderProps;
 
 export function LandingLayout({
   children,
   scrollRef,
-  onFeaturesPress,
-  onHowItWorksPress,
-  onDownloadPress,
+  ...headerProps
 }: LandingLayoutProps) {
   return (
     <>
-      <LandingNavBar
-        onFeaturesPress={onFeaturesPress}
-        onHowItWorksPress={onHowItWorksPress}
-        onDownloadPress={onDownloadPress}
-      />
+      <LandingHeader {...headerProps} />
       {children}
-      <FooterSection />
+      <LandingFooter />
     </>
   );
 }

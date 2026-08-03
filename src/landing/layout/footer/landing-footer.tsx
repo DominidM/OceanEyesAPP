@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 
-export function FooterSection() {
+export function LandingFooter() {
   return (
     <View style={styles.footer}>
       <Text style={styles.brand}>OceanEyes</Text>

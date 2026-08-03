@@ -4,9 +4,15 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { BrandColors } from '@landing/config/theme';
 import { LandingLayout } from '@landing/layout/landing-layout';
 import { useLandingScroll } from '../hooks/useLandingScroll';
-import { DownloadSection } from '../sections/download-section';
-import { FeaturesSection } from '../sections/features-section';
-import { HeroSection } from '../sections/hero-section';
+import {
+  HeroSection,
+  FeaturesSection,
+  HelpSection,
+  TechnologySection,
+  ImpactSection,
+  InfrastructureSection,
+  ContactSection,
+} from '../sections/inicio';
 
 export function LandingScreen() {
   const { scrollRef, toFeatures, toHowItWorks, toDownload } = useLandingScroll();
@@ -20,9 +26,13 @@ export function LandingScreen() {
         onDownloadPress={toDownload}
       >
         <ScrollView ref={scrollRef} style={styles.scroll} contentContainerStyle={styles.content}>
-          <HeroSection onDownloadPress={toDownload} />
+          <HeroSection onFeaturesPress={toFeatures} onDownloadPress={toDownload} />
           <FeaturesSection />
-          <DownloadSection />
+          <HelpSection />
+          <TechnologySection />
+          <ImpactSection />
+          <InfrastructureSection />
+          <ContactSection />
         </ScrollView>
       </LandingLayout>
     </View>
