@@ -53,7 +53,7 @@ export function LandingHeader({
               <FontAwesome5
                 name="shield-alt"
                 size={12}
-                color={isTransparent ? 'rgba(255,255,255,0.85)' : BrandColors.primary}
+                color={isTransparent ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.85)'}
               />
               <Text style={[styles.adminLabel, isTransparent && styles.adminLabelLight]}>Admin</Text>
             </Pressable>
@@ -65,7 +65,7 @@ export function LandingHeader({
               <FontAwesome5
                 name="download"
                 size={13}
-                color={isTransparent ? BrandColors.primary : BrandColors.tertiary}
+                color={isTransparent ? BrandColors.primary : BrandColors.primary}
               />
               <Text style={[styles.ctaLabel, isTransparent && styles.ctaLabelLight]}>Descargar</Text>
             </Pressable>
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
-    backgroundColor: BrandColors.tertiary,
+    backgroundColor: BrandColors.neutral,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(19, 78, 94, 0.12)',
     transitionProperty: 'background-color, border-color',
@@ -120,12 +120,13 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.four,
   },
   logo: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
+    transform: [{ scale: 1.5 }, { translateY: 2 }],
   },
   brand: {
-    color: BrandColors.primary,
-    fontFamily: Fonts.headline,
+    color: BrandColors.tertiary,
+    fontFamily: Fonts.serif,
     fontSize: 22,
     fontWeight: '700',
     letterSpacing: -0.4,
@@ -141,11 +142,11 @@ const styles = StyleSheet.create({
     gap: Spacing.five,
   },
   link: {
-    color: BrandColors.neutral,
+    color: 'rgba(255,255,255,0.85)',
     fontFamily: Fonts.body,
     fontSize: 15,
     fontWeight: '500',
-    opacity: 0.72,
+    opacity: 1,
     transitionProperty: 'color',
     transitionDuration: '300ms',
   },
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: BrandColors.primary,
+    backgroundColor: BrandColors.tertiary,
     borderRadius: 999,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two + 2,
@@ -165,13 +166,13 @@ const styles = StyleSheet.create({
     transitionDuration: '300ms',
   },
   ctaTransparent: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
   },
   adminLink: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    borderColor: BrandColors.primary,
+    borderColor: 'rgba(255,255,255,0.5)',
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: Spacing.three,
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.5)',
   },
   adminLabel: {
-    color: BrandColors.primary,
+    color: 'rgba(255,255,255,0.85)',
     fontFamily: Fonts.label,
     fontSize: 13,
     fontWeight: '700',
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
   },
   ctaLabel: {
-    color: BrandColors.tertiary,
+    color: BrandColors.primary,
     fontFamily: Fonts.label,
     fontSize: 14,
     fontWeight: '700',
