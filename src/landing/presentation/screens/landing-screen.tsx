@@ -6,6 +6,7 @@ import { LandingFooter } from "@landing/layout/footer/landing-footer";
 import { LandingSubfooter } from "@landing/layout/footer/landing-subfooter";
 import { LandingLayout } from "@landing/layout/landing-layout";
 import { CustomCursor } from "../components/custom-cursor";
+import { LandingSplash } from "../components/landing-splash";
 import { PageTransition } from "../components/page-transition";
 import { useLandingScroll } from "../hooks/useLandingScroll";
 import {
@@ -16,15 +17,31 @@ import {
   TechnologySection,
 } from "../sections/inicio";
 
+let splashShownOnce = false;
+
 export function LandingScreen() {
   const { scrollRef, toReportes, toHowItWorks, toHelp } = useLandingScroll();
   const [scrolled, setScrolled] = useState(false);
+  const [showSplash, setShowSplash] = useState(() => {
+    if (splashShownOnce) return false;
+    splashShownOnce = true;
+    return true;
+  });
 
   const handleScroll = (e: {
     nativeEvent: { contentOffset: { y: number } };
   }) => {
     setScrolled(e.nativeEvent.contentOffset.y > 50);
   };
+
+  if (showSplash) {
+    return (
+      <View style={styles.screen}>
+        <CustomCursor />
+        <LandingSplash onFinish={() => setShowSplash(false)} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
