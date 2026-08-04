@@ -1,19 +1,16 @@
 import * as Location from 'expo-location';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView from 'react-native-maps';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
-import type { ReportCategory, ReportStatus } from '@/shared/firebase/types';
 
-export type MapReport = {
-  id: string;
-  latitude: number;
-  longitude: number;
-  category: ReportCategory;
-  status: ReportStatus;
-};
+import type { MapReport } from './map-report';
+import { ReportDetailSheet } from './report-detail-sheet';
+import { ReportMarker } from './report-marker';
+
+export type { MapReport } from './map-report';
 
 export type Region = {
   latitude: number;
@@ -22,24 +19,18 @@ export type Region = {
   longitudeDelta: number;
 };
 
-const CATEGORY_COLORS: Record<ReportCategory, string> = {
-  pesca_ilegal: '#C0392B',
-  basura_marina: '#F59E0B',
-  variacion_mar: '#2563EB',
-};
-
-const STATUS_OPACITY: Record<ReportStatus, number> = {
-  pendiente: 0.55,
-  en_revision: 0.75,
-  verificado: 1,
-  descartado: 0.3,
-};
-
 const DEFAULT_REGION: Region = {
   latitude: -12.0464,
   longitude: -77.0428,
   latitudeDelta: 0.08,
   longitudeDelta: 0.08,
+};
+
+const FOCUS_REGION: Region = {
+  latitude: -12.0464,
+  longitude: -77.0428,
+  latitudeDelta: 0.02,
+  longitudeDelta: 0.02,
 };
 
 type RealTimeMapProps = {
@@ -50,6 +41,31 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
   const [permission, requestPermission] = Location.useForegroundPermissions();
   const [region, setRegion] = useState<Region | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<MapReport | null>(null);
+  const markerTapped = useRef(false);
+  const mapRef = useRef<MapView>(null);
+
+  const handleMapPress = () => {
+    if (markerTapped.current) return;
+    setSelected(null);
+  };
+
+  const handleMarkerPress = (report: MapReport) => {
+    markerTapped.current = true;
+    setSelected(report);
+    mapRef.current?.animateToRegion(
+      {
+        latitude: report.latitude,
+        longitude: report.longitude,
+        latitudeDelta: FOCUS_REGION.latitudeDelta,
+        longitudeDelta: FOCUS_REGION.longitudeDelta,
+      },
+      500,
+    );
+    setTimeout(() => {
+      markerTapped.current = false;
+    }, 0);
+  };
 
   useEffect(() => {
     if (!permission) return;
@@ -90,19 +106,21 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
     <View style={styles.container}>
       {region ? (
         <MapView
+          ref={mapRef}
           style={StyleSheet.absoluteFill}
           initialRegion={region}
           showsUserLocation={permission?.granted}
           showsMyLocationButton
           rotateEnabled={false}
           pitchEnabled={false}
-          showsCompass={false}>
+          showsCompass={false}
+          onPress={handleMapPress}>
           {reports.map((report) => (
-            <Marker
+            <ReportMarker
               key={report.id}
-              coordinate={{ latitude: report.latitude, longitude: report.longitude }}
-              pinColor={CATEGORY_COLORS[report.category] ?? BrandColors.primary}
-              opacity={STATUS_OPACITY[report.status] ?? 1}
+              report={report}
+              selected={selected?.id === report.id}
+              onPress={() => handleMarkerPress(report)}
             />
           ))}
         </MapView>
@@ -133,6 +151,8 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
           ) : null}
         </View>
       ) : null}
+
+      <ReportDetailSheet report={selected} onClose={() => setSelected(null)} />
     </View>
   );
 }

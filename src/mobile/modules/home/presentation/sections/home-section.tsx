@@ -7,12 +7,11 @@ import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/cons
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { subscribeReports } from '@/shared/firebase/reports';
 import { useAuth } from '@/shared/firebase/auth-context';
-import type { Report as FirestoreReport } from '@/shared/firebase/types';
 
 import { ActionCard } from '../components/action-card';
 import { ActivityCard, ActivityStat } from '../components/activity-card';
 import { MapPreview } from '../components/map-preview';
-import type { MapReport } from '../components/real-time-map';
+import { isMapReport, toMapReport, type MapReport } from '../components/map-report';
 import { TopBar } from '../components/top-bar';
 
 const activityStats: ActivityStat[] = [
@@ -88,23 +87,6 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onPendi
       </ScrollView>
     </>
   );
-}
-
-function toMapReport(report: FirestoreReport): MapReport | null {
-  const latitude = report.location?.latitude;
-  const longitude = report.location?.longitude;
-  if (latitude == null || longitude == null) return null;
-  return {
-    id: report.id,
-    latitude,
-    longitude,
-    category: report.category,
-    status: report.status,
-  };
-}
-
-function isMapReport(report: MapReport | null): report is MapReport {
-  return report != null;
 }
 
 const styles = StyleSheet.create({
