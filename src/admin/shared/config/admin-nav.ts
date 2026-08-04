@@ -1,4 +1,4 @@
-export type AdminRoute = '/admin' | '/admin/reports';
+export type AdminRoute = '/admin' | '/admin/reports' | '/admin/users';
 
 export type AdminNavItem = {
   key: string;
@@ -9,6 +9,6 @@ export type AdminNavItem = {
 export const ADMIN_NAV: AdminNavItem[] = [
   { key: 'dashboard', label: 'Dashboard', href: '/admin' },
   { key: 'reports', label: 'Reportes', href: '/admin/reports' },
-  { key: 'users', label: 'Usuarios' },
+  { key: 'users', label: 'Usuarios', href: '/admin/users' },
   { key: 'rewards', label: 'Recompensas' },
 ];

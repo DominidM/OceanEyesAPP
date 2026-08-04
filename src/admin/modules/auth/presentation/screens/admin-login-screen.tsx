@@ -3,27 +3,23 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
-import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { loginWithEmail } from '@/shared/firebase/auth';
 
 export function AdminLoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@oceaneyes.com');
+  const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async () => {
     setError('');
-    if (!isFirebaseConfigured()) {
-      setError('Firebase aún no está configurado.');
-      return;
-    }
     setBusy(true);
     try {
       await loginWithEmail(email.trim(), password);
       router.replace('/admin');
-    } catch {
-      setError('Credenciales inválidas o usuario sin permisos.');
+    } catch (e: any) {
+      const msg = e?.code || e?.message || String(e);
+      setError(msg);
     } finally {
       setBusy(false);
     }
@@ -74,8 +70,6 @@ export function AdminLoginScreen() {
           </Pressable>
           {!!error && <Text style={styles.error}>{error}</Text>}
         </View>
-
-        <Text style={styles.demoNote}>Modo demostración: no se validan credenciales todavía.</Text>
       </View>
 
       <Text style={styles.footer}>OceanEyes · Gestión de vigilancia marina</Text>
@@ -92,6 +86,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: BrandColors.primary,
     padding: Spacing.five,
+    cursor: 'auto',
   },
   brandBlock: {
     alignItems: 'center',
@@ -162,6 +157,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
+    userSelect: 'auto',
+    cursor: 'text',
   },
   submit: {
     alignItems: 'center',
@@ -169,20 +166,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     marginTop: Spacing.one,
     paddingVertical: Spacing.three,
+    cursor: 'pointer',
   },
   submitLabel: {
     color: BrandColors.tertiary,
     fontFamily: Fonts.label,
     fontSize: 15,
     fontWeight: '700',
-  },
-  demoNote: {
-    color: BrandColors.neutral,
-    fontFamily: Fonts.body,
-    fontSize: 12,
-    marginTop: Spacing.four,
-    opacity: 0.55,
-    textAlign: 'center',
   },
   error: {
     color: '#B42318',

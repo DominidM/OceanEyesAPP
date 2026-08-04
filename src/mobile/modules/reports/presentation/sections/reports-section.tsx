@@ -12,7 +12,12 @@ import { HistoryHeader } from '../components/history-header';
 import { SurfaceColors } from '../theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { getMyReports } from '@/shared/firebase/reports';
-import type { Report as FirestoreReport } from '@/shared/firebase/types';
+import type { Report as FirestoreReport, ReportStatus } from '@/shared/firebase/types';
+import { getCached, setCached } from '@/shared/offline/read-cache';
+import { getPendingReports, subscribeOutbox, type PendingReport } from '@/shared/offline/outbox';
+import { requestSync } from '@/shared/offline/sync-engine';
+
+const REPORTS_CACHE_KEY = '@oceaneyes/cache/reports-mine';
 
 const chips: ReportChip[] = [
   { label: 'Todos', active: true },
@@ -28,50 +33,35 @@ const stats: ReportStat[] = [
   { label: 'Puntos', value: '120', icon: { ios: 'star.fill', android: 'star', web: 'star' } },
 ];
 
-const demoReports: Report[] = [
-  {
-    title: 'Red ilegal',
-    time: 'Hace 2 horas',
-    location: 'Costa Verde, Lima',
-    date: '15 Ene, 10:30',
-    status: 'Verificado',
-    statusBg: SurfaceColors.successBg,
-    statusText: SurfaceColors.successText,
-    statusIcon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' },
-    thumbnail: 'net',
-  },
-  {
-    title: 'Barco sospechoso',
-    time: 'Ayer',
-    location: 'Bahia de Paracas',
-    date: '14 Ene, 16:45',
-    status: 'En revision',
-    statusBg: SurfaceColors.reviewBg,
-    statusText: SurfaceColors.reviewText,
-    statusIcon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' },
-    thumbnail: 'boat',
-  },
-  {
-    title: 'Especie protegida',
-    time: 'Sin enviar',
-    location: 'Pucusana',
-    date: '13 Ene, 08:15',
-    status: 'Pendiente de envio',
-    statusBg: SurfaceColors.pendingBg,
-    statusText: SurfaceColors.pendingText,
-    statusIcon: { ios: 'icloud.slash.fill', android: 'cloud-off', web: 'cloud-off' },
-    thumbnail: 'pending',
-  },
-];
-
 export function ReportsSection() {
   const insets = useSafeAreaInsets();
-  const [reports, setReports] = useState<Report[]>(demoReports);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [queued, setQueued] = useState<PendingReport[]>([]);
 
   useEffect(() => {
-    if (!isFirebaseConfigured()) return;
-    getMyReports().then((items) => setReports(items.map(toCardReport))).catch(() => undefined);
+    (async () => {
+      const cached = await getCached<Report[]>(REPORTS_CACHE_KEY);
+      if (cached?.length) setReports(cached);
+      if (!isFirebaseConfigured()) return;
+      try {
+        const items = await getMyReports();
+        const cards = items.map(toCardReport);
+        setReports(cards);
+        await setCached(REPORTS_CACHE_KEY, cards);
+      } catch {
+        // keep cached data
+      }
+    })();
   }, []);
+
+  useEffect(() => {
+    const loadQueued = () => {
+      getPendingReports().then(setQueued).catch(() => undefined);
+    };
+    loadQueued();
+    return subscribeOutbox(loadQueued);
+  }, []);
+
   return (
     <>
       <ReportsHeader chips={chips} />
@@ -80,11 +70,14 @@ export function ReportsSection() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
         <StatsStrip stats={stats} />
-        <SyncWarning />
+        <SyncWarning onSync={() => void requestSync('manual')} />
         <HistoryHeader />
         <View style={styles.reportList}>
+          {queued.map((pending) => (
+            <ReportCard key={pending.id} report={toQueuedCard(pending)} />
+          ))}
           {reports.map((report) => (
-            <ReportCard key={report.title} report={report} />
+            <ReportCard key={`${report.title}-${report.date}`} report={report} />
           ))}
         </View>
       </ScrollView>
@@ -92,15 +85,35 @@ export function ReportsSection() {
   );
 }
 
+function toQueuedCard(pending: PendingReport): Report {
+  return {
+    title: pending.input.title,
+    time: 'Sin enviar',
+    location: pending.input.location?.address ?? 'Pendiente de envío',
+    date: new Date(pending.createdAt).toLocaleDateString(),
+    status: 'Pendiente de envío',
+    statusBg: SurfaceColors.pendingBg,
+    statusText: SurfaceColors.pendingText,
+    statusIcon: { ios: 'icloud.slash.fill', android: 'cloud-off', web: 'cloud-off' },
+    thumbnail:
+      pending.input.category === 'pesca_ilegal'
+        ? 'net'
+        : pending.input.category === 'basura_marina'
+          ? 'boat'
+          : 'pending',
+  };
+}
+
 function toCardReport(report: FirestoreReport): Report {
   const date = report.createdAt?.toDate?.() ?? new Date();
-  const status = {
-    pending: { label: 'Pendiente', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
-    in_review: { label: 'En revisión', bg: SurfaceColors.reviewBg, text: SurfaceColors.reviewText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
-    verified: { label: 'Verificado', bg: SurfaceColors.successBg, text: SurfaceColors.successText, icon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' } },
-    rejected: { label: 'Rechazado', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'xmark.seal.fill', android: 'cancel', web: 'cancel' } },
-  }[report.status];
-  const statusIcon = status.icon as Report['statusIcon'];
+  const statusMap: Record<ReportStatus, { label: string; bg: string; text: string; icon: Report['statusIcon'] }> = {
+    pendiente: { label: 'Pendiente', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
+    en_revision: { label: 'En revisión', bg: SurfaceColors.reviewBg, text: SurfaceColors.reviewText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
+    verificado: { label: 'Verificado', bg: SurfaceColors.successBg, text: SurfaceColors.successText, icon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' } },
+    descartado: { label: 'Descartado', bg: 'rgba(254, 226, 226, 1.0)', text: '#991B1B', icon: { ios: 'xmark.seal.fill', android: 'cancel', web: 'cancel' } },
+  };
+  const status = statusMap[report.status] ?? statusMap.pendiente;
+  const statusIcon = status.icon;
 
   return {
     title: report.title,
@@ -111,7 +124,7 @@ function toCardReport(report: FirestoreReport): Report {
     statusBg: status.bg,
     statusText: status.text,
     statusIcon,
-    thumbnail: report.category === 'illegal_fishing' ? 'net' : report.category === 'suspicious_activity' ? 'boat' : 'pending',
+    thumbnail: report.category === 'pesca_ilegal' ? 'net' : report.category === 'basura_marina' ? 'boat' : 'pending',
   };
 }
 

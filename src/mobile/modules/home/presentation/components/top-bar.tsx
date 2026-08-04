@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
+import { useConnectivity } from '@/shared/offline/connectivity-context';
+import { useSync } from '@/shared/offline/sync-context';
 
 export function TopBar() {
   const insets = useSafeAreaInsets();
@@ -38,18 +40,25 @@ export function TopBar() {
 }
 
 function StatusPill() {
+  const { online } = useConnectivity();
   return (
     <View style={styles.statusRow}>
-      <View style={styles.onlineDot} />
-      <Text style={styles.onlineText}>Online</Text>
+      <View style={[styles.onlineDot, !online && styles.offlineDot]} />
+      <Text style={[styles.onlineText, !online && styles.offlineText]}>
+        {online ? 'Online' : 'Offline'}
+      </Text>
     </View>
   );
 }
 
 function PendingBadge() {
+  const { pendingCount } = useSync();
+  if (pendingCount === 0) return null;
   return (
     <View style={styles.pendingBadge}>
-      <Text style={styles.pendingText}>2 reportes pendientes</Text>
+      <Text style={styles.pendingText}>
+        {pendingCount} reporte{pendingCount === 1 ? '' : 's'} pendiente{pendingCount === 1 ? '' : 's'}
+      </Text>
     </View>
   );
 }
@@ -103,6 +112,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#2E7D32',
   },
+  offlineDot: {
+    backgroundColor: '#B42318',
+  },
   onlineText: {
     color: '#2E7D32',
     fontFamily: Fonts.label,
@@ -112,6 +124,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     includeFontPadding: false,
+  },
+  offlineText: {
+    color: '#B42318',
   },
   pendingBadge: {
     height: 38,

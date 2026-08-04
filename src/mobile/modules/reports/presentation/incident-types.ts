@@ -1,44 +1,34 @@
 import type { SymbolName } from '@/shared/components/app-symbol';
+import type { ReportCategory } from '@/shared/firebase/types';
 
 export type IncidentType = {
-  id: string;
+  id: ReportCategory;
   label: string;
   icon: SymbolName;
+  points: number;
 };
 
 export const INCIDENT_TYPES: IncidentType[] = [
   {
-    id: 'spill',
-    label: 'Derrame de hidrocarburos',
-    icon: { ios: 'drop.fill', android: 'water-drop', web: 'water-drop' },
-  },
-  {
-    id: 'pollution',
-    label: 'Contaminación marina',
-    icon: { ios: 'trash.fill', android: 'delete', web: 'delete' },
-  },
-  {
-    id: 'fishing',
+    id: 'pesca_ilegal',
     label: 'Pesca ilegal',
+    points: 100,
     icon: { ios: 'fish.fill', android: 'phishing', web: 'phishing' },
   },
   {
-    id: 'vessel',
-    label: 'Embarcación siniestrada',
-    icon: { ios: 'sailboat.fill', android: 'sailing', web: 'sailing' },
+    id: 'basura_marina',
+    label: 'Basura en el mar u orillas',
+    points: 50,
+    icon: { ios: 'trash.fill', android: 'delete', web: 'delete' },
   },
   {
-    id: 'wildlife',
-    label: 'Fauna en peligro',
-    icon: { ios: 'pawprint.fill', android: 'pets', web: 'pets' },
-  },
-  {
-    id: 'debris',
-    label: 'Desechos marinos',
-    icon: { ios: 'arrow.3.trianglepath', android: 'recycling', web: 'recycling' },
+    id: 'variacion_mar',
+    label: 'Variación del mar',
+    points: 30,
+    icon: { ios: 'water.waves', android: 'waves', web: 'waves' },
   },
 ];
 
-export function getIncidentType(id: string): IncidentType | undefined {
+export function getIncidentType(id: ReportCategory): IncidentType | undefined {
   return INCIDENT_TYPES.find((incident) => incident.id === id);
 }

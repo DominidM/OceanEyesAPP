@@ -9,10 +9,19 @@ body,
 html,
 body {
   overflow-x: hidden;
+}
+
+[data-mobile-app] {
   cursor: none;
 }
 
-a, button, [role="button"], input, select, textarea, label {
+[data-mobile-app] a,
+[data-mobile-app] button,
+[data-mobile-app] [role="button"],
+[data-mobile-app] input,
+[data-mobile-app] select,
+[data-mobile-app] textarea,
+[data-mobile-app] label {
   cursor: none;
 }
 

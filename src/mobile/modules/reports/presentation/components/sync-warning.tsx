@@ -3,29 +3,49 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
+import { useSync } from '@/shared/offline/sync-context';
 
 import { SurfaceColors } from '../theme';
 import { shadow } from '@/shared/utils/shadows';
 
 export function SyncWarning({ onSync }: { onSync?: () => void }) {
+  const { pendingCount, syncing, lastError } = useSync();
+
+  if (pendingCount === 0 && !syncing) return null;
+
+  const countLabel = `${pendingCount} reporte${pendingCount === 1 ? '' : 's'}`;
+
   return (
     <View style={styles.syncPanel}>
       <View style={styles.syncInfo}>
         <View style={styles.syncIconWrap}>
           <AppSymbol
-            name={{ ios: 'wifi.exclamationmark', android: 'wifi-off', web: 'wifi-off' }}
+            name={{
+              ios: syncing ? 'arrow.triangle.2.circlepath' : 'wifi.exclamationmark',
+              android: syncing ? 'sync' : 'wifi-off',
+              web: syncing ? 'sync' : 'wifi-off',
+            }}
             color={BrandColors.primary}
             size={24}
           />
         </View>
         <View style={styles.syncCopy}>
-          <Text style={styles.syncTitle}>Reportes sin sincronizar</Text>
-          <Text style={styles.syncDescription}>2 reportes esperan conexion</Text>
+          <Text style={styles.syncTitle}>
+            {syncing ? 'Sincronizando reportes...' : `${countLabel} sin sincronizar`}
+          </Text>
+          <Text style={styles.syncDescription}>
+            {lastError ??
+              (pendingCount > 0
+                ? `${pendingCount === 1 ? 'Espera' : 'Esperan'} conexión para enviarse`
+                : '')}
+          </Text>
         </View>
       </View>
 
       <Pressable
         accessibilityRole="button"
+        accessibilityState={{ disabled: syncing }}
+        disabled={syncing}
         onPress={onSync}
         style={({ pressed }) => [styles.syncButton, pressed && styles.pressed]}>
         <AppSymbol
@@ -33,7 +53,7 @@ export function SyncWarning({ onSync }: { onSync?: () => void }) {
           color="#FFFFFF"
           size={13}
         />
-        <Text style={styles.syncButtonText}>Sincronizar ahora</Text>
+        <Text style={styles.syncButtonText}>{syncing ? 'Sincronizando...' : 'Sincronizar ahora'}</Text>
       </Pressable>
     </View>
   );

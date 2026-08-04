@@ -14,8 +14,9 @@ import type { CaptureMedia } from '../sections/media-preview';
 import { ReportTopBar } from '../sections/report-top-bar';
 import { SummaryStep } from '../sections/summary-step';
 import { ReportFlowColors as C, SummaryColors as SC } from '../theme';
-import { createReport } from '@/shared/firebase/reports';
-import type { ReportCategory } from '@/shared/firebase/types';
+import { saveReportOfflineFirst } from '@/shared/firebase/reports';
+import { getPendingReports } from '@/shared/offline/outbox';
+import { requestSync } from '@/shared/offline/sync-engine';
 
 const TOTAL_STEPS = 5;
 const STEP_PROGRESS = 20;
@@ -34,6 +35,7 @@ export function ReportCreateScreen() {
   const [createdAt] = useState(() => new Date());
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
+  const [queued, setQueued] = useState(false);
 
   const handleDniChange = (value: string) => {
     setDni(value.replace(/\D/g, ''));
@@ -69,28 +71,24 @@ export function ReportCreateScreen() {
     setSendError('');
     setSending(true);
     try {
-      const categoryByIncident: Record<string, ReportCategory> = {
-        fishing: 'illegal_fishing',
-        spill: 'pollution',
-        pollution: 'pollution',
-        wildlife: 'protected_species',
-        vessel: 'suspicious_activity',
-        debris: 'pollution',
-      };
-      await createReport({
-        category: categoryByIncident[incident.id] ?? 'other',
-        title: incident.label,
-        isAnonymous: anonymous,
-        visibility: anonymous ? 'restricted' : 'public',
-        location:
-          location?.latitude != null && location.longitude != null
-            ? { latitude: location.latitude, longitude: location.longitude, address: location.placeName ?? undefined }
-            : undefined,
-        evidence: media ? [{ uri: media.uri, type: media.type === 'photo' ? 'image' : 'video' }] : undefined,
-      });
+      const id = await saveReportOfflineFirst(
+        {
+          category: incident.id,
+          title: incident.label,
+          isAnonymous: anonymous,
+          location:
+            location?.latitude != null && location.longitude != null
+              ? { latitude: location.latitude, longitude: location.longitude, address: location.placeName ?? undefined }
+              : undefined,
+        },
+        media ? [{ uri: media.uri, kind: media.type }] : [],
+      );
+      await requestSync('new_report');
+      const stillPending = (await getPendingReports()).some((pending) => pending.id === id);
+      setQueued(stillPending);
       setSubmitted(true);
     } catch {
-      setSendError('No se pudo enviar el reporte. Revisa tu conexión e inténtalo nuevamente.');
+      setSendError('No se pudo guardar el reporte. Revisa tu conexión e inténtalo nuevamente.');
     } finally {
       setSending(false);
     }
@@ -101,14 +99,22 @@ export function ReportCreateScreen() {
       <View style={styles.successScreen}>
         <View style={styles.successCircle}>
           <AppSymbol
-            name={{ ios: 'checkmark', android: 'check', web: 'check' }}
+            name={
+              queued
+                ? { ios: 'cloud.fill', android: 'cloud', web: 'cloud' }
+                : { ios: 'checkmark', android: 'check', web: 'check' }
+            }
             color={SC.accent}
             size={40}
           />
         </View>
-        <Text style={styles.successTitle}>Reporte enviado</Text>
+        <Text style={styles.successTitle}>
+          {queued ? 'Reporte guardado' : 'Reporte enviado'}
+        </Text>
         <Text style={styles.successBody}>
-          Gracias por colaborar con la vigilancia marítima. Tu reporte será revisado.
+          {queued
+            ? 'Sin conexión. Tu reporte se guardó en el dispositivo y se enviará automáticamente cuando tengas internet.'
+            : 'Gracias por colaborar con la vigilancia marítima. Tu reporte será revisado.'}
         </Text>
         <Pressable
           accessibilityRole="button"

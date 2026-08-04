@@ -1,10 +1,11 @@
 import { router, usePathname } from 'expo-router';
 import React, { PropsWithChildren } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
-
+import { AppFonts as Fonts, Spacing } from '@/constants/theme';
+import { useAdminTheme } from '@admin/shared/theme/context';
 import { AdminNavItem, ADMIN_NAV } from '@admin/shared/config/admin-nav';
+import { logout } from '@/shared/firebase/auth';
 
 type AdminShellProps = PropsWithChildren<{
   title: string;
@@ -12,46 +13,91 @@ type AdminShellProps = PropsWithChildren<{
 
 export function AdminShell({ children, title }: AdminShellProps) {
   const pathname = usePathname();
+  const { colors, mode, toggle } = useAdminTheme();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/admin/login');
+  };
 
   return (
-    <View style={styles.shell}>
-      <View style={styles.sidebar}>
+    <View style={[styles.shell, { backgroundColor: colors.appBg }]}>
+      <View style={[styles.sidebar, { backgroundColor: colors.sidebarBg }]}>
         <View style={styles.brandBlock}>
-          <Text style={styles.brand}>OceanEyes</Text>
-          <Text style={styles.brandSub}>Panel de administración</Text>
+          <Text style={[styles.brand, { color: colors.sidebarText }]}>OceanEyes</Text>
+          <Text style={[styles.brandSub, { color: colors.sidebarTextMuted }]}>Panel de administración</Text>
         </View>
         <View style={styles.nav}>
           {ADMIN_NAV.map((item) => (
-            <NavItem key={item.key} item={item} active={!!item.href && pathname === item.href} />
+            <NavItem
+              key={item.key}
+              item={item}
+              active={!!item.href && pathname === item.href}
+              colors={colors}
+            />
           ))}
         </View>
       </View>
-      <View style={styles.main}>
-        <View style={styles.topbar}>
-          <Text style={styles.topbarTitle}>{title}</Text>
+      <View style={[styles.main, { backgroundColor: colors.contentBg }]}>
+        <View style={[styles.topbar, { borderBottomColor: colors.topbarBorder }]}>
+          <Text style={[styles.topbarTitle, { color: colors.contentText }]}>{title}</Text>
+          <View style={styles.topbarActions}>
+            <Pressable onPress={() => router.push('/admin')} style={[styles.topBtn, { borderColor: colors.cardBorder }]}>
+              <Text style={[styles.topBtnLabel, { color: colors.contentText }]}>← Inicio</Text>
+            </Pressable>
+            <Pressable onPress={toggle} style={[styles.topBtn, { borderColor: colors.cardBorder }]}>
+              <Text style={[styles.topBtnLabel, { color: colors.contentText }]}>
+                {mode === 'light' ? '🌙' : '☀️'}
+              </Text>
+            </Pressable>
+            <Pressable onPress={handleLogout} style={[styles.topBtn, { borderColor: colors.dangerBg }]}>
+              <Text style={[styles.topBtnLabel, { color: colors.danger }]}>Salir</Text>
+            </Pressable>
+          </View>
         </View>
-        <View style={styles.content}>{children}</View>
+        <View style={[styles.breadcrumb, { borderBottomColor: colors.topbarBorder }]}>
+          <Text style={[styles.breadcrumbText, { color: colors.contentTextMuted }]}>
+            Panel / {title}
+          </Text>
+        </View>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={{ gap: Spacing.four, paddingBottom: Spacing.five }}
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </ScrollView>
       </View>
     </View>
   );
 }
 
-function NavItem({ item, active }: { item: AdminNavItem; active: boolean }) {
+function NavItem({
+  item,
+  active,
+  colors,
+}: {
+  item: AdminNavItem;
+  active: boolean;
+  colors: ReturnType<typeof useAdminTheme>['colors'];
+}) {
   if (!item.href) {
     return (
       <View style={styles.navItem}>
-        <Text style={styles.navLabel}>{item.label}</Text>
-        <Text style={styles.navSoon}>Pronto</Text>
+        <Text style={[styles.navLabel, { color: colors.sidebarText, opacity: 0.5 }]}>{item.label}</Text>
+        <Text style={[styles.navSoon, { color: colors.sidebarTextMuted }]}>Pronto</Text>
       </View>
     );
   }
 
   return (
     <Pressable
-      style={[styles.navItem, active && styles.navItemActive]}
+      style={[styles.navItem, active && { backgroundColor: colors.sidebarActiveBg }]}
       onPress={() => router.push(item.href!)}
     >
-      <Text style={[styles.navLabel, active && styles.navLabelActive]}>{item.label}</Text>
+      <Text style={[styles.navLabel, { color: colors.sidebarText, opacity: active ? 1 : 0.82 }]}>
+        {item.label}
+      </Text>
     </Pressable>
   );
 }
@@ -60,13 +106,11 @@ const styles = StyleSheet.create({
   shell: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: BrandColors.tertiary,
+    cursor: 'auto',
   },
   sidebar: {
     width: 240,
-    backgroundColor: BrandColors.primary,
     paddingTop: Spacing.five,
-    paddingBottom: Spacing.five,
   },
   brandBlock: {
     gap: Spacing.one,
@@ -74,14 +118,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.five,
   },
   brand: {
-    color: BrandColors.tertiary,
     fontFamily: Fonts.headline,
     fontSize: 20,
     fontWeight: '700',
     letterSpacing: -0.4,
   },
   brandSub: {
-    color: BrandColors.secondary,
     fontFamily: Fonts.body,
     fontSize: 13,
   },
@@ -94,22 +136,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three - 4,
-  },
-  navItemActive: {
-    backgroundColor: 'rgba(239, 235, 227, 0.14)',
+    cursor: 'pointer',
   },
   navLabel: {
-    color: BrandColors.tertiary,
     fontFamily: Fonts.body,
     fontSize: 15,
     fontWeight: '600',
-    opacity: 0.82,
-  },
-  navLabelActive: {
-    opacity: 1,
   },
   navSoon: {
-    color: BrandColors.secondary,
     fontFamily: Fonts.label,
     fontSize: 11,
     fontWeight: '700',
@@ -121,21 +155,47 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(19, 78, 94, 0.12)',
     paddingHorizontal: Spacing.five,
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.two,
   },
   topbarTitle: {
-    color: BrandColors.neutral,
     fontFamily: Fonts.headline,
     fontSize: 20,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
+  topbarActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  topBtn: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    cursor: 'pointer',
+  },
+  topBtnLabel: {
+    fontFamily: Fonts.label,
+    fontSize: 13,
+    fontWeight: '600',
+  },
   content: {
     flex: 1,
     gap: Spacing.four,
     padding: Spacing.five,
+  },
+  breadcrumb: {
+    borderBottomWidth: 1,
+    paddingHorizontal: Spacing.five,
+    paddingVertical: Spacing.two,
+  },
+  breadcrumbText: {
+    fontFamily: Fonts.body,
+    fontSize: 13,
   },
 });
