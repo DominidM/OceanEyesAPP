@@ -8,6 +8,7 @@ import { HomeSection } from '../sections/home-section';
 import { ReportsSection } from '@/modules/reports/presentation/sections/reports-section';
 import { RewardsSection } from '@/modules/rewards/presentation/sections/rewards-section';
 import { ProfileSection } from '@/modules/profile/presentation/sections/profile-section';
+import { TabTransition } from '../components/tab-transition';
 
 export function HomeScreen() {
   const router = useRouter();
@@ -21,17 +22,19 @@ export function HomeScreen() {
 
   return (
     <PhoneFrame section={section} onSectionChange={setSection} onFabPress={openReportFlow}>
-      {section === 'inicio' && (
-        <HomeSection
-          onReportPress={openReportFlow}
-          onExpandMap={openRealTimeMap}
-          onAlertsPress={openAlerts}
-          onPendingPress={() => setSection('reportes')}
-        />
-      )}
-      {section === 'reportes' && <ReportsSection />}
-      {section === 'recompensas' && <RewardsSection />}
-      {section === 'perfil' && <ProfileSection />}
+      <TabTransition section={section}>
+        {section === 'inicio' && (
+          <HomeSection
+            onReportPress={openReportFlow}
+            onExpandMap={openRealTimeMap}
+            onAlertsPress={openAlerts}
+            onPendingPress={() => setSection('reportes')}
+          />
+        )}
+        {section === 'reportes' && <ReportsSection />}
+        {section === 'recompensas' && <RewardsSection />}
+        {section === 'perfil' && <ProfileSection />}
+      </TabTransition>
     </PhoneFrame>
   );
 }
