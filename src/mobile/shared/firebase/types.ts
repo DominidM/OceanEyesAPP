@@ -9,6 +9,7 @@ export type UserProfile = {
   profileType: ProfileType;
   displayName?: string;
   email: string;
+  dni?: string;
   phone?: string;
   walletAddress?: string;
   pointsBalance: number;

@@ -59,6 +59,7 @@ export function requestSync(_reason?: string): Promise<void> {
     if (currentRun) {
       await currentRun;
     }
+    await refreshPendingCount();
     if (state.pendingCount === 0 || !getOnline()) return;
     if (currentRun) return;
     currentRun = runSync().finally(() => {
@@ -78,7 +79,7 @@ function scheduleRetry(): void {
   }, delay);
 }
 
-function isNetworkError(error: unknown): boolean {
+export function isNetworkError(error: unknown): boolean {
   const code = (error as { code?: string })?.code;
   const message = (error as { message?: string })?.message ?? '';
   return (

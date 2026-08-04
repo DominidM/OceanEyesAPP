@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   },
   chipContent: {
     paddingHorizontal: 12,
-    paddingTop: 12,
+    paddingTop: 2,
     gap: 12,
   },
   chip: {

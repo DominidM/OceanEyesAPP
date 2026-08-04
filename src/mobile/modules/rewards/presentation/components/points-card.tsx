@@ -8,37 +8,53 @@ import { RewardsColors } from '../theme';
 import { shadow } from '@/shared/utils/shadows';
 const arrowIcon: SymbolName = { ios: 'arrow.right', android: 'arrow-forward', web: 'arrow-forward' };
 
-export function PointsCard() {
+export function PointsCard({ guest = false, onLogin }: PointsCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
         <View style={styles.balanceCol}>
-          <Text style={styles.balanceLabel}>Saldo de puntos</Text>
-          <Text style={styles.balanceValue}>{POINTS_BALANCE}</Text>
+          <Text style={styles.balanceLabel}>{guest ? 'Inicia sesión' : 'Saldo de puntos'}</Text>
+          <Text style={styles.balanceValue}>{guest ? '—' : POINTS_BALANCE}</Text>
         </View>
 
         <View style={styles.levelPill}>
           <View style={styles.levelDot} />
-          <Text style={styles.levelText}>{LEVEL_BADGE}</Text>
+          <Text style={styles.levelText}>{guest ? 'Invitado' : LEVEL_BADGE}</Text>
         </View>
       </View>
 
-      <View style={styles.statsRow}>
-        <Text style={styles.statText}>{PROGRESS.label}</Text>
-        <Text style={styles.statText}>{PROGRESS.value}</Text>
-      </View>
+      {!guest && (
+        <>
+          <View style={styles.statsRow}>
+            <Text style={styles.statText}>{PROGRESS.label}</Text>
+            <Text style={styles.statText}>{PROGRESS.value}</Text>
+          </View>
 
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${PROGRESS.fill * 100}%` }]} />
-      </View>
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${PROGRESS.fill * 100}%` }]} />
+          </View>
+        </>
+      )}
 
-      <Pressable accessibilityRole="button" style={styles.button}>
-        <Text style={styles.buttonText}>Canjear puntos</Text>
-        <AppSymbol name={arrowIcon} color={RewardsColors.accent} size={14} />
+      <Pressable
+        accessibilityRole="button"
+        onPress={guest ? onLogin : undefined}
+        style={styles.button}>
+        <Text style={styles.buttonText}>{guest ? 'Inicia sesión para canjear' : 'Canjear puntos'}</Text>
+        <AppSymbol
+          name={guest ? { ios: 'lock.fill', android: 'lock', web: 'lock' } : arrowIcon}
+          color={RewardsColors.accent}
+          size={14}
+        />
       </Pressable>
     </View>
   );
 }
+
+type PointsCardProps = {
+  guest?: boolean;
+  onLogin?: () => void;
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -67,7 +83,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: RewardsColors.text,
     fontFamily: Fonts.headline,
-    fontSize: 36,
+    fontSize: 35,
     fontWeight: '800',
     lineHeight: 40,
     letterSpacing: -1.8,

@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { AppFonts, Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { LANDING_NAV_LINKS, type LandingNavPressKey } from '@landing/config/landing-nav';
 
 const logoImg = require('../../../../assets/images/logo-ocean-eyes-grande.png');
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   link: {
     color: 'rgba(255,255,255,0.85)',
-    fontFamily: Fonts.body,
+    fontFamily: AppFonts.body,
     fontSize: 15,
     fontWeight: '500',
     opacity: 1,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   adminLabel: {
     color: 'rgba(255,255,255,0.85)',
-    fontFamily: Fonts.label,
+    fontFamily: AppFonts.label,
     fontSize: 13,
     fontWeight: '700',
     transitionProperty: 'color',
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   ctaLabel: {
     color: BrandColors.primary,
-    fontFamily: Fonts.label,
+    fontFamily: AppFonts.label,
     fontSize: 14,
     fontWeight: '700',
     transitionProperty: 'color',

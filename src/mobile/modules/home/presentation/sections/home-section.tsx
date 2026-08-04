@@ -6,6 +6,7 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { subscribeReports } from '@/shared/firebase/reports';
+import { useAuth } from '@/shared/firebase/auth-context';
 import type { Report as FirestoreReport } from '@/shared/firebase/types';
 
 import { ActionCard } from '../components/action-card';
@@ -23,10 +24,13 @@ const activityStats: ActivityStat[] = [
 type HomeSectionProps = {
   onReportPress?: () => void;
   onExpandMap?: () => void;
+  onAlertsPress?: () => void;
+  onPendingPress?: () => void;
 };
 
-export function HomeSection({ onReportPress, onExpandMap }: HomeSectionProps) {
+export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onPendingPress }: HomeSectionProps) {
   const insets = useSafeAreaInsets();
+  const { profile } = useAuth();
   const [reports, setReports] = useState<MapReport[]>([]);
 
   useEffect(() => {
@@ -36,14 +40,16 @@ export function HomeSection({ onReportPress, onExpandMap }: HomeSectionProps) {
 
   return (
     <>
-      <TopBar />
+      <TopBar onPendingPress={onPendingPress} />
 
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
         <View style={styles.headlineRow}>
-          <Text style={styles.headline}>Hola, Pescador</Text>
+          <Text style={styles.headline}>
+            {profile?.displayName ? `Hola, ${profile.displayName}` : 'Hola, Guardián del Mar'}
+          </Text>
           <AppSymbol
             name={{ ios: 'sailboat.fill', android: 'directions-boat', web: 'directions-boat' }}
             color={BrandColors.primary}
@@ -53,7 +59,7 @@ export function HomeSection({ onReportPress, onExpandMap }: HomeSectionProps) {
 
         <View style={styles.actionsStack}>
           <ActionCard
-            title="REPORTAR PESCA ILEGAL"
+            title="REPORTAR UN INCIDENTE"
             subtitle="Captura foto y envia"
             color={BrandColors.primary}
             onPress={onReportPress}
@@ -62,16 +68,17 @@ export function HomeSection({ onReportPress, onExpandMap }: HomeSectionProps) {
           />
 
           <ActionCard
-            title="MEDIR CALIDAD DEL AGUA"
-            subtitle="Conectar sensor Bluetooth"
+            title="VER ALERTAS EN MI ZONA"
+            subtitle="Reportes verificados cerca de ti"
             color={BrandColors.secondary}
             height={147}
+            onPress={onAlertsPress}
             helperIcon={{
-              ios: 'dot.radiowaves.left.and.right',
-              android: 'bluetooth-connected',
-              web: 'bluetooth-connected',
+              ios: 'location.fill',
+              android: 'my-location',
+              web: 'my-location',
             }}
-            icon={{ ios: 'drop.fill', android: 'water-drop', web: 'water-drop' }}
+            icon={{ ios: 'bell.fill', android: 'notifications', web: 'notifications' }}
           />
         </View>
 

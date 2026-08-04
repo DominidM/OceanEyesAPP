@@ -17,9 +17,18 @@ export function HomeScreen() {
 
   const openRealTimeMap = () => router.push('/mobile/map');
 
+  const openAlerts = () => router.push('/mobile/alerts');
+
   return (
     <PhoneFrame section={section} onSectionChange={setSection} onFabPress={openReportFlow}>
-      {section === 'inicio' && <HomeSection onReportPress={openReportFlow} onExpandMap={openRealTimeMap} />}
+      {section === 'inicio' && (
+        <HomeSection
+          onReportPress={openReportFlow}
+          onExpandMap={openRealTimeMap}
+          onAlertsPress={openAlerts}
+          onPendingPress={() => setSection('reportes')}
+        />
+      )}
       {section === 'reportes' && <ReportsSection />}
       {section === 'recompensas' && <RewardsSection />}
       {section === 'perfil' && <ProfileSection />}

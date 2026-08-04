@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  signInAnonymously,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -25,6 +26,7 @@ export async function registerUser(input: {
   password: string;
   displayName: string;
   profileType: ProfileType;
+  dni?: string;
 }) {
   const credential = await createUserWithEmailAndPassword(requireAuth(), input.email, input.password);
   await updateProfile(credential.user, { displayName: input.displayName });
@@ -34,6 +36,7 @@ export async function registerUser(input: {
     profileType: input.profileType,
     displayName: input.displayName,
     email: input.email,
+    dni: input.dni ?? null,
     pointsBalance: 0,
     totalPointsEarned: 0,
     verifiedReportsCount: 0,
@@ -50,6 +53,10 @@ export async function loginWithEmail(email: string, password: string) {
   return credential.user;
 }
 
+export async function signInAsGuest() {
+  await signInAnonymously(requireAuth());
+}
+
 export async function logout() {
   await signOut(requireAuth());
 }
@@ -59,7 +66,7 @@ export async function getUserProfile(uid: string) {
   return snapshot.exists() ? (snapshot.data() as UserProfile) : null;
 }
 
-export async function updateUserProfile(uid: string, changes: Partial<Pick<UserProfile, 'displayName' | 'phone' | 'profileType'>>) {
+export async function updateUserProfile(uid: string, changes: Partial<Pick<UserProfile, 'displayName' | 'dni' | 'phone' | 'profileType'>>) {
   await updateDoc(doc(firestore, 'users', uid), {
     ...changes,
     updatedAt: serverTimestamp(),

@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heading: {
-    color: RewardsColors.text,
+    color: RewardsColors.textBottom,
     fontFamily: Fonts.label,
     fontSize: 18,
     fontWeight: '700',

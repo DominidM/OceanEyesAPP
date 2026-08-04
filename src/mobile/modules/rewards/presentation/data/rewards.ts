@@ -11,18 +11,11 @@ export type Reward = {
 
 export const REWARDS: Reward[] = [
   {
-    id: 'report',
-    title: 'Reportar pesca ilegal',
+    id: 'report-zone',
+    title: 'Reportar en tu zona',
     subtitle: 'Completa 5 reportes verificados',
     points: '350',
     icon: { ios: 'exclamationmark.triangle.fill', android: 'report', web: 'report' },
-  },
-  {
-    id: 'water',
-    title: 'Medir calidad del agua',
-    subtitle: 'Conecta el sensor 10 veces',
-    points: '120',
-    icon: { ios: 'drop.fill', android: 'water-drop', web: 'water-drop' },
   },
   {
     id: 'safety',
@@ -35,7 +28,7 @@ export const REWARDS: Reward[] = [
 ];
 
 export const POINTS_BALANCE = '1,240';
-export const LEVEL_BADGE = 'Nivel 3 Pescador';
+export const LEVEL_BADGE = 'Nivel 3 Guardián del Mar';
 
 export const PROGRESS = {
   label: 'Recompensas canjeadas',
@@ -60,4 +53,4 @@ export const RECENT_CLAIMS: Reward[] = [
   },
 ];
 
-export const RECENT_TEXT = 'Unieron 8 pescadores esta semana';
+export const RECENT_TEXT = 'Unieron 8 guardianes del mar esta semana';

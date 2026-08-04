@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   historyTitle: {
     color: BrandColors.neutral,
     fontFamily: Fonts.headline,
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '700',
     lineHeight: 22,
     letterSpacing: -0.45,

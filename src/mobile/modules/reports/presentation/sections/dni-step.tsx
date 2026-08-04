@@ -12,6 +12,8 @@ import { ReportFlowColors as C } from '../theme';
 type DniStepProps = {
   dni: string;
   onDniChange: (value: string) => void;
+  hasDni?: boolean;
+  guest?: boolean;
   consent: boolean;
   onConsentToggle: () => void;
   anonymous: boolean;
@@ -21,13 +23,16 @@ type DniStepProps = {
   onCancel: () => void;
 };
 
-const BODY_TEXT = 'Puedes reportar como ciudadano o pescador. Tu identidad no se publicará en la incidencia.';
+const BODY_TEXT = 'Puedes reportar como ciudadano, pescador o voluntario. Tu identidad no se publicará en la incidencia.';
 const CHECKBOX_LABEL = 'Acepto que mi ubicación se comparta con las autoridades para validar este reporte.';
 const SECURITY_NOTE = 'Tu identidad queda protegida y separada del contenido del reporte.';
+const GUEST_NOTE = 'Como invitado, tu reporte se envía de forma anónima.';
 
 export function DniStep({
   dni,
   onDniChange,
+  hasDni = false,
+  guest = false,
   consent,
   onConsentToggle,
   anonymous,
@@ -48,12 +53,19 @@ export function DniStep({
         </View>
       </View>
 
-      <Text style={styles.headline}>Reportar Pesca Ilegal</Text>
+      <Text style={styles.headline}>Reportar un incidente</Text>
       <Text style={styles.body}>{BODY_TEXT}</Text>
 
       <View style={styles.form}>
-        <ConsentCheckbox checked={anonymous} onToggle={onAnonymousToggle} label="Enviar como reporte anónimo" />
-        {!anonymous && <DniInput value={dni} onChangeText={onDniChange} />}
+        {guest ? (
+          <View style={styles.guestNote}>
+            <AppSymbol name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }} color={C.securityText} size={14} />
+            <Text style={styles.guestNoteText}>{GUEST_NOTE}</Text>
+          </View>
+        ) : (
+          <ConsentCheckbox checked={anonymous} onToggle={onAnonymousToggle} label="Enviar como reporte anónimo" />
+        )}
+        {!anonymous && !hasDni && <DniInput value={dni} onChangeText={onDniChange} />}
         <ConsentCheckbox checked={consent} onToggle={onConsentToggle} label={CHECKBOX_LABEL} />
       </View>
 
@@ -124,6 +136,22 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 16,
+  },
+  guestNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    backgroundColor: 'rgba(19, 78, 94, 0.06)',
+    borderRadius: 10,
+  },
+  guestNoteText: {
+    flex: 1,
+    color: C.securityText,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+    includeFontPadding: false,
   },
   actions: {
     gap: 16,

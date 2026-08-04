@@ -1,13 +1,20 @@
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
+import { AppSymbol } from '@/shared/components/app-symbol';
 import { SectionHeader } from '@/shared/components/section-header';
+import { useAuth } from '@/shared/firebase/auth-context';
 import { shadow } from '@/shared/utils/shadows';
 
 export function ProfileSection() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const guest = !user || user.isAnonymous;
 
   return (
     <>
@@ -16,12 +23,28 @@ export function ProfileSection() {
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
-        <View style={styles.placeholderCard}>
-          <Text style={styles.placeholderTitle}>Proximamente</Text>
-          <Text style={styles.placeholderText}>
-            El perfil del pescador estara disponible en una proxima version.
-          </Text>
-        </View>
+        {guest ? (
+          <View style={styles.placeholderCard}>
+            <AppSymbol name={{ ios: 'person.crop.circle.badge.questionmark.fill', android: 'person', web: 'person' }} color={BrandColors.primary} size={34} />
+            <Text style={styles.placeholderTitle}>Inicia sesión</Text>
+            <Text style={styles.placeholderText}>
+              Para ver tu perfil, puntos y recompensas, inicia sesión con tu cuenta.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push('/mobile/login')}
+              style={({ pressed }) => [styles.loginButton, pressed && styles.pressed]}>
+              <Text style={styles.loginButtonLabel}>Iniciar sesión</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.placeholderCard}>
+            <Text style={styles.placeholderTitle}>Proximamente</Text>
+            <Text style={styles.placeholderText}>
+              Tu perfil estará disponible en una próxima versión.
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </>
   );
@@ -62,5 +85,20 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 21,
     includeFontPadding: false,
+  },
+  loginButton: {
+    alignItems: 'center',
+    marginTop: Spacing.one,
+    borderRadius: 999,
+    paddingVertical: Spacing.two,
+    backgroundColor: BrandColors.primary,
+  },
+  loginButtonLabel: {
+    color: BrandColors.tertiary,
+    fontFamily: Fonts.label,
+    fontWeight: '700',
+  },
+  pressed: {
+    opacity: 0.78,
   },
 });

@@ -4,13 +4,14 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { loginWithEmail, registerUser } from '@/shared/firebase/auth';
+import { loginWithEmail, registerUser, /* signInAsGuest */ } from '@/shared/firebase/auth';
 import type { ProfileType } from '@/shared/firebase/types';
 
 export default function MobileLoginScreen() {
   const [registering, setRegistering] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [profileType, setProfileType] = useState<ProfileType>('citizen');
+  const [dni, setDni] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,11 +27,15 @@ export default function MobileLoginScreen() {
       setError('Ingresa tu nombre o alias.');
       return;
     }
+    if (registering && dni && !/^\d{8}$/.test(dni)) {
+      setError('El DNI debe tener 8 dígitos.');
+      return;
+    }
 
     setBusy(true);
     try {
       if (registering) {
-        await registerUser({ email: email.trim(), password, displayName: displayName.trim(), profileType });
+        await registerUser({ email: email.trim(), password, displayName: displayName.trim(), profileType, dni: dni || undefined });
       } else {
         await loginWithEmail(email.trim(), password);
       }
@@ -40,6 +45,12 @@ export default function MobileLoginScreen() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const submitAsGuest = () => {
+    // Invitado sin Firebase: solo redirige al home.
+    // await signInAsGuest();
+    router.replace('/mobile');
   };
 
   return (
@@ -52,14 +63,15 @@ export default function MobileLoginScreen() {
           <>
             <TextInput value={displayName} onChangeText={setDisplayName} placeholder="Nombre o alias" style={styles.input} />
             <View style={styles.typeRow}>
-              {(['citizen', 'fisher', 'other'] as ProfileType[]).map((type) => (
+              {(['citizen', 'fisher'] as ProfileType[]).map((type) => (
                 <Pressable key={type} onPress={() => setProfileType(type)} style={[styles.typeButton, profileType === type && styles.typeButtonActive]}>
                   <Text style={[styles.typeLabel, profileType === type && styles.typeLabelActive]}>
-                    {type === 'citizen' ? 'Ciudadano' : type === 'fisher' ? 'Pescador' : 'Otro'}
+                    {type === 'citizen' ? 'Ciudadano' : 'Pescador'}
                   </Text>
                 </Pressable>
               ))}
             </View>
+            <TextInput value={dni} onChangeText={(value) => setDni(value.replace(/\D/g, '').slice(0, 8))} keyboardType="number-pad" maxLength={8} placeholder="DNI (opcional, 8 dígitos)" style={styles.input} />
           </>
         )}
         <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="Correo electrónico" style={styles.input} />
@@ -70,6 +82,9 @@ export default function MobileLoginScreen() {
         </Pressable>
         <Pressable onPress={() => setRegistering((value) => !value)}>
           <Text style={styles.switchLabel}>{registering ? 'Ya tengo una cuenta' : 'Crear una cuenta'}</Text>
+        </Pressable>
+        <Pressable disabled={busy} onPress={submitAsGuest} style={styles.guest}>
+          <Text style={styles.guestLabel}>Continuar como invitado</Text>
         </Pressable>
       </View>
     </View>
@@ -92,4 +107,6 @@ const styles = StyleSheet.create({
   submit: { alignItems: 'center', backgroundColor: BrandColors.primary, borderRadius: 999, paddingVertical: Spacing.three },
   submitLabel: { color: BrandColors.tertiary, fontFamily: Fonts.label, fontWeight: '700' },
   switchLabel: { color: BrandColors.primary, fontFamily: Fonts.body, textAlign: 'center' },
+  guest: { alignItems: 'center', borderWidth: 1, borderColor: 'rgba(19, 78, 94, 0.3)', borderRadius: 999, paddingVertical: Spacing.three },
+  guestLabel: { color: BrandColors.primary, fontFamily: Fonts.label, fontWeight: '700' },
 });

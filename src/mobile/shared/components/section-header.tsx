@@ -14,7 +14,7 @@ export function SectionHeader({ title, children }: SectionHeaderProps) {
 
   return (
     <View
-      style={[styles.header, { paddingTop: insets.top, height: (hasChildren ? 133 : 72) + insets.top }]}>
+      style={[styles.header, { paddingTop: insets.top, height: (hasChildren ? 113 : 72) + insets.top }]}>
       <View style={styles.headerTop}>
         <Text style={styles.title}>{title}</Text>
       </View>
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   headerTop: {
-    height: 72,
+    height: 62,
     paddingTop: 10,
     paddingHorizontal: 18,
     justifyContent: 'center',

@@ -47,6 +47,45 @@ export async function createReport(input: ReportInput): Promise<string> {
   return ref.id;
 }
 
+export async function publishReportOnline(
+  input: ReportInput,
+  media?: { uri: string; kind: 'photo' | 'video' }[],
+): Promise<string> {
+  const user = firebaseAuth?.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
+
+  const ref = await addDoc(collection(firestore, 'reports'), {
+    userId: user.uid,
+    category: input.category,
+    title: input.title,
+    description: input.description ?? null,
+    isAnonymous: input.isAnonymous,
+    location: input.location ?? null,
+    photoURLs: [],
+    status: 'pendiente',
+    pointsAwarded: 0,
+    createdAt: serverTimestamp(),
+    submittedAt: serverTimestamp(),
+  });
+
+  const photoURLs: string[] = [];
+  for (let index = 0; index < (media ?? []).length; index += 1) {
+    const item = media![index];
+    const url = await uploadMediaToStorage({
+      localUri: item.uri,
+      kind: item.kind,
+      reportId: ref.id,
+      mediaId: `${ref.id}-${index}`,
+    });
+    photoURLs.push(url);
+  }
+  if (photoURLs.length > 0) {
+    await updateDoc(doc(firestore, 'reports', ref.id), { photoURLs });
+  }
+
+  return ref.id;
+}
+
 export async function saveReportOfflineFirst(
   input: ReportInput,
   media?: { uri: string; kind: 'photo' | 'video' }[],
@@ -136,19 +175,22 @@ export async function verifyReport(reportId: string, adminUid: string): Promise<
     if (!snap.exists()) throw new Error('Reporte no encontrado.');
 
     const report = snap.data() as Report;
-    const categoryPoints = REPORT_CATEGORIES[report.category]?.points ?? 0;
     const userRef = doc(firestore, 'users', report.userId);
     const userSnap = await tx.get(userRef);
-    const user = userSnap.data() as { pointsBalance: number; totalPointsEarned: number; verifiedReportsCount: number };
 
     tx.update(reportRef, {
       status: 'verificado',
-      pointsAwarded: categoryPoints,
+      pointsAwarded: 0,
       reviewedAt: serverTimestamp(),
       reviewedBy: adminUid,
     });
 
+    if (!userSnap.exists()) return;
+
+    const categoryPoints = REPORT_CATEGORIES[report.category]?.points ?? 0;
+    const user = userSnap.data() as { pointsBalance: number; totalPointsEarned: number; verifiedReportsCount: number };
     const newBalance = (user.pointsBalance ?? 0) + categoryPoints;
+
     tx.update(userRef, {
       pointsBalance: increment(categoryPoints),
       totalPointsEarned: increment(categoryPoints),

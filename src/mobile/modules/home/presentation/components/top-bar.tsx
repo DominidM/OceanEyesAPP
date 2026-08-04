@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -7,7 +7,7 @@ import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { useConnectivity } from '@/shared/offline/connectivity-context';
 import { useSync } from '@/shared/offline/sync-context';
 
-export function TopBar() {
+export function TopBar({ onPendingPress }: { onPendingPress?: () => void }) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -16,7 +16,7 @@ export function TopBar() {
         styles.topBar,
         {
           paddingTop: insets.top,
-          height: 72 + insets.top,
+          height: 62 + insets.top,
         },
       ]}
     >
@@ -33,7 +33,7 @@ export function TopBar() {
 
       <View style={styles.headerActions}>
         <StatusPill />
-        <PendingBadge />
+        <PendingBadge onPress={onPendingPress} />
       </View>
     </View>
   );
@@ -51,15 +51,24 @@ function StatusPill() {
   );
 }
 
-function PendingBadge() {
+function PendingBadge({ onPress }: { onPress?: () => void }) {
   const { pendingCount } = useSync();
   if (pendingCount === 0) return null;
   return (
-    <View style={styles.pendingBadge}>
-      <Text style={styles.pendingText}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${pendingCount} reporte${pendingCount === 1 ? '' : 's'} pendiente${pendingCount === 1 ? '' : 's'}`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.pendingBadge, pressed && styles.pendingBadgePressed]}>
+      <AppSymbol
+        name={{ ios: 'icloud.slash.fill', android: 'cloud-off', web: 'cloud-off' }}
+        color={BrandColors.primary}
+        size={14}
+      />
+      <Text style={styles.pendingText} numberOfLines={1} ellipsizeMode="tail">
         {pendingCount} reporte{pendingCount === 1 ? '' : 's'} pendiente{pendingCount === 1 ? '' : 's'}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -129,16 +138,22 @@ const styles = StyleSheet.create({
     color: '#B42318',
   },
   pendingBadge: {
-    height: 38,
+    height: 32,
     borderRadius: 9999,
     backgroundColor: 'rgba(19, 78, 94, 0.12)',
-    paddingLeft: 12,
-    paddingRight: 32,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
+    maxWidth: 220,
     flexShrink: 1,
   },
+  pendingBadgePressed: {
+    opacity: 0.7,
+  },
   pendingText: {
+    flexShrink: 1,
     color: BrandColors.primary,
     fontFamily: Fonts.label,
     fontSize: 10,

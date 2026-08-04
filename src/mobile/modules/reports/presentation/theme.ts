@@ -110,9 +110,9 @@ export const SummaryColors = {
 } as const;
 
 export const CaptureColors = {
-  accent: '#F56E3D',
-  accentSoft: 'rgba(245, 110, 61, 0.2)',
-  accentBorder: 'rgba(245, 110, 61, 0.3)',
+  accent: '#134E5E',
+  accentSoft: 'rgba(19, 78, 94, 0.25)',
+  accentBorder: 'rgba(19, 78, 94, 0.5)',
   chipBg: 'rgba(0, 0, 0, 0.6)',
   chipBorder: 'rgba(255, 255, 255, 0.2)',
   pillBg: 'rgba(0, 0, 0, 0.4)',
