@@ -11,7 +11,8 @@ type SlideDirection = 'forward' | 'backward' | 'none';
 
 const ROUTE_ORDER = ['/', '/descargas', '/faq', '/contacto'];
 
-const ENTER_DURATION = 480;
+const ENTER_DURATION = 380;
+const ENTER_EASING = Easing.out(Easing.cubic);
 
 let previousPathname: string | null = null;
 
@@ -27,7 +28,6 @@ function resolveSlideDirection(currentPathname: string): SlideDirection {
 
 export function PageTransition({ children, style }: PageTransitionProps) {
   const pathname = usePathname();
-  const opacity = useRef(new Animated.Value(0)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const appliedPathRef = useRef<string | null>(null);
@@ -37,24 +37,26 @@ export function PageTransition({ children, style }: PageTransitionProps) {
     appliedPathRef.current = pathname;
 
     const direction = resolveSlideDirection(pathname);
-    const fromX = direction === 'forward' ? 56 : direction === 'backward' ? -56 : 0;
-    const fromY = direction === 'none' ? 26 : 0;
+    const fromX = direction === 'forward' ? 28 : direction === 'backward' ? -28 : 0;
+    const fromY = direction === 'none' ? 16 : 0;
 
-    opacity.setValue(0);
     translateX.setValue(fromX);
     translateY.setValue(fromY);
 
-    const timing = { duration: ENTER_DURATION, easing: Easing.out(Easing.cubic), useNativeDriver: false };
+    const timing = {
+      duration: ENTER_DURATION,
+      easing: ENTER_EASING,
+      useNativeDriver: false,
+    };
     Animated.parallel([
-      Animated.timing(opacity, { ...timing, toValue: 1 }),
       Animated.timing(translateX, { ...timing, toValue: 0 }),
       Animated.timing(translateY, { ...timing, toValue: 0 }),
     ]).start();
-  }, [pathname, opacity, translateX, translateY]);
+  }, [pathname, translateX, translateY]);
 
   return (
     <Animated.View
-      style={[styles.root, style, { opacity, transform: [{ translateX }, { translateY }] }]}
+      style={[styles.root, style, { transform: [{ translateX }, { translateY }] }]}
     >
       {children}
     </Animated.View>

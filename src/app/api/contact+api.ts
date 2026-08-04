@@ -1,5 +1,14 @@
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export async function POST(request: Request) {
-  let body: { name?: string; email?: string; phone?: string; message?: string };
+  let body: { name?: string; email?: string; phone?: string; subject?: string; message?: string };
 
   try {
     body = await request.json();
@@ -10,7 +19,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const { name, email, phone, message } = body;
+  const { name, email, phone, subject, message } = body;
 
   if (!name || !email || !message) {
     return new Response(JSON.stringify({ error: 'Todos los campos son requeridos' }), {
@@ -39,14 +48,16 @@ export async function POST(request: Request) {
   const brevoBody = {
     sender: { email: senderEmail, name: 'Ocean Eyes' },
     to: [{ email: senderEmail, name: 'Ocean Eyes' }],
+    replyTo: { email, name },
     subject: `Contacto OceanEyes - ${name}`,
     htmlContent: `
       <h2>Nuevo mensaje de contacto</h2>
-      <p><strong>Nombre:</strong> ${name}</p>
-      <p><strong>Email:</strong> ${email}</p>
-      ${phone ? `<p><strong>Teléfono:</strong> ${phone}</p>` : ''}
+      <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
+      <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+      ${subject ? `<p><strong>Asunto:</strong> ${escapeHtml(subject)}</p>` : ''}
+      ${phone ? `<p><strong>Teléfono:</strong> ${escapeHtml(phone)}</p>` : ''}
       <p><strong>Mensaje:</strong></p>
-      <p>${message.replace(/\n/g, '<br>')}</p>
+      <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
     `,
   };
 

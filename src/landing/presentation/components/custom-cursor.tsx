@@ -13,6 +13,7 @@ export function CustomCursor() {
   const dotRef = useRef<View>(null);
   const ringRef = useRef<View>(null);
   const [hovered, setHovered] = useState(false);
+  const hoveredRef = useRef(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
@@ -46,7 +47,7 @@ export function CustomCursor() {
     };
 
     const onMouseUp = () => {
-      ring.style.borderColor = hovered ? BrandColors.primary : BrandColors.secondary;
+      ring.style.borderColor = hoveredRef.current ? BrandColors.primary : BrandColors.secondary;
     };
 
     const isInteractive = (target: EventTarget | null): boolean => {
@@ -55,17 +56,16 @@ export function CustomCursor() {
     };
 
     const onMouseOver = (e: MouseEvent) => {
-      if (isInteractive(e.target)) {
-        setHovered(true);
-      } else {
-        setHovered(false);
-      }
+      const next = isInteractive(e.target);
+      hoveredRef.current = next;
+      setHovered(next);
     };
 
     const onMouseLeave = () => {
       visible = false;
       dot.style.opacity = '0';
       ring.style.opacity = '0';
+      hoveredRef.current = false;
       setHovered(false);
     };
 
@@ -93,7 +93,7 @@ export function CustomCursor() {
       document.body.style.cursor = '';
       cancelAnimationFrame(rafId);
     };
-  }, [hovered]);
+  }, []);
 
   if (Platform.OS !== 'web') return null;
 

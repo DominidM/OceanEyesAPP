@@ -17,14 +17,15 @@ const STATUS_MESSAGES = [
 
 const MSG_INTERVAL = 1300;
 const MSG_FADE = 260;
-const EXIT_DURATION = 800;
+const EXIT_DURATION = 600;
 const EMERGE_DURATION = 1300;
 
 export type LandingSplashProps = {
+  duration?: number;
   onFinish: () => void;
 };
 
-export function LandingSplash({ onFinish }: LandingSplashProps) {
+export function LandingSplash({ duration = STATUS_MESSAGES.length * MSG_INTERVAL, onFinish }: LandingSplashProps) {
   const emerge = useRef(new Animated.Value(0)).current;
   const exitProgress = useRef(new Animated.Value(0)).current;
   const statusFade = useRef(new Animated.Value(1)).current;
@@ -78,20 +79,19 @@ export function LandingSplash({ onFinish }: LandingSplashProps) {
     const messageInterval = setInterval(() => {
       setMessageIndex((prev) => {
         const next = prev + 1;
-        if (next >= STATUS_MESSAGES.length) {
-          clearInterval(messageInterval);
-          setTimeout(() => {
-            Animated.timing(exitProgress, {
-              toValue: 1,
-              duration: EXIT_DURATION,
-              easing: Easing.inOut(Easing.ease),
-              useNativeDriver: false,
-            }).start(onFinish);
-          }, 1200);
-        }
         return Math.min(next, STATUS_MESSAGES.length - 1);
       });
     }, MSG_INTERVAL);
+
+    const exitTimeout = setTimeout(() => {
+      clearInterval(messageInterval);
+      Animated.timing(exitProgress, {
+        toValue: 1,
+        duration: EXIT_DURATION,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start(onFinish);
+    }, duration);
 
     return () => {
       emergeAnim.stop();
@@ -99,8 +99,9 @@ export function LandingSplash({ onFinish }: LandingSplashProps) {
       waveBAnim.stop();
       ringsComposed.stop();
       clearInterval(messageInterval);
+      clearTimeout(exitTimeout);
     };
-  }, [emerge, exitProgress, onFinish, pulseRings, waveA, waveB]);
+  }, [duration, emerge, exitProgress, onFinish, pulseRings, waveA, waveB]);
 
   useEffect(() => {
     if (messageIndex === 0) return;

@@ -7,10 +7,21 @@ import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 
 const contactImg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
 
+const SUBJECT_OPTIONS = [
+  'Consulta general',
+  'Reportar pesca ilegal',
+  'Sugerencia',
+  'Colaboración',
+  'Otro',
+];
+
 export function ContactoForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [subject, setSubject] = useState('');
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [menuTop, setMenuTop] = useState(56);
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,7 +32,7 @@ export function ContactoForm() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, message }),
+        body: JSON.stringify({ name, email, phone, subject, message }),
       });
 
       if (res.ok) {
@@ -58,6 +69,7 @@ export function ContactoForm() {
                   setName('');
                   setEmail('');
                   setPhone('');
+                  setSubject('');
                   setMessage('');
                 }}
               >
@@ -104,6 +116,50 @@ export function ContactoForm() {
                 />
               </View>
 
+              <View style={[styles.field, themeOpen && styles.fieldOpen]}>
+                <Text style={styles.label}>Asunto</Text>
+                <View style={[styles.selectWrap, themeOpen && styles.selectWrapOpen]}>
+                   <Pressable
+                     style={[styles.selectTrigger, themeOpen && styles.selectTriggerOpen]}
+                     onPress={() => setThemeOpen((v) => !v)}
+                     onLayout={(e) => {
+                       setMenuTop(e.nativeEvent.layout.height + 8);
+                     }}
+                   >
+                    <Text
+                      style={[styles.selectValue, !subject && styles.selectPlaceholder]}
+                    >
+                      {subject || 'Seleccioná un asunto'}
+                    </Text>
+                    <FontAwesome5
+                      name={themeOpen ? 'chevron-up' : 'chevron-down'}
+                      size={12}
+                      color={BrandColors.primary}
+                    />
+                  </Pressable>
+                  {themeOpen && (
+                    <View style={[styles.selectMenu, { top: menuTop }]}>
+                      {SUBJECT_OPTIONS.map((option) => (
+                        <Pressable
+                          key={option}
+                          style={({ pressed }) => [
+                            styles.selectOption,
+                            pressed && styles.selectOptionPressed,
+                            subject === option && styles.selectOptionActive,
+                          ]}
+                          onPress={() => {
+                            setSubject(option);
+                            setThemeOpen(false);
+                          }}
+                        >
+                          <Text style={styles.selectOptionText}>{option}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </View>
+
               <View style={styles.field}>
                 <Text style={styles.label}>Mensaje</Text>
                 <TextInput
@@ -119,9 +175,9 @@ export function ContactoForm() {
               </View>
 
               <Pressable
-                style={[styles.btn, (!name || !email || !message || loading) && styles.btnDisabled]}
+                style={[styles.btn, (!name || !email || !subject || !message || loading) && styles.btnDisabled]}
                 onPress={handleSubmit}
-                disabled={!name || !email || !message || loading}
+                disabled={!name || !email || !subject || !message || loading}
               >
                 <FontAwesome5 name={loading ? 'spinner' : 'paper-plane'} size={14} color="#FFFFFF" />
                 <Text style={styles.btnText}>{loading ? 'Enviando...' : 'Enviar Mensaje'}</Text>
@@ -204,6 +260,10 @@ const styles = StyleSheet.create({
   field: {
     gap: Spacing.two,
   },
+  fieldOpen: {
+    position: 'relative',
+    zIndex: 30,
+  },
   fieldHalf: {
     flex: 1,
   },
@@ -227,6 +287,64 @@ const styles = StyleSheet.create({
   },
   textarea: {
     minHeight: 140,
+  },
+  selectWrap: {
+    position: 'relative',
+    overflow: 'visible',
+  },
+  selectWrapOpen: {
+    zIndex: 30,
+  },
+  selectTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: BrandColors.tertiary,
+    borderRadius: 12,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three + 1,
+    borderWidth: 1,
+    borderColor: 'rgba(152,185,177,0.3)',
+  },
+  selectTriggerOpen: {
+    borderColor: BrandColors.secondary,
+  },
+  selectValue: {
+    fontFamily: Fonts.body,
+    fontSize: 15,
+    color: BrandColors.neutral,
+  },
+  selectPlaceholder: {
+    color: 'rgba(0,0,0,0.35)',
+  },
+  selectMenu: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: Spacing.two,
+    borderWidth: 1.5,
+    borderColor: BrandColors.secondary,
+    overflow: 'hidden',
+    boxShadow: '0 10px 28px rgba(0,0,0,0.18)',
+  },
+  selectOption: {
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+    backgroundColor: '#FFFFFF',
+  },
+  selectOptionPressed: {
+    backgroundColor: 'rgba(152,185,177,0.25)',
+  },
+  selectOptionActive: {
+    backgroundColor: 'rgba(152,185,177,0.15)',
+  },
+  selectOptionText: {
+    fontFamily: Fonts.body,
+    fontSize: 15,
+    color: BrandColors.neutral,
   },
   btn: {
     flexDirection: 'row',
