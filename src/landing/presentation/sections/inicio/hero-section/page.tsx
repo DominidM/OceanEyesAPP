@@ -1,5 +1,6 @@
 import React from 'react';
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
@@ -8,10 +9,9 @@ const heroBg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
 
 type HeroSectionProps = {
   onFeaturesPress: () => void;
-  onDownloadPress: () => void;
 };
 
-export function HeroSection({ onFeaturesPress, onDownloadPress }: HeroSectionProps) {
+export function HeroSection({ onFeaturesPress }: HeroSectionProps) {
   return (
     <View style={styles.section}>
       <View style={styles.background}>
@@ -39,7 +39,7 @@ export function HeroSection({ onFeaturesPress, onDownloadPress }: HeroSectionPro
             <Pressable style={styles.infoBtn} onPress={onFeaturesPress}>
               <Text style={styles.infoBtnText}>Ver más</Text>
             </Pressable>
-            <Pressable style={styles.downloadBtn} onPress={onDownloadPress}>
+            <Pressable style={styles.downloadBtn} onPress={() => router.push('/descargas')}>
               <Text style={styles.downloadBtnText}>Descargar</Text>
             </Pressable>
           </View>

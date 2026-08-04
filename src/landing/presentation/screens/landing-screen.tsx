@@ -6,6 +6,8 @@ import { LandingFooter } from "@landing/layout/footer/landing-footer";
 import { LandingSubfooter } from "@landing/layout/footer/landing-subfooter";
 import { LandingLayout } from "@landing/layout/landing-layout";
 import { CustomCursor } from "../components/custom-cursor";
+import { LandingSplash } from "../components/landing-splash";
+import { PageTransition } from "../components/page-transition";
 import { useLandingScroll } from "../hooks/useLandingScroll";
 import {
   HeroSection,
@@ -15,10 +17,16 @@ import {
   TechnologySection,
 } from "../sections/inicio";
 
+let splashShownOnce = false;
+
 export function LandingScreen() {
-  const { scrollRef, toFeatures, toHowItWorks, toDownload } =
-    useLandingScroll();
+  const { scrollRef, toReportes, toHowItWorks, toHelp } = useLandingScroll();
   const [scrolled, setScrolled] = useState(false);
+  const [showSplash, setShowSplash] = useState(() => {
+    if (splashShownOnce) return false;
+    splashShownOnce = true;
+    return true;
+  });
 
   const handleScroll = (e: {
     nativeEvent: { contentOffset: { y: number } };
@@ -26,36 +34,44 @@ export function LandingScreen() {
     setScrolled(e.nativeEvent.contentOffset.y > 50);
   };
 
+  if (showSplash) {
+    return (
+      <View style={styles.screen}>
+        <CustomCursor />
+        <LandingSplash onFinish={() => setShowSplash(false)} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <CustomCursor />
-      <LandingLayout
-        scrolled={scrolled}
-        scrollRef={scrollRef}
-        onFeaturesPress={toFeatures}
-        onHowItWorksPress={toHowItWorks}
-        onDownloadPress={toDownload}
-      >
-        <ScrollView
-          ref={scrollRef}
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
+      <PageTransition>
+        <LandingLayout
+          scrolled={scrolled}
+          scrollRef={scrollRef}
+          onHowItWorksPress={toHowItWorks}
+          onHelpPress={toHelp}
+          onReportesPress={toReportes}
         >
-          <HeroSection
-            onFeaturesPress={toFeatures}
-            onDownloadPress={toDownload}
-          />
-          <FeaturesSection />
-          <HelpSection />
-          <TechnologySection />
-          <ReportesSection />
+          <ScrollView
+            ref={scrollRef}
+            style={styles.scroll}
+            contentContainerStyle={styles.content}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
+            <HeroSection onFeaturesPress={toHowItWorks} />
+            <FeaturesSection />
+            <HelpSection />
+            <TechnologySection />
+            <ReportesSection />
 
-          <LandingSubfooter />
-          <LandingFooter />
-        </ScrollView>
-      </LandingLayout>
+            <LandingSubfooter />
+            <LandingFooter />
+          </ScrollView>
+        </LandingLayout>
+      </PageTransition>
     </View>
   );
 }
