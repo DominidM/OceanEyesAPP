@@ -12,6 +12,7 @@
 | Router | **Expo Router** (file-based) | v6 |
 | UI | React Native + React Native Web | 0.81.5 / 0.21.0 |
 | Lenguaje | **TypeScript** | 5.9.x |
+| Backend | **Firebase** (Auth + Firestore + Storage) | 12.17.0 |
 | Iconos | expo-symbols (iOS) / @expo/vector-icons MaterialIcons (Android) | |
 | Fuentes | Inter + Playfair Display (Google Fonts via expo-font) | |
 | Animaciones | react-native-reanimated | ~4.1.1 |
@@ -19,6 +20,8 @@
 | Geolocalización | expo-location | ~19.0.8 |
 | Mapas | react-native-maps | 1.20.1 |
 | Audio | expo-audio | ~1.1.1 |
+| Offline | AsyncStorage + sistema de cola propio (`src/mobile/shared/offline/`) | |
+| Blockchain | ethers (pendiente, ver `docs/ARBITRUM_PLAN.md`) | — |
 | Linting | ESLint + eslint-config-expo | |
 
 ---
@@ -30,42 +33,57 @@ src/
 ├── app/                    # Expo Router (file-based routing)
 │   ├── _layout.tsx         # Root layout: ThemeProvider + Stack
 │   ├── index.tsx           # Landing (web) o redirect → /mobile
+│   ├── (landing)/          # descargas, faq, contacto + api/contact+api.ts
 │   ├── mobile/
 │   │   ├── _layout.tsx     # Splash + font loading + Stack
 │   │   ├── index.tsx       # → HomeScreen
-│   │   └── report.tsx      # → ReportCreateScreen
+│   │   ├── login.tsx       # → MobileLoginScreen
+│   │   ├── report.tsx      # → ReportCreateScreen
+│   │   └── map.tsx         # → MapScreen (mapa en tiempo real)
 │   └── admin/
 │       ├── _layout.tsx     # Web-only guard
 │       ├── index.tsx       # → DashboardScreen
 │       ├── login.tsx       # → AdminLoginScreen
-│       └── reports.tsx     # → ReportsScreen
+│       ├── reports.tsx     # → ReportsScreen (moderación)
+│       └── users.tsx       # → UsersScreen
 │
 ├── mobile/                 # App móvil principal (@/*)
 │   ├── constants/theme.ts
 │   ├── hooks/useAppFonts.ts
-│   ├── components/         # Splash overlay (platform-specific)
+│   ├── components/         # Splash overlay, animated icons (platform-specific)
 │   ├── shared/
 │   │   ├── components/     # AppSymbol, BottomTabBar, PhoneFrame, SectionHeader
 │   │   ├── config/main-tabs.ts
-│   │   └── utils/shadows.ts
+│   │   ├── utils/shadows.ts
+│   │   ├── offline/        # outbox, sync-engine, media, connectivity (cola offline)
+│   │   └── firebase/       # app, auth, auth-context, reports, rewards, seed, types
 │   └── modules/
-│       ├── home/           # Tab Inicio
-│       ├── reports/        # Tab Reportes + flujo de creación
+│       ├── home/           # Tab Inicio (incluye mapas real-time web/native)
+│       ├── reports/        # Tab Reportes + wizard de 5 pasos
 │       ├── rewards/        # Tab Recompensas
+│       ├── auth/           # Login móvil
 │       └── profile/        # Tab Perfil (placeholder)
 │
 ├── admin/                  # Panel administrativo web (@admin/*)
-│   ├── shared/components/admin-shell.tsx
+│   ├── shared/
+│   │   ├── components/admin-shell.tsx   # Sidebar + topbar + tema + logout
+│   │   ├── components/charts/           # BarChart, DonutChart (SVG)
+│   │   ├── config/admin-nav.ts
+│   │   ├── theme/                       # context (light/dark) + colors
+│   │   └── ui/                          # Card, SectionTitle, Badge, Button, KpiStat
 │   └── modules/
 │       ├── auth/           # Login
-│       ├── dashboard/      # KPIs + reportes recientes
-│       └── reports/        # Gestión de reportes (placeholder)
+│       ├── dashboard/      # KPIs + charts conectados a Firestore
+│       ├── reports/        # Moderación
+│       └── users/          # Listado paginado
 │
-└── landing/                # Landing page web (@landing/*)
-    └── presentation/
-        ├── screens/landing-screen.tsx
-        ├── sections/       # Hero, Features, Download, Footer
-        └── components/     # NavBar, SectionHeader
+├── landing/                # Landing page web (@landing/*)
+│   └── presentation/
+│       ├── screens/landing-screen.tsx
+│       ├── sections/       # Hero, Features, Download, Footer
+│       └── components/     # NavBar, SectionHeader
+│
+└── shared/styles/          # CSS global (fuentes, variables)
 ```
 
 ### Aliases de Path (tsconfig.json)
@@ -83,11 +101,15 @@ src/
 
 ```
 /                       → Web: LandingScreen  |  Native: redirect → /mobile
+/descargas /faq /contacto → Landing sections
 /mobile                 → HomeScreen (tabs: inicio/reportes/recompensas/perfil)
 /mobile/report          → ReportCreateScreen (wizard de 5 pasos)
-/admin                  → DashboardScreen (KPIs + reportes recientes)
+/mobile/login           → MobileLoginScreen
+/mobile/map             → MapScreen (mapa en tiempo real)
+/admin                  → DashboardScreen (KPIs + charts + reportes recientes)
 /admin/login            → AdminLoginScreen
-/admin/reports          → ReportsScreen (placeholder)
+/admin/reports          → ReportsScreen (moderación)
+/admin/users            → UsersScreen (usuarios)
 ```
 
 ---
@@ -149,13 +171,22 @@ El wizard de creación de reportes tiene 5 pasos secuenciales:
 4. **Incident Step** — Selección de tipo de incidente + grabación de audio
 5. **Summary Step** — Resumen final y envío
 
-Tipos de incidente definidos en `incident-types.ts`:
-- Derrame (`spill`)
-- Contaminación (`pollution`)
-- Pesca ilegal (`fishing`)
-- Embarcación sospechosa (`vessel`)
-- Fauna en peligro (`wildlife`)
-- Residuos (`debris`)
+Tipos de incidente definidos en `incident-types.ts` (las 3 categorías del hackathon):
+- Pesca ilegal (`pesca_ilegal`) — 100 pts
+- Basura en el mar u orillas (`basura_marina`) — 50 pts
+- Variación del mar (`variacion_mar`) — 30 pts
+
+Cada categoría tiene un ícono `AppSymbol` (SF Symbol en iOS, MaterialIcons en Android/web). Los puntos se otorgan cuando un admin verifica el reporte (`verifyReport()`).
+
+---
+
+## Firebase — Backend
+
+- **Proyecto**: `oceaneyes-5e7b4` · Región `southamerica-east1` · Plan Spark (gratuito).
+- **Firestore** (colecciones): `users`, `reports`, `rewards`, `redemptions`, `pointTransactions`. Esquema completo en `docs/STATUS.md` §3.
+- **Funciones**: `createReport`, `verifyReport` (otorga puntos + `pointTransactions`), `redeemReward`, seed de recompensas y datos de prueba.
+- **Modo offline**: los reportes se encolan en AsyncStorage (`offline/outbox.ts`) y se sincronizan con `offline/sync-engine.ts` al recuperar conexión.
+- **Config**: env vars `EXPO_PUBLIC_FIREBASE_*` en `.env.local` (ver `.env.example`).
 
 ---
 
@@ -187,3 +218,16 @@ Archivo `eslint.config.js` — usa `expoConfig` de `eslint-config-expo` con sopo
 - **Maps**: Implementación con platform-specific files (`.native.tsx` / `.web.tsx`) para manejar diferencias entre `react-native-maps` (native) y `react-native-web-maps` (web).
 - **PhoneFrame**: Contenedor centrado con `maxWidth: 430` que simula un teléfono en web y se adapta en mobile.
 - **Edge-to-Edge**: Diseño sin SafeAreaView superior — cada componente maneja sus propios insets.
+- **Admin theme**: Tema light/dark gestionado por `AdminThemeProvider` (`@admin/shared/theme/context.tsx`), sin persistencia.
+- **Charts SVG**: `BarChart` y `DonutChart` construidos con `react-native-svg` en `@admin/shared/components/charts/`.
+
+## Documentación relacionada
+
+| Documento | Contenido |
+|-----------|-----------|
+| `docs/STATUS.md` | Estado actual + esquema Firestore completo |
+| `docs/PROJECT.md` | Este archivo |
+| `docs/ARBITRUM_PLAN.md` | Plan de integración Arbitrum (contratos, fases, entregables) |
+| `docs/ARBITRUM_README.md` | Brief autónomo para modelo de IA (implementación blockchain) |
+| `docs/FIREBASE_SETUP.md` | Setup de Firebase |
+| `docs/DATABASE_PLAN.md` | Plan de base de datos (histórico) |

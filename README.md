@@ -1,56 +1,48 @@
-# Welcome to your Expo app 👋
+# OceanEyes
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> **Vigilancia ciudadana del mar.** Protege el océano, reporta en segundos.
 
-## Get started
+App para la **Hackathon Ethereum Lima 2026**: pescadores y ciudadanos reportan pesca ilegal,
+basura marina o variación del mar; los reportes verificados otorgan puntos de recompensa
+auditables en **Arbitrum**.
 
-1. Install dependencies
+## Stack
 
-   ```bash
-   npm install
-   ```
+- **Expo (React Native)** SDK 54 · Expo Router v6 · TypeScript 5.9
+- **Firebase** (Auth + Firestore + Storage) — backend y datos
+- **Arbitrum Sepolia** — registro on-chain de puntos (pendiente, ver docs)
 
-2. Start the app
+## Requisitos
 
-   ```bash
-   npx expo start
-   ```
+- Node.js ≥ 20 (projecto usa `npm`)
+- Cuenta Firebase con `.env.local` (ver `.env.example`)
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Comandos
 
 ```bash
-npm run reset-project
+npm install         # instalar dependencias
+npm start           # Metro Bundler (QR + web)
+npm run android     # Android
+npm run ios         # iOS
+npm run web         # http://localhost:8081
+npm run lint        # ESLint
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Rutas principales
 
-### Other setup steps
+| Ruta | Plataforma | Vista |
+|------|-----------|-------|
+| `/` | Web / Native | Landing page (web) o redirect → `/mobile` |
+| `/mobile` | Mobile | HomeScreen (4 tabs) |
+| `/mobile/report` | Mobile | Wizard de reporte |
+| `/admin` | Web | Dashboard admin |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Documentación
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+| Documento | Contenido |
+|-----------|-----------|
+| [`docs/PROJECT.md`](docs/PROJECT.md) | Visión general del proyecto |
+| [`docs/STATUS.md`](docs/STATUS.md) | Estado actual + esquema Firestore |
+| [`docs/ARBITRUM_PLAN.md`](docs/ARBITRUM_PLAN.md) | Plan de integración Arbitrum |
+| [`docs/ARBITRUM_README.md`](docs/ARBITRUM_README.md) | Brief para IA (blockchain) |
+| [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md) | Setup de Firebase |
