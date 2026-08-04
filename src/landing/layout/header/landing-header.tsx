@@ -9,23 +9,34 @@ import { LANDING_NAV_LINKS, type LandingNavPressKey } from '@landing/config/land
 
 const logoImg = require('../../../../assets/images/logo-ocean-eyes-grande.png');
 
-export type LandingHeaderProps = Record<LandingNavPressKey, () => void> & {
+export type LandingHeaderProps = {
   scrolled: boolean;
+  onHowItWorksPress: () => void;
+  onHelpPress: () => void;
+  onReportesPress: () => void;
 };
 
 export function LandingHeader({
-  onFeaturesPress,
   onHowItWorksPress,
-  onDownloadPress,
+  onHelpPress,
+  onReportesPress,
   scrolled,
 }: LandingHeaderProps) {
   const actions: Record<LandingNavPressKey, () => void> = {
-    onFeaturesPress,
     onHowItWorksPress,
-    onDownloadPress,
+    onHelpPress,
+    onReportesPress,
   };
 
   const isTransparent = !scrolled;
+
+  const handlePress = (link: typeof LANDING_NAV_LINKS[number]) => {
+    if (link.href) {
+      router.push(link.href);
+    } else if (link.onPressKey) {
+      actions[link.onPressKey]();
+    }
+  };
 
   return (
     <View style={[styles.bar, isTransparent && styles.barTransparent]}>
@@ -37,7 +48,7 @@ export function LandingHeader({
         <View style={styles.rightGroup}>
           <View style={styles.links}>
             {LANDING_NAV_LINKS.map((link) => (
-              <Pressable key={link.label} onPress={actions[link.onPressKey]} hitSlop={8}>
+              <Pressable key={link.label} onPress={() => handlePress(link)} hitSlop={8}>
                 <Text style={[styles.link, isTransparent && styles.linkLight]}>
                   {link.label}
                 </Text>
@@ -59,7 +70,7 @@ export function LandingHeader({
             </Pressable>
             <Pressable
               style={[styles.cta, isTransparent && styles.ctaTransparent]}
-              onPress={onDownloadPress}
+              onPress={() => router.push('/descargas')}
               hitSlop={8}
             >
               <FontAwesome5

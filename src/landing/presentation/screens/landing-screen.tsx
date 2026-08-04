@@ -6,6 +6,7 @@ import { LandingFooter } from "@landing/layout/footer/landing-footer";
 import { LandingSubfooter } from "@landing/layout/footer/landing-subfooter";
 import { LandingLayout } from "@landing/layout/landing-layout";
 import { CustomCursor } from "../components/custom-cursor";
+import { PageTransition } from "../components/page-transition";
 import { useLandingScroll } from "../hooks/useLandingScroll";
 import {
   HeroSection,
@@ -16,8 +17,7 @@ import {
 } from "../sections/inicio";
 
 export function LandingScreen() {
-  const { scrollRef, toFeatures, toHowItWorks, toDownload } =
-    useLandingScroll();
+  const { scrollRef, toReportes, toHowItWorks, toHelp } = useLandingScroll();
   const [scrolled, setScrolled] = useState(false);
 
   const handleScroll = (e: {
@@ -29,33 +29,32 @@ export function LandingScreen() {
   return (
     <View style={styles.screen}>
       <CustomCursor />
-      <LandingLayout
-        scrolled={scrolled}
-        scrollRef={scrollRef}
-        onFeaturesPress={toFeatures}
-        onHowItWorksPress={toHowItWorks}
-        onDownloadPress={toDownload}
-      >
-        <ScrollView
-          ref={scrollRef}
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
+      <PageTransition>
+        <LandingLayout
+          scrolled={scrolled}
+          scrollRef={scrollRef}
+          onHowItWorksPress={toHowItWorks}
+          onHelpPress={toHelp}
+          onReportesPress={toReportes}
         >
-          <HeroSection
-            onFeaturesPress={toFeatures}
-            onDownloadPress={toDownload}
-          />
-          <FeaturesSection />
-          <HelpSection />
-          <TechnologySection />
-          <ReportesSection />
+          <ScrollView
+            ref={scrollRef}
+            style={styles.scroll}
+            contentContainerStyle={styles.content}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
+            <HeroSection onFeaturesPress={toHowItWorks} />
+            <FeaturesSection />
+            <HelpSection />
+            <TechnologySection />
+            <ReportesSection />
 
-          <LandingSubfooter />
-          <LandingFooter />
-        </ScrollView>
-      </LandingLayout>
+            <LandingSubfooter />
+            <LandingFooter />
+          </ScrollView>
+        </LandingLayout>
+      </PageTransition>
     </View>
   );
 }

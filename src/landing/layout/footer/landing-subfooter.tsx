@@ -9,10 +9,9 @@ import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 const logoImg = require('../../../../assets/images/logo-ocean-eyes-grande.png');
 
 const navLinks = [
-  { label: 'Inicio', href: '#hero' },
-  { label: 'Reportar', href: '#reportes' },
-  { label: 'Funcionalidades', href: '#features' },
-  { label: 'Tecnología', href: '#technology' },
+  { label: 'Inicio', href: '/' },
+  { label: 'Cómo funciona', href: '/#features' },
+  { label: 'FAQ', href: '/faq' },
 ];
 
 const rutasLinks = [
@@ -41,9 +40,9 @@ export function LandingSubfooter() {
         <View style={styles.navCol}>
           <Text style={styles.colTitle}>Navegación</Text>
           {navLinks.map((link) => (
-            <Pressable key={link.label}>
+            <Link key={link.label} href={link.href as any}>
               <Text style={styles.navLink}>{link.label}</Text>
-            </Pressable>
+            </Link>
           ))}
         </View>
 
