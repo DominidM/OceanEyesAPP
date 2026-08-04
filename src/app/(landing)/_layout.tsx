@@ -2,12 +2,11 @@ import { Slot } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { CustomCursor } from '@landing/presentation/components/custom-cursor';
+import { BrandColors } from '@landing/config/theme';
 
 export default function LandingLayout() {
   return (
     <View style={styles.screen}>
-      <CustomCursor />
       <Slot />
     </View>
   );
@@ -16,5 +15,6 @@ export default function LandingLayout() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: BrandColors.tertiary,
   },
 });

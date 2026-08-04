@@ -11,6 +11,11 @@ body {
   overflow-x: hidden;
 }
 
+html,
+body {
+  background-color: #efebe3;
+}
+
 [data-mobile-app] {
   cursor: none;
 }
