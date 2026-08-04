@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import React from 'react';
 import { Image } from 'expo-image';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -15,9 +16,9 @@ const navLinks = [
 ];
 
 const rutasLinks = [
-  { label: 'Descargas', href: '#download' },
-  { label: 'FAQ', href: '#faq' },
-  { label: 'Contacto', href: 'mailto:contacto@oceaneyes.pe' },
+  { label: 'Descargas', href: '/descargas' },
+  { label: 'FAQ', href: '/faq' },
+  { label: 'Contacto', href: '/contacto' },
 ];
 
 const socialLinks = [
@@ -49,16 +50,9 @@ export function LandingSubfooter() {
         <View style={styles.rutasCol}>
           <Text style={styles.colTitle}>Rutas</Text>
           {rutasLinks.map((link) => (
-            <Pressable
-              key={link.label}
-              onPress={() => {
-                if (link.href.startsWith('mailto:')) {
-                  Linking.openURL(link.href);
-                }
-              }}
-            >
+            <Link key={link.label} href={link.href as any}>
               <Text style={styles.navLink}>{link.label}</Text>
-            </Pressable>
+            </Link>
           ))}
         </View>
 
