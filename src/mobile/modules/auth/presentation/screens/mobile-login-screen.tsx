@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { loginWithEmail, registerUser, /* signInAsGuest */ } from '@/shared/firebase/auth';
+import { isGoogleSignInAvailable, loginWithEmail, registerUser, signInWithGoogle, /* signInAsGuest */ } from '@/shared/firebase/auth';
 import type { ProfileType } from '@/shared/firebase/types';
 
 export default function MobileLoginScreen() {
@@ -53,12 +53,48 @@ export default function MobileLoginScreen() {
     router.replace('/mobile');
   };
 
+  const submitWithGoogle = async () => {
+    setError('');
+    if (!isFirebaseConfigured()) {
+      setError('Firebase aún no está configurado. Completa el archivo .env.local.');
+      return;
+    }
+    if (!isGoogleSignInAvailable()) {
+      setError('Google Sign-In requiere una development build. Ejecuta npx expo run:ios o run:android.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const user = await signInWithGoogle();
+      if (user) router.replace('/mobile');
+    } catch {
+      setError('No se pudo iniciar sesión con Google. Inténtalo nuevamente.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <View style={styles.screen}>
       <Text style={styles.brand}>OceanEyes</Text>
       <Text style={styles.subtitle}>{registering ? 'Únete a la comunidad' : 'Protege el océano con nosotros'}</Text>
       <View style={styles.card}>
         <Text style={styles.title}>{registering ? 'Crear cuenta' : 'Iniciar sesión'}</Text>
+        {!registering && Platform.OS !== 'web' && (
+          <>
+            <Pressable disabled={busy} onPress={submitWithGoogle} style={styles.googleButton}>
+              <View style={styles.googleLogo}>
+                <Text style={styles.googleLogoText}>G</Text>
+              </View>
+              <Text style={styles.googleLabel}>Continuar con Google</Text>
+            </Pressable>
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>o</Text>
+              <View style={styles.dividerLine} />
+            </View>
+          </>
+        )}
         {registering && (
           <>
             <TextInput value={displayName} onChangeText={setDisplayName} placeholder="Nombre o alias" style={styles.input} />
@@ -107,6 +143,13 @@ const styles = StyleSheet.create({
   submit: { alignItems: 'center', backgroundColor: BrandColors.primary, borderRadius: 999, paddingVertical: Spacing.three },
   submitLabel: { color: BrandColors.tertiary, fontFamily: Fonts.label, fontWeight: '700' },
   switchLabel: { color: BrandColors.primary, fontFamily: Fonts.body, textAlign: 'center' },
+  googleButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(19, 78, 94, 0.3)', borderRadius: 999, paddingVertical: Spacing.three },
+  googleLogo: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#4285F4', alignItems: 'center', justifyContent: 'center' },
+  googleLogoText: { color: '#FFFFFF', fontFamily: Fonts.label, fontSize: 13, fontWeight: '700', lineHeight: 16 },
+  googleLabel: { color: BrandColors.neutral, fontFamily: Fonts.label, fontWeight: '700' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(19, 78, 94, 0.2)' },
+  dividerText: { color: 'rgba(44, 44, 44, 0.5)', fontFamily: Fonts.body, fontSize: 12 },
   guest: { alignItems: 'center', borderWidth: 1, borderColor: 'rgba(19, 78, 94, 0.3)', borderRadius: 999, paddingVertical: Spacing.three },
   guestLabel: { color: BrandColors.primary, fontFamily: Fonts.label, fontWeight: '700' },
 });

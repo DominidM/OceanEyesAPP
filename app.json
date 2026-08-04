@@ -11,7 +11,8 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "backgroundColor": "#0A0F1D",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.belze.oceaneyesapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +21,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.belze.oceaneyesapp"
     },
     "web": {
       "output": "static",

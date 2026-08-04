@@ -1,6 +1,8 @@
+import type { Href } from 'expo-router';
+
 export type LandingNavPressKey = 'onHowItWorksPress' | 'onHelpPress' | 'onReportesPress';
 
-export type LandingNavLink = { label: string; onPressKey?: LandingNavPressKey; href?: string };
+export type LandingNavLink = { label: string; onPressKey?: LandingNavPressKey; href?: Href };
 
 export type LandingSectionKey = 'reportes' | 'how-it-works' | 'ayudar';
 
