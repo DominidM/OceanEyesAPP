@@ -531,13 +531,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   shutterInner: {
-    width: 64,
-    height: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 5,
-    borderRadius: 9999,
-    backgroundColor: 'transparent',
+    //Acá no pongan nada
   },
   recordDot: {
     width: 24,

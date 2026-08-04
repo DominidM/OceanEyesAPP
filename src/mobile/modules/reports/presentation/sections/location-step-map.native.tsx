@@ -11,9 +11,11 @@ export type Region = {
 
 type LocationMapProps = {
   region: Region;
+  interactive?: boolean;
+  onRegionChangeComplete?: (region: Region) => void;
 };
 
-export function LocationMap({ region }: LocationMapProps) {
+export function LocationMap({ region, interactive = false, onRegionChangeComplete }: LocationMapProps) {
   return (
     <MapView
       style={StyleSheet.absoluteFill}
@@ -21,6 +23,9 @@ export function LocationMap({ region }: LocationMapProps) {
       rotateEnabled={false}
       pitchEnabled={false}
       showsCompass={false}
+      scrollEnabled={interactive}
+      zoomEnabled={interactive}
+      onRegionChangeComplete={interactive ? onRegionChangeComplete : undefined}
     />
   );
 }
