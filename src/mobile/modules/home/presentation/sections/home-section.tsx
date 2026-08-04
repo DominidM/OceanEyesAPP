@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { subscribeReports } from '@/shared/firebase/reports';
+import { getMyReports, subscribeReports } from '@/shared/firebase/reports';
 import { useAuth } from '@/shared/firebase/auth-context';
 
 import { ActionCard } from '../components/action-card';
@@ -13,12 +13,6 @@ import { ActivityCard, ActivityStat } from '../components/activity-card';
 import { MapPreview } from '../components/map-preview';
 import { isMapReport, toMapReport, type MapReport } from '../components/map-report';
 import { TopBar } from '../components/top-bar';
-
-const activityStats: ActivityStat[] = [
-  { label: 'Reportes', value: '8', color: BrandColors.primary },
-  { label: 'Verificados', value: '6', color: BrandColors.secondary },
-  { label: 'Puntos', value: '120', color: BrandColors.neutral },
-];
 
 type HomeSectionProps = {
   onReportPress?: () => void;
@@ -29,13 +23,39 @@ type HomeSectionProps = {
 
 export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onPendingPress }: HomeSectionProps) {
   const insets = useSafeAreaInsets();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [reports, setReports] = useState<MapReport[]>([]);
+  const [myReportCount, setMyReportCount] = useState(0);
 
   useEffect(() => {
     if (!isFirebaseConfigured()) return;
     return subscribeReports((items) => setReports(items.map(toMapReport).filter(isMapReport)));
   }, []);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !user || user.isAnonymous) return;
+    getMyReports()
+      .then((items) => setMyReportCount(items.length))
+      .catch(() => undefined);
+  }, [user]);
+
+  const guest = !user || user.isAnonymous;
+  const activityStats: ActivityStat[] = useMemo(
+    () => [
+      { label: 'Reportes', value: guest ? '0' : String(myReportCount), color: BrandColors.primary },
+      {
+        label: 'Verificados',
+        value: guest ? '0' : String(profile?.verifiedReportsCount ?? 0),
+        color: BrandColors.secondary,
+      },
+      {
+        label: 'Puntos',
+        value: guest ? '0' : (profile?.pointsBalance ?? 0).toLocaleString('es-PE'),
+        color: BrandColors.neutral,
+      },
+    ],
+    [guest, myReportCount, profile],
+  );
 
   return (
     <>

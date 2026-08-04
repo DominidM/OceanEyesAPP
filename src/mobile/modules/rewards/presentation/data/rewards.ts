@@ -1,4 +1,5 @@
-import { SymbolName } from '@/shared/components/app-symbol';
+import type { SymbolName } from '@/shared/components/app-symbol';
+import type { Redemption, Reward as FirestoreReward } from '@/shared/firebase/types';
 
 export type Reward = {
   id: string;
@@ -9,48 +10,53 @@ export type Reward = {
   locked?: boolean;
 };
 
-export const REWARDS: Reward[] = [
-  {
-    id: 'report-zone',
-    title: 'Reportar en tu zona',
-    subtitle: 'Completa 5 reportes verificados',
-    points: '350',
-    icon: { ios: 'exclamationmark.triangle.fill', android: 'report', web: 'report' },
-  },
-  {
-    id: 'safety',
-    title: 'Equipo de seguridad',
-    subtitle: 'Alcanza el nivel 3',
-    points: '500',
-    icon: { ios: 'lock.fill', android: 'lock', web: 'lock' },
-    locked: true,
-  },
-];
+export function toRewardCard(reward: FirestoreReward): Reward {
+  return {
+    id: reward.id,
+    title: reward.title,
+    subtitle: reward.description ?? reward.sponsor ?? 'Recompensa OceanEyes',
+    points: String(reward.pointsCost),
+    icon: rewardIconFor(reward.title),
+    locked: reward.stock === 0,
+  };
+}
 
-export const POINTS_BALANCE = '1,240';
-export const LEVEL_BADGE = 'Nivel 3 Guardián del Mar';
+export function toClaimCard(redemption: Redemption): Reward {
+  const date = redemption.claimedAt?.toDate?.() ?? new Date();
+  return {
+    id: redemption.id,
+    title: 'Recompensa canjeada',
+    subtitle: `Canjeado ${date.toLocaleDateString()}`,
+    points: String(redemption.pointsSpent),
+    icon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' },
+  };
+}
 
-export const PROGRESS = {
-  label: 'Recompensas canjeadas',
-  value: '8',
-  fill: 0.6,
-};
+export function levelLabelFor(totalPoints: number): string {
+  const name = 'Guardián del Mar';
+  if (totalPoints >= 1000) return `Nivel 5 ${name}`;
+  if (totalPoints >= 500) return `Nivel 4 ${name}`;
+  if (totalPoints >= 300) return `Nivel 3 ${name}`;
+  if (totalPoints >= 100) return `Nivel 2 ${name}`;
+  return `Nivel 1 ${name}`;
+}
 
-export const RECENT_CLAIMS: Reward[] = [
-  {
-    id: 'claim-fuel',
-    title: 'Bono de combustible',
-    subtitle: 'Canjeado hace 2 dias',
-    points: '200',
-    icon: { ios: 'fuelpump.fill', android: 'local-gas-station', web: 'local-gas-station' },
-  },
-  {
-    id: 'claim-double',
-    title: 'Puntos dobles',
-    subtitle: 'Canjeado hace 1 semana',
-    points: '80',
-    icon: { ios: 'plus.circle.fill', android: 'add-circle', web: 'add-circle' },
-  },
-];
-
-export const RECENT_TEXT = 'Unieron 8 guardianes del mar esta semana';
+function rewardIconFor(title: string): SymbolName {
+  const t = title.toLowerCase();
+  if (t.includes('combustible')) {
+    return { ios: 'fuelpump.fill', android: 'local-gas-station', web: 'local-gas-station' };
+  }
+  if (t.includes('red')) {
+    return { ios: 'network', android: 'share', web: 'share' };
+  }
+  if (t.includes('limpieza') || t.includes('kit')) {
+    return { ios: 'trash.fill', android: 'cleaning-services', web: 'cleaning-services' };
+  }
+  if (t.includes('curso')) {
+    return { ios: 'book.fill', android: 'menu-book', web: 'menu-book' };
+  }
+  if (t.includes('boya')) {
+    return { ios: 'location.fill', android: 'my-location', web: 'my-location' };
+  }
+  return { ios: 'gift.fill', android: 'redeem', web: 'redeem' };
+}

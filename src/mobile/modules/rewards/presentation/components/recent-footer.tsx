@@ -3,10 +3,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts } from '@/constants/theme';
-import { RECENT_TEXT } from '../data/rewards';
 import { RewardsColors } from '../theme';
 
 const personIcon: SymbolName = { ios: 'person.fill', android: 'person', web: 'person' };
+const COMMUNITY_TEXT = 'Únete a la comunidad que reporta y protege el mar.';
 
 export function RecentFooter() {
   return (
@@ -26,7 +26,7 @@ export function RecentFooter() {
           </View>
         </View>
 
-        <Text style={styles.text}>{RECENT_TEXT}</Text>
+        <Text style={styles.text}>{COMMUNITY_TEXT}</Text>
       </View>
     </View>
   );

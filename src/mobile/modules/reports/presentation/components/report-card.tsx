@@ -7,6 +7,7 @@ import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { SurfaceColors } from '../theme';
 import { ReportThumbnail, ThumbnailType } from './report-thumbnail';
 import { shadow } from '@/shared/utils/shadows';
+import type { ReportStatus } from '@/shared/firebase/types';
 
 export type Report = {
   title: string;
@@ -18,6 +19,8 @@ export type Report = {
   statusText: string;
   statusIcon: SymbolName;
   thumbnail: ThumbnailType;
+  statusKey?: ReportStatus;
+  pointsAwarded?: number;
 };
 
 export function ReportCard({ report }: { report: Report }) {
