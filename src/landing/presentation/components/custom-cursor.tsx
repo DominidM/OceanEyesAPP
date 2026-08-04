@@ -81,6 +81,7 @@ export function CustomCursor() {
     window.addEventListener('mouseup', onMouseUp);
     document.addEventListener('mouseover', onMouseOver, { passive: true });
     document.documentElement.addEventListener('mouseleave', onMouseLeave);
+    document.body.style.cursor = 'none';
     rafId = requestAnimationFrame(loop);
 
     return () => {
@@ -89,6 +90,7 @@ export function CustomCursor() {
       window.removeEventListener('mouseup', onMouseUp);
       document.removeEventListener('mouseover', onMouseOver);
       document.documentElement.removeEventListener('mouseleave', onMouseLeave);
+      document.body.style.cursor = '';
       cancelAnimationFrame(rafId);
     };
   }, [hovered]);

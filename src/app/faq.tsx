@@ -1,15 +1,19 @@
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { BrandColors } from '@landing/config/theme';
 import { LandingHeader } from '@landing/layout/header/landing-header';
 import { LandingFooter } from '@landing/layout/footer/landing-footer';
 import { LandingSubfooter } from '@landing/layout/footer/landing-subfooter';
-import { FAQSection } from '@landing/presentation/sections/faq/page';
+import { FAQHero } from '@landing/presentation/sections/faq/hero-section/page';
+import { FAQSection } from '@landing/presentation/sections/faq/faq-section/page';
+import { CustomCursor } from '@landing/presentation/components/custom-cursor';
 
 export default function FAQScreen() {
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <View style={styles.screen}>
+      <CustomCursor />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <LandingHeader
         scrolled={true}
         onFeaturesPress={() => {}}
@@ -17,14 +21,19 @@ export default function FAQScreen() {
         onDownloadPress={() => {}}
       />
 
+      <FAQHero />
       <FAQSection />
       <LandingSubfooter />
       <LandingFooter />
     </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
     backgroundColor: BrandColors.tertiary,

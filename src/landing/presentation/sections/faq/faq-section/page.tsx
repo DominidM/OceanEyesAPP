@@ -1,8 +1,61 @@
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+
+function FAQItem({ question, answer, isOpen, onToggle }: {
+  question: string;
+  answer: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const animation = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
+
+  const toggle = () => {
+    Animated.timing(animation, {
+      toValue: isOpen ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+    onToggle();
+  };
+
+  const rotateChevron = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const maxHeight = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 300],
+  });
+
+  const opacity = animation.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+
+  return (
+    <Pressable style={[styles.faqItem, isOpen && styles.faqItemOpen]} onPress={toggle}>
+      <View style={styles.faqHeader}>
+        <Text style={[styles.faqQuestion, isOpen && styles.faqQuestionOpen]}>
+          {question}
+        </Text>
+        <Animated.View style={{ transform: [{ rotate: rotateChevron }] }}>
+          <FontAwesome5
+            name="chevron-down"
+            size={14}
+            color={isOpen ? BrandColors.primary : BrandColors.secondary}
+          />
+        </Animated.View>
+      </View>
+      <Animated.View style={{ overflow: 'hidden', maxHeight, opacity }}>
+        <Text style={styles.faqAnswer}>{answer}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
 
 const faqs = [
   {
@@ -52,34 +105,16 @@ export function FAQSection() {
 
   return (
     <View style={styles.section}>
-      <Text style={styles.title}>Preguntas Frecuentes</Text>
-      <Text style={styles.subtitle}>
-        Todo lo que necesitás saber sobre Ocean Eyes.
-      </Text>
-
       <View style={styles.list}>
-        {faqs.map((faq, index) => {
-          const isOpen = openId === index;
-          return (
-            <Pressable
-              key={index}
-              style={[styles.faqItem, isOpen && styles.faqItemOpen]}
-              onPress={() => setOpenId(isOpen ? null : index)}
-            >
-              <View style={styles.faqHeader}>
-                <Text style={[styles.faqQuestion, isOpen && styles.faqQuestionOpen]}>
-                  {faq.question}
-                </Text>
-                <FontAwesome5
-                  name={isOpen ? 'chevron-up' : 'chevron-down'}
-                  size={14}
-                  color={isOpen ? BrandColors.primary : BrandColors.secondary}
-                />
-              </View>
-              {isOpen && <Text style={styles.faqAnswer}>{faq.answer}</Text>}
-            </Pressable>
-          );
-        })}
+        {faqs.map((faq, index) => (
+          <FAQItem
+            key={index}
+            question={faq.question}
+            answer={faq.answer}
+            isOpen={openId === index}
+            onToggle={() => setOpenId(openId === index ? null : index)}
+          />
+        ))}
       </View>
     </View>
   );
@@ -91,23 +126,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.five,
     backgroundColor: BrandColors.tertiary,
     alignItems: 'center',
-  },
-  title: {
-    fontFamily: Fonts.headline,
-    fontSize: 40,
-    color: BrandColors.primary,
-    fontWeight: '700',
-    fontStyle: 'italic',
-    marginBottom: Spacing.three,
-  },
-  subtitle: {
-    fontFamily: Fonts.headline,
-    fontSize: 18,
-    color: BrandColors.neutral,
-    opacity: 0.72,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginBottom: Spacing.six,
   },
   list: {
     maxWidth: 900,
