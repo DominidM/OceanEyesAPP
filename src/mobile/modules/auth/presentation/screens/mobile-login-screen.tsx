@@ -1,11 +1,67 @@
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Animated, Platform, Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { isGoogleSignInAvailable, isAppleSignInAvailable, loginWithEmail, registerUser, signInAsGuest, signInWithGoogle, signInWithApple } from '@/shared/firebase/auth';
 import type { ProfileType } from '@/shared/firebase/types';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+type ToneButtonProps = {
+  children: React.ReactNode;
+  onPress: () => void;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+  /** [estado base, estado presionado] */
+  tone: readonly [string | number, string | number];
+  /** 'backgroundColor' por defecto; 'opacity' para enlaces de texto */
+  property?: 'backgroundColor' | 'opacity';
+};
+
+function ToneButton({ children, onPress, disabled, style, tone, property = 'backgroundColor' }: ToneButtonProps) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  const animate = useCallback(
+    (toValue: number) => {
+      Animated.timing(progress, { toValue, duration: 160, useNativeDriver: false }).start();
+    },
+    [progress],
+  );
+
+  const animatedStyle = useMemo(() => {
+    const value = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange:
+        property === 'opacity'
+          ? ([tone[0], tone[1]] as number[])
+          : ([tone[0], tone[1]] as string[]),
+    });
+    return property === 'opacity' ? { opacity: value } : { backgroundColor: value };
+  }, [progress, property, tone]);
+
+  if (Platform.OS === 'web') {
+    const pressedStyle: ViewStyle =
+      property === 'opacity' ? { opacity: tone[1] as number } : { backgroundColor: tone[1] as string };
+    return (
+      <Pressable disabled={disabled} onPress={onPress} style={({ pressed }) => [style, pressed && pressedStyle]}>
+        {children}
+      </Pressable>
+    );
+  }
+
+  return (
+    <AnimatedPressable
+      disabled={disabled}
+      onPress={onPress}
+      onPressIn={() => animate(1)}
+      onPressOut={() => animate(0)}
+      style={[style, animatedStyle]}>
+      {children}
+    </AnimatedPressable>
+  );
+}
 
 export default function MobileLoginScreen() {
   const [registering, setRegistering] = useState(false);
@@ -113,19 +169,19 @@ export default function MobileLoginScreen() {
         <Text style={styles.title}>{registering ? 'Crear cuenta' : 'Iniciar sesión'}</Text>
         {!registering && Platform.OS !== 'web' && (
           <>
-            <Pressable disabled={busy} onPress={submitWithGoogle} style={styles.googleButton}>
+            <ToneButton disabled={busy} onPress={submitWithGoogle} style={styles.googleButton} tone={['#FFFFFF', '#E9E5DF']}>
               <View style={styles.googleLogo}>
                 <Text style={styles.googleLogoText}>G</Text>
               </View>
               <Text style={styles.googleLabel}>Continuar con Google</Text>
-            </Pressable>
+            </ToneButton>
             {Platform.OS === 'ios' && (
-              <Pressable disabled={busy} onPress={submitWithApple} style={styles.appleButton}>
+              <ToneButton disabled={busy} onPress={submitWithApple} style={styles.appleButton} tone={['#111111', '#000000']}>
                 <View style={styles.appleLogo}>
                   <Text style={styles.appleLogoText}></Text>
                 </View>
                 <Text style={styles.appleLabel}>Iniciar sesión con Apple</Text>
-              </Pressable>
+              </ToneButton>
             )}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
@@ -139,11 +195,19 @@ export default function MobileLoginScreen() {
             <TextInput value={displayName} onChangeText={setDisplayName} placeholder="Nombre o alias" style={styles.input} />
             <View style={styles.typeRow}>
               {(['citizen', 'fisher'] as ProfileType[]).map((type) => (
-                <Pressable key={type} onPress={() => setProfileType(type)} style={[styles.typeButton, profileType === type && styles.typeButtonActive]}>
+                <ToneButton
+                  key={type}
+                  onPress={() => setProfileType(type)}
+                  style={[styles.typeButton, profileType === type && styles.typeButtonActive]}
+                  tone={
+                    profileType === type
+                      ? (['#134E5E', '#0E3B47'] as const)
+                      : (['rgba(19,78,94,0)', 'rgba(19,78,94,0.10)'] as const)
+                  }>
                   <Text style={[styles.typeLabel, profileType === type && styles.typeLabelActive]}>
                     {type === 'citizen' ? 'Ciudadano' : 'Pescador'}
                   </Text>
-                </Pressable>
+                </ToneButton>
               ))}
             </View>
             <TextInput value={dni} onChangeText={(value) => setDni(value.replace(/\D/g, '').slice(0, 8))} keyboardType="number-pad" maxLength={8} placeholder="DNI (opcional, 8 dígitos)" style={styles.input} />
@@ -152,15 +216,19 @@ export default function MobileLoginScreen() {
         <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="Correo electrónico" style={styles.input} />
         <TextInput value={password} onChangeText={setPassword} secureTextEntry placeholder="Contraseña" style={styles.input} />
         {!!error && <Text style={styles.error}>{error}</Text>}
-        <Pressable disabled={busy} onPress={submit} style={styles.submit}>
+        <ToneButton disabled={busy} onPress={submit} style={styles.submit} tone={['#134E5E', '#0E3B47']}>
           <Text style={styles.submitLabel}>{busy ? 'Procesando...' : registering ? 'Crear cuenta' : 'Entrar'}</Text>
-        </Pressable>
-        <Pressable onPress={() => setRegistering((value) => !value)}>
+        </ToneButton>
+        <ToneButton onPress={() => setRegistering((value) => !value)} tone={[1, 0.55]} property="opacity">
           <Text style={styles.switchLabel}>{registering ? 'Ya tengo una cuenta' : 'Crear una cuenta'}</Text>
-        </Pressable>
-        <Pressable disabled={busy} onPress={submitAsGuest} style={styles.guest}>
+        </ToneButton>
+        <ToneButton
+          disabled={busy}
+          onPress={submitAsGuest}
+          style={styles.guest}
+          tone={['rgba(19,78,94,0)', 'rgba(19,78,94,0.12)']}>
           <Text style={styles.guestLabel}>Continuar como invitado</Text>
-        </Pressable>
+        </ToneButton>
       </View>
     </View>
   );
