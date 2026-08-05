@@ -1,1 +1,1 @@
-export { UsersScreen as default } from '@admin/modules/users/presentation/screens/users-screen';
+export { UsersScreen as default } from '@admin/presentation/screens/users-screen';
