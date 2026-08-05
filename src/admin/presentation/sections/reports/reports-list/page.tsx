@@ -1,25 +1,13 @@
-import {
-  addDoc,
-  collection,
-  getCountFromServer,
-  getDocs,
-  limit as fireLimit,
-  orderBy,
-  query,
-  serverTimestamp,
-  startAfter,
-  updateDoc,
-  doc,
-} from 'firebase/firestore';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { collection, getCountFromServer, getDocs, limit as fireLimit, orderBy, query, startAfter } from 'firebase/firestore';
+import { router } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
-import { firebaseAuth, firestore } from '@/shared/firebase/app';
-import { banDevice } from '@/shared/firebase/bans';
+import { firestore } from '@/shared/firebase/app';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Card, Badge, IconButton, SectionHeader, PaginationFooter, EmptyState, LoadingState } from '@admin/presentation/components/ui';
+import { Card, Badge, Button, SectionHeader, PaginationFooter, EmptyState, LoadingState } from '@admin/presentation/components/ui';
 
 type AdminReport = {
   id: string;
@@ -47,9 +35,6 @@ export function ReportsList() {
   const [pageCursors, setPageCursors] = useState<any[]>([]);
   const [totalDocs, setTotalDocs] = useState(0);
   const [loading, setLoading] = useState(true);
-  const currentPageRef = useRef(currentPage);
-
-  useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
 
   const totalPages = Math.max(1, Math.ceil(totalDocs / PAGE_SIZE));
   const start = reports.length > 0 ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
@@ -97,29 +82,7 @@ export function ReportsList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const changeStatus = async (report: AdminReport, status: Extract<ReportStatus, 'en_revision' | 'verificado' | 'descartado'>) => {
-    await updateDoc(doc(firestore, 'reports', report.id), {
-      status,
-      reviewedBy: firebaseAuth?.currentUser?.uid,
-      reviewedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    await addDoc(collection(firestore, 'reports', report.id, 'statusHistory'), {
-      fromStatus: report.status,
-      toStatus: status,
-      changedBy: firebaseAuth?.currentUser?.uid,
-      createdAt: serverTimestamp(),
-    });
-    loadPage(currentPageRef.current);
-  };
-
-  const handleBanDevice = async (report: AdminReport) => {
-    if (!report.deviceHash) return;
-    await banDevice(report.deviceHash, {
-      reason: `Reporte falso/descartado: ${report.id}`,
-      bannedBy: firebaseAuth?.currentUser?.uid,
-    });
-  };
+  const hoverBg = 'rgba(148,163,184,0.08)';
 
   const statusChip = (status: ReportStatus) => {
     switch (status) {
@@ -129,8 +92,6 @@ export function ReportsList() {
       default: return { label: 'Pendiente', color: colors.warning, bg: colors.warningBg };
     }
   };
-
-  const hoverBg = 'rgba(148,163,184,0.08)';
 
   return (
     <View style={styles.content}>
@@ -157,7 +118,7 @@ export function ReportsList() {
             <Text style={[styles.th, styles.thDate, { color: colors.contentTextMuted }]}>Fecha</Text>
             <Text style={[styles.th, styles.thCategory, { color: colors.contentTextMuted }]}>Categoría</Text>
             <Text style={[styles.th, styles.thStatus, { color: colors.contentTextMuted }]}>Estado</Text>
-            <Text style={[styles.th, styles.thActions, { color: colors.contentTextMuted }]}>Acciones</Text>
+            <Text style={[styles.th, styles.thActions, { color: colors.contentTextMuted }]}>Detalles</Text>
           </View>
 
           <View>
@@ -169,6 +130,7 @@ export function ReportsList() {
               return (
                 <Pressable
                   key={report.id}
+                  onPress={() => router.push({ pathname: '/admin/reports/[id]', params: { id: report.id } })}
                   style={({ hovered }) => [
                     styles.row,
                     { borderBottomColor: colors.cardBorder },
@@ -191,18 +153,7 @@ export function ReportsList() {
                     <Badge label={st.label} color={st.color} bg={st.bg} />
                   </View>
                   <View style={styles.cellActions}>
-                    {report.status === 'pendiente' && (
-                      <IconButton icon="eye-outline" label="Revisar" color={colors.contentTextMuted} onPress={() => changeStatus(report, 'en_revision')} />
-                    )}
-                    {(report.status === 'pendiente' || report.status === 'en_revision') && (
-                      <IconButton icon="check-circle-outline" label="Verificar" color={colors.success} onPress={() => changeStatus(report, 'verificado')} />
-                    )}
-                    {(report.status === 'pendiente' || report.status === 'en_revision') && (
-                      <IconButton icon="close-circle-outline" label="Rechazar" color={colors.danger} onPress={() => changeStatus(report, 'descartado')} />
-                    )}
-                    {report.status === 'descartado' && report.deviceHash && (
-                      <IconButton icon="cancel" label="Banear dispositivo" color={colors.danger} onPress={() => handleBanDevice(report)} />
-                    )}
+                    <Button label="Ver detalles" variant="secondary" onPress={() => router.push({ pathname: '/admin/reports/[id]', params: { id: report.id } })} />
                   </View>
                 </Pressable>
               );
@@ -250,7 +201,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     borderBottomWidth: 1,
     gap: Spacing.three,
-    cursor: 'auto',
+    cursor: 'pointer',
   },
   cellMain: { flex: 1, gap: 2, minWidth: 0 },
   rowTitle: { fontFamily: Fonts.body, fontSize: 14, fontWeight: '600' },

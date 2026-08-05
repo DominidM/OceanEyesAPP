@@ -1,4 +1,4 @@
-export type AdminRoute = '/admin' | '/admin/reports' | '/admin/users' | '/admin/bans' | '/admin/rewards';
+export type AdminRoute = '/admin' | '/admin/reports' | '/admin/users' | '/admin/bans' | '/admin/rewards' | '/admin/redemptions';
 
 export type AdminNavItem = {
   key: string;
@@ -13,4 +13,5 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { key: 'users', label: 'Usuarios', icon: 'users', href: '/admin/users' },
   { key: 'bans', label: 'Dispositivos baneados', icon: 'ban', href: '/admin/bans' },
   { key: 'rewards', label: 'Recompensas', icon: 'award', href: '/admin/rewards' },
+  { key: 'redemptions', label: 'Canjes', icon: 'exchange-alt', href: '/admin/redemptions' },
 ];
