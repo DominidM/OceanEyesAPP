@@ -1,4 +1,7 @@
-import { publishPendingReport } from '@/shared/firebase/reports';
+import {
+  AuthenticationRequiredError,
+  publishPendingReport,
+} from '@/shared/firebase/reports';
 
 import { removeStagedMedia } from './media';
 import { getPendingReports, removePendingReport, updatePendingReport } from './outbox';
@@ -13,6 +16,7 @@ export type SyncState = {
 const MAX_ATTEMPTS = 5;
 const BACKOFF_BASE_MS = 1000;
 const BACKOFF_MAX_MS = 60000;
+const UPLOAD_TIMEOUT_MS = 60000;
 
 let state: SyncState = {
   syncing: false,
@@ -54,7 +58,7 @@ async function refreshPendingCount(): Promise<void> {
   emit();
 }
 
-export function requestSync(_reason?: string): Promise<void> {
+export function requestSync(reason?: string): Promise<void> {
   const run = async () => {
     if (currentRun) {
       await currentRun;
@@ -62,12 +66,26 @@ export function requestSync(_reason?: string): Promise<void> {
     await refreshPendingCount();
     if (state.pendingCount === 0 || !getOnline()) return;
     if (currentRun) return;
+    if (reason === 'manual') await resetStuckItems();
     currentRun = runSync().finally(() => {
       currentRun = null;
     });
     await currentRun;
   };
   return run();
+}
+
+async function resetStuckItems(): Promise<void> {
+  const items = await getPendingReports();
+  for (const item of items) {
+    if (item.state === 'stuck') {
+      await updatePendingReport(item.id, {
+        state: 'queued',
+        attempts: 0,
+        lastError: undefined,
+      });
+    }
+  }
 }
 
 function scheduleRetry(): void {
@@ -95,6 +113,16 @@ function errorMessage(error: unknown): string {
   return 'No se pudo sincronizar el reporte.';
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => reject(new Error('La sincronización tardó demasiado y se reintentará.')), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
 async function runSync(): Promise<void> {
   if (!getOnline()) {
     state.lastError = 'Sin conexión — se reanudará automáticamente.';
@@ -114,13 +142,21 @@ async function runSync(): Promise<void> {
           attempts: item.attempts + 1,
           lastError: undefined,
         });
-        await publishPendingReport(item);
+        await withTimeout(publishPendingReport(item), UPLOAD_TIMEOUT_MS);
         await removePendingReport(item.id);
         await removeStagedMedia(item.media.map((media) => media.localUri));
         consecutiveFailures = 0;
         state.lastSyncedAt = Date.now();
         state.lastError = null;
       } catch (error) {
+        if (error instanceof AuthenticationRequiredError) {
+          await updatePendingReport(item.id, {
+            state: 'queued',
+            lastError: 'Inicia sesión para enviar este reporte.',
+          });
+          state.lastError = 'Inicia sesión para enviar tus reportes pendientes.';
+          break;
+        }
         if (isNetworkError(error) || !getOnline()) {
           state.lastError = 'Sin conexión — se reanudará automáticamente.';
           break;
@@ -133,10 +169,10 @@ async function runSync(): Promise<void> {
           lastError: message,
         });
         if (exhausted) {
-          state.lastError = 'Algunos reportes no pudieron enviarse.';
+          state.lastError = `No se pudo enviar un reporte: ${message}`;
         } else {
           scheduleRetry();
-          state.lastError = 'Reintentando más tarde.';
+          state.lastError = `Reintentando más tarde: ${message}`;
         }
         break;
       }

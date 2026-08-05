@@ -48,3 +48,23 @@ npm run deploy:arbitrumSepolia  # despliega PointLedger (requiere .env)
 - Idempotencia por `reportId` (previene doble otorgamiento).
 - Rechaza `address(0)`, `reportId` vacío y categorías desconocidas.
 - No almacena claves privadas. La clave del deployer vive solo en `.env` (ignorado por Git).
+
+## Revocación de puntos (inmutabilidad)
+
+El ledger es **inmutable**: un `awardPoints` queda registrado para siempre y no puede
+eliminarse. Para corregir awards de reportes que fueron verificados y luego resultaron
+**falsos**, `PointLedger` ofrece `revokePoints(reportId)`:
+
+- **Solo el propietario** puede revocar (corrección sensible, más restrictiva que otorgar).
+- Resta los puntos del balance del reportante y marca el `reportId` como revocado
+  (`isReportRevoked`).
+- La transacción original **permanece intacta** en `transactions[]` (auditoría pública);
+  solo cambia el estado actual (balance + flag). El historial nunca se borra.
+- Un reporte revocado **no puede volver a otorgarse** (`processedReports` persiste).
+
+### Regla de oro
+
+Nada de datos personales, hashes de dispositivo ni estados de suspensión debe escribir
+on-chain. El contrato solo guarda `wallet + reportId + category + points + timestamp`.
+La penalización de usuarios (bans/suspensiones) vive exclusivamente off-chain en
+Firestore; la revocación on-chain es una acción manual del administrador.

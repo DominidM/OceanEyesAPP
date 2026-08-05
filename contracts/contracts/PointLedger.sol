@@ -19,11 +19,23 @@ contract PointLedger is Ownable {
         uint256 timestamp;
     }
 
+    /// @dev Datos del award asociado a un reportId (para poder revocar).
+    struct Award {
+        address reporter;
+        uint256 points;
+    }
+
     /// @dev wallet autorizada que puede otorgar puntos.
     mapping(address => bool) public verifiers;
 
     /// @dev reportId ya procesado (clave idempotente).
     mapping(bytes32 => bool) private processedReports;
+
+    /// @dev award vigente por reportId (puede quedar vacío tras revocar).
+    mapping(bytes32 => Award) private awards;
+
+    /// @dev reportId cuyo award fue revocado (nunca se elimina del historial).
+    mapping(bytes32 => bool) public revokedReports;
 
     /// @dev Puntos acumulados por wallet de reportante.
     mapping(address => uint256) private balances;
@@ -43,10 +55,20 @@ contract PointLedger is Ownable {
 
     event VerifierRevoked(address indexed verifier);
 
+    event PointsRevoked(
+        address indexed reporter,
+        address indexed revoker,
+        uint256 points,
+        string reportId,
+        uint256 timestamp
+    );
+
     error ZeroReporter();
     error EmptyReportId();
     error UnknownCategory();
     error AlreadyProcessed();
+    error NotProcessed();
+    error AlreadyRevoked();
 
     constructor() Ownable(msg.sender) {}
 
@@ -81,6 +103,7 @@ contract PointLedger is Ownable {
         bytes32 reportKey = keccak256(bytes(reportId));
         if (processedReports[reportKey]) revert AlreadyProcessed();
         processedReports[reportKey] = true;
+        awards[reportKey] = Award({ reporter: reporter, points: points });
 
         balances[reporter] += points;
 
@@ -98,6 +121,25 @@ contract PointLedger is Ownable {
         emit PointsAwarded(reporter, msg.sender, points, category, reportId, block.timestamp);
     }
 
+    /// @notice Revoca los puntos de un reporte verificado que resultó falso.
+    /// @dev Solo el propietario (corrección sensible). El historial de la
+    ///      transacción permanece intacto (ledger inmutable); solo se corrige el
+    ///      estado actual: se resta del balance y se marca el reportId como
+    ///      revocado. Un reporte revocado no puede volver a otorgarse.
+    function revokePoints(string calldata reportId) external onlyOwner {
+        if (bytes(reportId).length == 0) revert EmptyReportId();
+
+        bytes32 reportKey = keccak256(bytes(reportId));
+        Award memory award = awards[reportKey];
+        if (award.reporter == address(0)) revert NotProcessed();
+        if (revokedReports[reportKey]) revert AlreadyRevoked();
+
+        revokedReports[reportKey] = true;
+        balances[award.reporter] -= award.points;
+
+        emit PointsRevoked(award.reporter, msg.sender, award.points, reportId, block.timestamp);
+    }
+
     /// @notice Devuelve los puntos acumulados on-chain para una wallet.
     function getBalance(address user) external view returns (uint256) {
         return balances[user];
@@ -106,6 +148,11 @@ contract PointLedger is Ownable {
     /// @notice Informa si un reportId ya fue procesado.
     function isReportProcessed(string calldata reportId) external view returns (bool) {
         return processedReports[keccak256(bytes(reportId))];
+    }
+
+    /// @notice Informa si el award de un reportId fue revocado.
+    function isReportRevoked(string calldata reportId) external view returns (bool) {
+        return revokedReports[keccak256(bytes(reportId))];
     }
 
     /// @notice Cantidad de transacciones registradas.

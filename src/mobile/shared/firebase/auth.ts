@@ -162,3 +162,17 @@ export async function updateUserProfile(uid: string, changes: Partial<Pick<UserP
     updatedAt: serverTimestamp(),
   });
 }
+
+export async function setUserStatus(
+  uid: string,
+  status: UserProfile['status'],
+  options?: { reason?: string; adminUid?: string },
+): Promise<void> {
+  await updateDoc(doc(firestore, 'users', uid), {
+    status,
+    banReason: status === 'suspended' ? options?.reason ?? null : null,
+    bannedBy: status === 'suspended' ? options?.adminUid ?? null : null,
+    bannedAt: status === 'suspended' ? serverTimestamp() : null,
+    updatedAt: serverTimestamp(),
+  });
+}

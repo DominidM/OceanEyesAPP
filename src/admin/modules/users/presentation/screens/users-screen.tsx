@@ -3,7 +3,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@/constants/theme';
-import { firestore } from '@/shared/firebase/app';
+import { firebaseAuth, firestore } from '@/shared/firebase/app';
+import { setUserStatus } from '@/shared/firebase/auth';
 import type { UserProfile } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/shared/theme/context';
 import { AdminShell } from '@admin/shared/components/admin-shell';
@@ -47,6 +48,15 @@ export function UsersScreen() {
     }
   };
 
+  const toggleStatus = async (u: UserRow) => {
+    const next = u.status === 'suspended' ? 'active' : 'suspended';
+    await setUserStatus(u.id, next, {
+      reason: next === 'suspended' ? 'Suspendido por el administrador.' : undefined,
+      adminUid: firebaseAuth?.currentUser?.uid,
+    });
+    setUsers((prev) => prev.map((row) => (row.id === u.id ? { ...row, status: next } : row)));
+  };
+
   return (
     <AdminShell title="Usuarios">
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
@@ -56,6 +66,7 @@ export function UsersScreen() {
 
         {users.map((u) => {
           const rc = roleConfig(u.role);
+          const suspended = u.status === 'suspended';
           return (
             <Card key={u.id} style={styles.row}>
               <View style={styles.rowMain}>
@@ -63,11 +74,21 @@ export function UsersScreen() {
                 <Text style={[styles.email, { color: colors.contentTextMuted }]}>{u.email ?? 'sin email'}</Text>
                 <View style={styles.tags}>
                   <Badge label={rc.label} color={rc.color} bg={rc.bg} />
+                  {suspended && (
+                    <Badge label="Suspendido" color={colors.danger} bg={colors.dangerBg} />
+                  )}
                   <Text style={[styles.stat, { color: colors.contentTextMuted }]}>
                     {u.pointsBalance ?? 0} pts · {u.verifiedReportsCount ?? 0} verificados
                   </Text>
                 </View>
               </View>
+              {u.role !== 'admin' && (
+                <Button
+                  label={suspended ? 'Activar' : 'Suspender'}
+                  variant={suspended ? 'primary' : 'danger'}
+                  onPress={() => toggleStatus(u)}
+                />
+              )}
             </Card>
           );
         })}

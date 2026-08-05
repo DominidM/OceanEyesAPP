@@ -93,7 +93,7 @@ function NavItem({
   return (
     <Pressable
       style={[styles.navItem, active && { backgroundColor: colors.sidebarActiveBg }]}
-      onPress={() => router.push(item.href!)}
+      onPress={() => router.push(item.href! as any)}
     >
       <Text style={[styles.navLabel, { color: colors.sidebarText, opacity: active ? 1 : 0.82 }]}>
         {item.label}

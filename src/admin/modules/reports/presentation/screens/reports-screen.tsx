@@ -15,6 +15,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@/constants/theme';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
+import { banDevice } from '@/shared/firebase/bans';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/shared/theme/context';
 import { AdminShell } from '@admin/shared/components/admin-shell';
@@ -27,6 +28,7 @@ type AdminReport = {
   status: ReportStatus;
   isAnonymous: boolean;
   userId: string;
+  deviceHash?: string | null;
   createdAt?: { toDate?: () => Date };
 };
 
@@ -83,6 +85,14 @@ export function ReportsScreen() {
     }
   };
 
+  const handleBanDevice = async (report: AdminReport) => {
+    if (!report.deviceHash) return;
+    await banDevice(report.deviceHash, {
+      reason: `Reporte falso/descartado: ${report.id}`,
+      bannedBy: firebaseAuth?.currentUser?.uid,
+    });
+  };
+
   return (
     <AdminShell title="Reportes">
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
@@ -126,6 +136,9 @@ export function ReportsScreen() {
                   )}
                   {(report.status === 'pendiente' || report.status === 'en_revision') && (
                     <Button label="Rechazar" variant="danger" onPress={() => changeStatus(report, 'descartado')} />
+                  )}
+                  {report.status === 'descartado' && report.deviceHash && (
+                    <Button label="Banear dispositivo" variant="danger" onPress={() => handleBanDevice(report)} />
                   )}
                 </View>
               </Card>

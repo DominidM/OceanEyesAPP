@@ -18,6 +18,7 @@ import { ReportFlowColors as C, SummaryColors as SC } from '../theme';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { signInAsGuest } from '@/shared/firebase/auth';
 import { publishReportOnline, saveReportOfflineFirst } from '@/shared/firebase/reports';
+import { useBan } from '@/shared/identity/ban-context';
 import { useConnectivity } from '@/shared/offline/connectivity-context';
 import { isNetworkError } from '@/shared/offline/sync-engine';
 
@@ -27,6 +28,7 @@ const STEP_PROGRESS = 20;
 export function ReportCreateScreen() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
+  const { verdict } = useBan();
   const { online } = useConnectivity();
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -86,6 +88,10 @@ export function ReportCreateScreen() {
 
   const handleSend = async () => {
     if (!incident || sending) return;
+    if (verdict !== 'ok') {
+      setSendError('Tu cuenta o dispositivo está bloqueado para enviar reportes.');
+      return;
+    }
     setSendError('');
     setSending(true);
     try {
@@ -161,7 +167,9 @@ export function ReportCreateScreen() {
         </Text>
         <Text style={styles.successBody}>
           {queued
-            ? 'Tu reporte se guardó en el dispositivo y se enviará automáticamente cuando sea posible.'
+            ? !user
+              ? 'Tu reporte quedó guardado en el dispositivo. Inicia sesión para poder enviarlo.'
+              : 'Tu reporte se guardó en el dispositivo y se enviará automáticamente cuando sea posible.'
             : 'Gracias por colaborar con la vigilancia marítima. Tu reporte será revisado.'}
         </Text>
         <Pressable

@@ -119,6 +119,69 @@ describe('PointLedger', function () {
     });
   });
 
+  describe('Revocación de puntos (revokePoints)', function () {
+    beforeEach(async function () {
+      await ledger.authorizeVerifier(verifier.address);
+      await ledger.connect(verifier).awardPoints(reporter.address, 'report-1', 'pesca_ilegal'); // 100
+    });
+
+    it('15. El propietario puede revocar un award y corrige el balance', async function () {
+      expect(await ledger.getBalance(reporter.address)).to.equal(100);
+      await expect(ledger.revokePoints('report-1'))
+        .to.emit(ledger, 'PointsRevoked')
+        .withArgs(reporter.address, owner.address, 100, 'report-1', anyValue);
+      expect(await ledger.getBalance(reporter.address)).to.equal(0);
+      expect(await ledger.isReportRevoked('report-1')).to.equal(true);
+      expect(await ledger.isReportProcessed('report-1')).to.equal(true);
+    });
+
+    it('16. Un verificador NO puede revocar (solo el propietario)', async function () {
+      await expect(ledger.connect(verifier).revokePoints('report-1'))
+        .to.be.revertedWithCustomError(ledger, 'OwnableUnauthorizedAccount')
+        .withArgs(verifier.address);
+      expect(await ledger.getBalance(reporter.address)).to.equal(100);
+    });
+
+    it('17. Un reporte no procesado no puede revocarse', async function () {
+      await expect(ledger.revokePoints('report-inexistente'))
+        .to.be.revertedWithCustomError(ledger, 'NotProcessed');
+    });
+
+    it('18. Un reporte ya revocado no puede revocarse de nuevo', async function () {
+      await ledger.revokePoints('report-1');
+      await expect(ledger.revokePoints('report-1'))
+        .to.be.revertedWithCustomError(ledger, 'AlreadyRevoked');
+    });
+
+    it('19. Un reportId vacío es rechazado al revocar', async function () {
+      await expect(ledger.revokePoints('')).to.be.revertedWithCustomError(ledger, 'EmptyReportId');
+    });
+
+    it('20. Tras revocar, el reporte no puede volver a otorgarse', async function () {
+      await ledger.revokePoints('report-1');
+      await expect(
+        ledger.connect(verifier).awardPoints(reporter.address, 'report-1', 'pesca_ilegal'),
+      ).to.be.revertedWithCustomError(ledger, 'AlreadyProcessed');
+    });
+
+    it('21. Una revocación solo resta los puntos de ese award', async function () {
+      await ledger.connect(verifier).awardPoints(reporter.address, 'r-2', 'basura_marina'); // 50
+      expect(await ledger.getBalance(reporter.address)).to.equal(150);
+      await ledger.revokePoints('report-1'); // -100
+      expect(await ledger.getBalance(reporter.address)).to.equal(50);
+      expect(await ledger.isReportRevoked('r-2')).to.equal(false);
+    });
+
+    it('El historial de la transacción permanece intacto tras la revocación', async function () {
+      await ledger.revokePoints('report-1');
+      const tx = await ledger.getTransaction(0);
+      expect(tx.reportId).to.equal('report-1');
+      expect(tx.points).to.equal(100);
+      expect(tx.reporter).to.equal(reporter.address);
+      expect(await ledger.getTransactionCount()).to.equal(1);
+    });
+  });
+
   describe('Registro y consultas', function () {
     beforeEach(async function () {
       await ledger.authorizeVerifier(verifier.address);

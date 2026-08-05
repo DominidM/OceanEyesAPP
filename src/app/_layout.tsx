@@ -39,6 +39,8 @@ const SCROLLBAR_CSS = `
 import { LandingSplash } from '@landing/presentation/components/landing-splash';
 import { CustomCursor } from '@landing/presentation/components/custom-cursor';
 import { AuthProvider } from '@/shared/firebase/auth-context';
+import { BanProvider, useBan } from '@/shared/identity/ban-context';
+import { BlockScreen } from '@/shared/components/block-screen';
 import { ConnectivityProvider } from '@/shared/offline/connectivity-context';
 import { SyncProvider } from '@/shared/offline/sync-context';
 
@@ -74,6 +76,14 @@ function SplashGate({ initialPath }: { initialPath: string | null }) {
   );
 }
 
+function BanGate({ children }: React.PropsWithChildren) {
+  const { verdict, reason } = useBan();
+
+  if (verdict === 'checking') return null;
+  if (verdict !== 'ok') return <BlockScreen verdict={verdict} reason={reason} />;
+  return <>{children}</>;
+}
+
 export default function RootLayout() {
   const pathname = usePathname();
   const initialPathRef = useRef<string | null>(pathname);
@@ -92,19 +102,23 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={AppLightTheme}>
       <AuthProvider>
-        <ConnectivityProvider>
-          <SyncProvider>
-            {Platform.OS === 'web' ? (
-              <View style={styles.webRoot}>
-                {isLandingPath && <CustomCursor />}
-                <SplashGate initialPath={splashInitialPath} />
-                <Slot />
-              </View>
-            ) : (
-              <Stack screenOptions={{ headerShown: false }} />
-            )}
-          </SyncProvider>
-        </ConnectivityProvider>
+        <BanProvider>
+          <BanGate>
+            <ConnectivityProvider>
+              <SyncProvider>
+                {Platform.OS === 'web' ? (
+                  <View style={styles.webRoot}>
+                    {isLandingPath && <CustomCursor />}
+                    <SplashGate initialPath={splashInitialPath} />
+                    <Slot />
+                  </View>
+                ) : (
+                  <Stack screenOptions={{ headerShown: false }} />
+                )}
+              </SyncProvider>
+            </ConnectivityProvider>
+          </BanGate>
+        </BanProvider>
       </AuthProvider>
     </ThemeProvider>
   );
