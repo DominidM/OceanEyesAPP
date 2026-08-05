@@ -67,8 +67,10 @@ export default function MobileLoginScreen() {
     try {
       const user = await signInWithGoogle();
       if (user) router.replace('/mobile');
-    } catch {
-      setError('No se pudo iniciar sesión con Google. Inténtalo nuevamente.');
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message ? `Error: ${e.message}` : 'No se pudo iniciar sesión con Google. Inténtalo nuevamente.',
+      );
     } finally {
       setBusy(false);
     }
