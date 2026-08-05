@@ -5,7 +5,7 @@ import { RewardsList } from '../sections/rewards/rewards-list/page';
 
 export function RewardsScreen() {
   return (
-    <AdminShell title="Recompensas">
+    <AdminShell title="Recompensas" breadcrumb={[{ label: 'Recompensas' }]}>
       <RewardsList />
     </AdminShell>
   );

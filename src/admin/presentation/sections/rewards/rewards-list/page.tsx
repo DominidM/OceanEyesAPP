@@ -7,15 +7,15 @@ import {
   query,
   startAfter,
 } from 'firebase/firestore';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { firestore } from '@/shared/firebase/app';
-import { deleteReward, updateReward } from '@/shared/firebase/rewards';
 import type { Reward } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Badge, Button, Card, EmptyState, IconButton, LoadingState, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, EmptyState, LoadingState, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
 
 type RewardRow = Reward & { id: string };
 
@@ -23,12 +23,12 @@ const PAGE_SIZE = 8;
 
 export function RewardsList() {
   const { colors } = useAdminTheme();
+  const router = useRouter();
   const [rewards, setRewards] = useState<RewardRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageCursors, setPageCursors] = useState<any[]>([]);
   const [totalDocs, setTotalDocs] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
   const currentPageRef = useRef(currentPage);
 
   useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
@@ -79,44 +79,6 @@ export function RewardsList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleActive = async (reward: RewardRow) => {
-    setBusyId(reward.id);
-    try {
-      await updateReward(reward.id, { active: !reward.active });
-      setRewards((prev) => prev.map((r) => (r.id === reward.id ? { ...r, active: !r.active } : r)));
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const handleDelete = (reward: RewardRow) => {
-    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      if (!window.confirm(`¿Eliminar la recompensa "${reward.title}"? Esta acción no se puede deshacer.`)) return;
-      doDelete(reward);
-      return;
-    }
-    Alert.alert('Eliminar recompensa', `¿Eliminar "${reward.title}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => doDelete(reward) },
-    ]);
-  };
-
-  const doDelete = async (reward: RewardRow) => {
-    setBusyId(reward.id);
-    try {
-      await deleteReward(reward.id);
-      await fetchTotal();
-      const current = currentPageRef.current;
-      if (rewards.length === 1 && current > 1) {
-        await loadPage(current - 1);
-      } else {
-        await loadPage(current);
-      }
-    } finally {
-      setBusyId(null);
-    }
-  };
-
   const hoverBg = 'rgba(148,163,184,0.08)';
 
   return (
@@ -124,6 +86,9 @@ export function RewardsList() {
       <SectionHeader
         title="Catálogo de recompensas"
         subtitle="Recompensas que los usuarios canjean con los puntos acumulados."
+        actions={[
+          <Button key="add" label="Agregar" onPress={() => router.push('/admin/rewards/new')} />,
+        ]}
       />
 
       {loading && rewards.length === 0 && (
@@ -151,7 +116,6 @@ export function RewardsList() {
             {rewards.map((reward) => {
               const stockLabel = reward.stock === null ? '∞' : String(reward.stock);
               const active = reward.active;
-              const busy = busyId === reward.id;
               return (
                 <Pressable
                   key={reward.id}
@@ -186,17 +150,13 @@ export function RewardsList() {
                   </View>
                   <View style={styles.cellActions}>
                     <Button
-                      label={active ? 'Desactivar' : 'Activar'}
-                      variant={active ? 'danger' : 'primary'}
-                      onPress={() => toggleActive(reward)}
-                      disabled={busy}
+                      label="Ver"
+                      variant="secondary"
+                      onPress={() => router.push(`/admin/rewards/${reward.id}`)}
                     />
-                    <IconButton
-                      icon="delete-outline"
-                      label="Eliminar"
-                      color={colors.danger}
-                      onPress={() => handleDelete(reward)}
-                      style={{ marginLeft: Spacing.two }}
+                    <Button
+                      label="Editar"
+                      onPress={() => router.push(`/admin/rewards/${reward.id}/edit`)}
                     />
                   </View>
                 </Pressable>
