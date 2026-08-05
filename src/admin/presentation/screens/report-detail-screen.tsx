@@ -162,24 +162,7 @@ export function ReportDetailScreen() {
               </View>
             ) : null}
 
-            <View style={styles.infoList}>
-              {pairs.map((pair, i) => (
-                <View key={i} style={[styles.infoPairRow, { borderBottomColor: colors.cardBorder }]}>
-                  {pair.map((r, idx) => (
-                    <React.Fragment key={r.label}>
-                      {idx > 0 ? (
-                        <View style={[styles.infoDivider, { backgroundColor: colors.cardBorder }]} />
-                      ) : null}
-                      <View style={styles.infoCell}>
-                        <Text style={[styles.infoLabel, { color: colors.contentTextMuted }]}>{r.label}</Text>
-                        <Text style={[styles.infoValue, { color: colors.cardText }]}>{r.value}</Text>
-                      </View>
-                    </React.Fragment>
-                  ))}
-                  {pair.length === 1 ? <View style={styles.infoCell} /> : null}
-                </View>
-              ))}
-            </View>
+            <ReportDataList rows={rows} />
           </View>
 
           <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
@@ -270,17 +253,5 @@ const styles = StyleSheet.create({
   descriptionBox: { gap: Spacing.one },
   descriptionLabel: { fontFamily: Fonts.label, fontSize: 13, fontWeight: '600' },
   description: { fontFamily: Fonts.body, fontSize: 14, lineHeight: 21 },
-  infoList: { gap: 0 },
-  infoPairRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.four,
-    paddingVertical: Spacing.three,
-    borderBottomWidth: 1,
-  },
-  infoCell: { flex: 1, minWidth: 0, gap: Spacing.half },
-  infoDivider: { width: 1, alignSelf: 'stretch' },
-  infoLabel: { fontFamily: Fonts.label, fontSize: 12, fontWeight: '600' },
-  infoValue: { fontFamily: Fonts.body, fontSize: 14, flexShrink: 1 },
   actionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
 });
