@@ -11,9 +11,10 @@ import { AdminHeader } from './header/admin-header';
 
 type AdminShellProps = PropsWithChildren<{
   title: string;
+  breadcrumb?: { label: string; href?: string }[];
 }>;
 
-export function AdminShell({ children, title }: AdminShellProps) {
+export function AdminShell({ children, title, breadcrumb }: AdminShellProps) {
   const { colors, mode } = useAdminTheme();
   const router = useRouter();
   const isDark = mode === 'dark';
@@ -34,7 +35,26 @@ export function AdminShell({ children, title }: AdminShellProps) {
             <Text style={[styles.breadcrumbText, { color: chromeText }]}>Panel</Text>
           </Pressable>
           <Text style={[styles.breadcrumbSep, { color: chromeText }]}>›</Text>
-          <Text style={[styles.breadcrumbCurrent, { color: chromeStrong }]}>{title}</Text>
+          {breadcrumb?.length
+            ? breadcrumb.map((crumb, i) => {
+                const isLast = i === breadcrumb.length - 1;
+                return (
+                  <React.Fragment key={`${crumb.label}-${i}`}>
+                    {isLast ? (
+                      <Text style={[styles.breadcrumbCurrent, { color: chromeStrong }]}>{crumb.label}</Text>
+                    ) : (
+                      <Pressable
+                        onPress={crumb.href ? () => router.push(crumb.href!) : undefined}
+                        style={styles.breadcrumbLink}
+                      >
+                        <Text style={[styles.breadcrumbText, { color: chromeText }]}>{crumb.label}</Text>
+                      </Pressable>
+                    )}
+                    {!isLast && <Text style={[styles.breadcrumbSep, { color: chromeText }]}>›</Text>}
+                  </React.Fragment>
+                );
+              })
+            : <Text style={[styles.breadcrumbCurrent, { color: chromeStrong }]}>{title}</Text>}
         </View>
         <ScrollView
           style={styles.content}

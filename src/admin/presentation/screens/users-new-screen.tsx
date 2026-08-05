@@ -74,7 +74,7 @@ export function UsersNewScreen() {
   };
 
   return (
-    <AdminShell title="Nuevo usuario">
+    <AdminShell title="Nuevo usuario" breadcrumb={[{ label: 'Usuarios', href: '/admin/users' }, { label: 'Nuevo' }]}>
       <SectionHeader
         title="Crear usuario"
         subtitle="Registra una cuenta para un pescador o ciudadano."

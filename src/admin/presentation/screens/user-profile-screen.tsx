@@ -54,7 +54,7 @@ export function UserProfileScreen() {
     : [];
 
   return (
-    <AdminShell title="Perfil de usuario">
+    <AdminShell title="Perfil de usuario" breadcrumb={[{ label: 'Usuarios', href: '/admin/users' }, { label: 'Perfil' }]}>
       <SectionHeader
         title={profile?.displayName ?? 'Usuario'}
         subtitle="Detalle del perfil de la cuenta."
