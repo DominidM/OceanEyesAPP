@@ -8,7 +8,7 @@ import { toClaimCard, toRewardCard, type Reward } from '../data/rewards';
 
 export function useRewardsData() {
   const { user } = useAuth();
-  const guest = !user || user.isAnonymous;
+  const guest = !user;
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [claims, setClaims] = useState<Reward[]>([]);
 

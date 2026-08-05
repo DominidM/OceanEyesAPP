@@ -4,7 +4,7 @@ import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { isGoogleSignInAvailable, isAppleSignInAvailable, loginWithEmail, registerUser, signInWithGoogle, signInWithApple, /* signInAsGuest */ } from '@/shared/firebase/auth';
+import { isGoogleSignInAvailable, isAppleSignInAvailable, loginWithEmail, registerUser, signInAsGuest, signInWithGoogle, signInWithApple } from '@/shared/firebase/auth';
 import type { ProfileType } from '@/shared/firebase/types';
 
 export default function MobileLoginScreen() {
@@ -47,9 +47,16 @@ export default function MobileLoginScreen() {
     }
   };
 
-  const submitAsGuest = () => {
-    // Invitado sin Firebase: solo redirige al home.
-    // await signInAsGuest();
+  const submitAsGuest = async () => {
+    // Invitado: se crea una sesión anónima en Firebase (requiere habilitar el sign-in
+    // anónimo en Firebase Auth). Si no está configurado o falla, se continúa localmente.
+    if (isFirebaseConfigured()) {
+      try {
+        await signInAsGuest();
+      } catch {
+        // Sin sesión anónima: seguimos como invitado local.
+      }
+    }
     router.replace('/mobile');
   };
 
