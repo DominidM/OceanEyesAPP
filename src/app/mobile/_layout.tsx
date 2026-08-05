@@ -10,7 +10,7 @@ import { useAppFonts } from '@/hooks/useAppFonts';
 export default function MobileLayout() {
   const { loaded } = useAppFonts();
 
-  if (Platform.OS === 'web') return <Redirect href="/" />;
+  if (Platform.OS === 'web') return <Redirect href="/admin" />;
   if (!loaded) return null;
 
   return (
