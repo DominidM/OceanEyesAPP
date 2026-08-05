@@ -38,6 +38,18 @@ export async function createReward(input: Omit<Reward, 'id' | 'createdAt'>): Pro
   return ref.id;
 }
 
+export async function updateReward(rewardId: string, changes: Partial<Pick<Reward, 'title' | 'description' | 'pointsCost' | 'stock' | 'active' | 'sponsor' | 'imageURL'>>): Promise<void> {
+  const { deleteField } = await import('firebase/firestore');
+  const data: Record<string, any> = { ...changes, updatedAt: serverTimestamp() };
+  if ('stock' in changes && changes.stock === null) data.stock = deleteField();
+  await updateDoc(doc(firestore, 'rewards', rewardId), data);
+}
+
+export async function deleteReward(rewardId: string): Promise<void> {
+  const { deleteDoc } = await import('firebase/firestore');
+  await deleteDoc(doc(firestore, 'rewards', rewardId));
+}
+
 /* ── Canje de recompensas ── */
 
 export async function redeemReward(userId: string, rewardId: string): Promise<string> {

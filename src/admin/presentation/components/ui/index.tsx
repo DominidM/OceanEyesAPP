@@ -85,9 +85,10 @@ type ButtonProps = {
   onPress?: () => void;
   variant?: ButtonVariant;
   style?: Record<string, any>;
+  disabled?: boolean;
 };
 
-export function Button({ label, onPress, variant = 'primary', style }: ButtonProps) {
+export function Button({ label, onPress, variant = 'primary', style, disabled }: ButtonProps) {
   const { colors } = useAdminTheme();
   const { View: RNView, Pressable } = require('react-native');
 
@@ -100,8 +101,13 @@ export function Button({ label, onPress, variant = 'primary', style }: ButtonPro
 
   return (
     <Pressable
-      onPress={onPress}
-      style={[styles.btn, { backgroundColor: v.bg, borderColor: v.border, borderWidth: variant === 'secondary' ? 1 : 0 }, style]}
+      onPress={disabled ? undefined : onPress}
+      style={[
+        styles.btn,
+        { backgroundColor: v.bg, borderColor: v.border, borderWidth: variant === 'secondary' ? 1 : 0 },
+        disabled && { opacity: 0.5 },
+        style,
+      ]}
     >
       <Text style={[styles.btnLabel, { color: v.text }]}>{label}</Text>
     </Pressable>
