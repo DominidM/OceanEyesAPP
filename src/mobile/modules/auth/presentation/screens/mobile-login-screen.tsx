@@ -112,12 +112,14 @@ export default function MobileLoginScreen() {
               </View>
               <Text style={styles.googleLabel}>Continuar con Google</Text>
             </Pressable>
-            <Pressable disabled={busy} onPress={submitWithApple} style={styles.appleButton}>
-              <View style={styles.appleLogo}>
-                <Text style={styles.appleLogoText}></Text>
-              </View>
-              <Text style={styles.appleLabel}>Iniciar sesión con Apple</Text>
-            </Pressable>
+            {Platform.OS === 'ios' && (
+              <Pressable disabled={busy} onPress={submitWithApple} style={styles.appleButton}>
+                <View style={styles.appleLogo}>
+                  <Text style={styles.appleLogoText}></Text>
+                </View>
+                <Text style={styles.appleLabel}>Iniciar sesión con Apple</Text>
+              </Pressable>
+            )}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>o</Text>
