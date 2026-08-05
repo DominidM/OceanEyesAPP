@@ -8,7 +8,7 @@ import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { useCurrentLocation } from '@/shared/hooks/use-current-location';
 import { useLiveReports } from '@/shared/hooks/use-live-reports';
-import type { Report as FirestoreReport } from '@/shared/firebase/types';
+import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
 
 import { AlertCard, type Alert } from '../components/alert-card';
 import { haversineKm } from '../utils/distance';
@@ -104,7 +104,7 @@ export function AlertsScreen() {
   );
 }
 
-function toAlerts(reports: FirestoreReport[], position: Location.LocationObject | null): Alert[] {
+function toAlerts(reports: ReportDto[], position: Location.LocationObject | null): Alert[] {
   if (!position) return [];
 
   const { latitude, longitude } = position.coords;
@@ -119,7 +119,7 @@ function toAlerts(reports: FirestoreReport[], position: Location.LocationObject 
     ) {
       continue;
     }
-    const date = report.createdAt?.toDate?.() ?? new Date();
+    const date = new Date(report.createdAt);
     alerts.push({
       id: report.id,
       category: report.category,

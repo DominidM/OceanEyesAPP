@@ -1,11 +1,12 @@
-import type { Report as FirestoreReport, ReportCategory, ReportStatus } from '@/shared/firebase/types';
+import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
+import type { ReportCategory, ReportStatus } from '@/shared/firebase/types';
 
 export type MapReport = {
   id: string;
   latitude: number;
   longitude: number;
   category: ReportCategory;
-  status: ReportStatus;
+  status: ReportDto['status'];
   title: string;
   description?: string;
   createdAt: number;
@@ -25,7 +26,7 @@ export const STATUS_OPACITY: Record<ReportStatus, number> = {
   descartado: 0.3,
 };
 
-export function toMapReport(report: FirestoreReport): MapReport | null {
+export function toMapReport(report: ReportDto): MapReport | null {
   const latitude = report.location?.latitude;
   const longitude = report.location?.longitude;
   if (latitude == null || longitude == null) return null;
@@ -36,8 +37,8 @@ export function toMapReport(report: FirestoreReport): MapReport | null {
     category: report.category,
     status: report.status,
     title: report.title,
-    description: report.description,
-    createdAt: report.createdAt?.toMillis?.() ?? Date.now(),
+    description: report.description ?? undefined,
+    createdAt: new Date(report.createdAt).getTime(),
     address: report.location?.address,
   };
 }

@@ -5,10 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { getMyReports } from '@/shared/firebase/reports';
 import { useAuth } from '@/shared/firebase/auth-context';
-import type { Report as FirestoreReport } from '@/shared/firebase/types';
+import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
 import { useAsyncData } from '@/shared/hooks/use-async-data';
+import { useDb } from '@/shared/hooks/use-db';
 import { useGuestStatus } from '@/shared/hooks/use-guest-status';
 import { useLiveReports } from '@/shared/hooks/use-live-reports';
 
@@ -27,14 +27,15 @@ type HomeSectionProps = {
 
 export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onPendingPress }: HomeSectionProps) {
   const insets = useSafeAreaInsets();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const guest = useGuestStatus();
-  const { data: myReports } = useAsyncData<FirestoreReport[]>(
+  const db = useDb('reports');
+  const { data: myReports } = useAsyncData<ReportDto[]>(
     async () => {
-      if (!isFirebaseConfigured() || guest) return [];
-      return getMyReports();
+      if (!isFirebaseConfigured() || guest || !user) return [];
+      return db.getMyReports(user.uid);
     },
-    [guest],
+    [guest, db, user],
   );
   const { reports } = useLiveReports<MapReport>((items) => items.map(toMapReport).filter(isMapReport));
   const myReportCount = myReports?.length ?? 0;

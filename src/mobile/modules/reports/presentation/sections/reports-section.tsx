@@ -3,7 +3,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors } from '@/constants/theme';
-import type { Report as FirestoreReport, ReportStatus } from '@/shared/firebase/types';
+import type { ReportStatus } from '@/shared/firebase/types';
+import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
 import type { PendingReport } from '@/shared/offline/outbox';
 import { requestSync } from '@/shared/offline/sync-engine';
 
@@ -147,8 +148,8 @@ function toQueuedCard(pending: PendingReport): Report {
   };
 }
 
-function toCardReport(report: FirestoreReport): Report {
-  const date = report.createdAt?.toDate?.() ?? new Date();
+function toCardReport(report: ReportDto): Report {
+  const date = new Date(report.createdAt);
   const statusMap: Record<ReportStatus, { label: string; bg: string; text: string; icon: Report['statusIcon'] }> = {
     pendiente: { label: 'Pendiente', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
     en_revision: { label: 'En revisión', bg: SurfaceColors.reviewBg, text: SurfaceColors.reviewText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
@@ -169,7 +170,7 @@ function toCardReport(report: FirestoreReport): Report {
     statusIcon,
     thumbnail: report.category === 'pesca_ilegal' ? 'net' : report.category === 'basura_marina' ? 'boat' : 'pending',
     statusKey: report.status,
-    pointsAwarded: report.pointsAwarded ?? 0,
+    pointsAwarded: report.pointsAwarded,
   };
 }
 

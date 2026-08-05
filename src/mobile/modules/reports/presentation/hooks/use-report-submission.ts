@@ -1,19 +1,16 @@
 import { useCallback, useState } from 'react';
 
-import { signInAsGuest } from '@/shared/firebase/auth';
-import { useAuth } from '@/shared/firebase/auth-context';
-import { publishReportOnline, saveReportOfflineFirst } from '@/shared/firebase/reports';
 import type { ReportInput } from '@/shared/firebase/types';
 import { useBan } from '@/shared/identity/ban-context';
 import { useConnectivity } from '@/shared/offline/connectivity-context';
-import { isNetworkError } from '@/shared/offline/sync-engine';
+import { useDb } from '@/shared/hooks/use-db';
 
 export type SubmissionMedia = { uri: string; kind: 'photo' | 'video' };
 
 export function useReportSubmission() {
-  const { user } = useAuth();
   const { verdict } = useBan();
   const { online } = useConnectivity();
+  const db = useDb('reports');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
   const [queued, setQueued] = useState(false);
@@ -28,36 +25,18 @@ export function useReportSubmission() {
       setSendError('');
       setSending(true);
       try {
-        // Invitado sin sesión: se crea una sesión anónima solo al momento de enviar.
-        // Requiere habilitar el sign-in anónimo en Firebase Auth. Si falla (p. ej. Firebase
-        // sin configurar), el reporte se encola localmente en lugar de bloquear al usuario.
-        if (!user) {
-          try {
-            await signInAsGuest();
-          } catch {
-            await saveReportOfflineFirst(input, media);
-            setQueued(true);
-            setSubmitted(true);
-            return;
-          }
-        }
-
-        if (online) {
-          try {
-            await publishReportOnline(input, media);
-            setQueued(false);
-          } catch (error) {
-            if (isNetworkError(error)) {
-              await saveReportOfflineFirst(input, media);
-              setQueued(true);
-            } else {
-              throw error;
-            }
-          }
-        } else {
-          await saveReportOfflineFirst(input, media);
-          setQueued(true);
-        }
+        const result = await db.submit(
+          {
+            category: input.category,
+            title: input.title,
+            description: input.description,
+            isAnonymous: input.isAnonymous,
+            location: input.location,
+            media,
+          },
+          { online },
+        );
+        setQueued(result.queued);
         setSubmitted(true);
       } catch {
         setSendError('No se pudo guardar el reporte. Revisa tu conexión e inténtalo nuevamente.');
@@ -65,7 +44,7 @@ export function useReportSubmission() {
         setSending(false);
       }
     },
-    [user, verdict, online],
+    [verdict, online, db],
   );
 
   const reset = useCallback(() => {

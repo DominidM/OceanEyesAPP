@@ -1,29 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { subscribeReports } from '@/shared/firebase/reports';
-import type { Report as FirestoreReport } from '@/shared/firebase/types';
+import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
+import { useDb } from '@/shared/hooks/use-db';
 
-export function useLiveReports<T = FirestoreReport>(
-  transform?: (reports: FirestoreReport[]) => T[],
+export function useLiveReports<T = ReportDto>(
+  transform?: (reports: ReportDto[]) => T[],
 ): { reports: T[]; loading: boolean } {
   const [reports, setReports] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const transformRef = useRef(transform);
   transformRef.current = transform;
+  const db = useDb('reports');
 
   useEffect(() => {
-    if (!isFirebaseConfigured()) {
-      setLoading(false);
-      return;
-    }
-    const unsubscribe = subscribeReports((items) => {
+    const unsubscribe = db.subscribe((items) => {
       const map = transformRef.current;
       setReports(map ? map(items) : (items as unknown as T[]));
     });
     setLoading(false);
     return unsubscribe;
-  }, []);
+  }, [db]);
 
   return { reports, loading };
 }
