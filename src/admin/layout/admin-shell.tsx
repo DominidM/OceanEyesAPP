@@ -8,10 +8,11 @@ import { themeTransition } from '@admin/config/admin-theme';
 import { useAdminTheme } from '@admin/theme/context';
 import { AdminSidebar } from './sidebar/admin-sidebar';
 import { AdminHeader } from './header/admin-header';
+import { AdminRoute } from '@admin/config/admin-nav';
 
 type AdminShellProps = PropsWithChildren<{
   title: string;
-  breadcrumb?: { label: string; href?: string }[];
+  breadcrumb?: { label: string; href?: AdminRoute }[];
 }>;
 
 export function AdminShell({ children, title, breadcrumb }: AdminShellProps) {
