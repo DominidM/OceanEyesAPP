@@ -1,4 +1,5 @@
 import { collection, getCountFromServer, getDocs, limit as fireLimit, orderBy, query, startAfter } from 'firebase/firestore';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -15,6 +16,7 @@ const PAGE_SIZE = 10;
 
 export function UsersList() {
   const { colors } = useAdminTheme();
+  const router = useRouter();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageCursors, setPageCursors] = useState<any[]>([]);
@@ -95,6 +97,9 @@ export function UsersList() {
       <SectionHeader
         title="Administración de usuarios"
         subtitle="Gestiona roles, puntos y suspende cuentas de la plataforma."
+        actions={[
+          <Button key="add" label="Agregar" onPress={() => router.push('/admin/users/new')} />,
+        ]}
       />
 
       {loading && users.length === 0 && (
@@ -146,11 +151,17 @@ export function UsersList() {
                   <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.pointsBalance ?? 0}</Text>
                   <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.verifiedReportsCount ?? 0}</Text>
                   <View style={styles.cellActions}>
-                    {u.role !== 'admin' && (
+                    {u.role !== 'admin' ? (
                       <Button
                         label={suspended ? 'Activar' : 'Suspender'}
                         variant={suspended ? 'primary' : 'danger'}
                         onPress={() => toggleStatus(u)}
+                      />
+                    ) : (
+                      <Button
+                        label="Ver perfil"
+                        variant="secondary"
+                        onPress={() => router.push(`/admin/users/${u.id}`)}
                       />
                     )}
                   </View>

@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
-import { loginWithEmail } from '@/shared/firebase/auth';
+import { loginWithEmail, rememberAdminSession } from '@/shared/firebase/auth';
 
 const logoImg = require('../../../../assets/images/OCEAN-EYES-LOGO.png');
 
@@ -20,6 +20,7 @@ export function AdminLoginScreen() {
     setBusy(true);
     try {
       await loginWithEmail(email.trim(), password);
+      rememberAdminSession(email.trim(), password);
       router.replace('/admin');
     } catch (e: any) {
       const msg = e?.code || e?.message || String(e);

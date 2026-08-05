@@ -108,6 +108,47 @@ export async function registerUser(input: {
   return credential.user;
 }
 
+let adminSession: { email: string; password: string } | null = null;
+
+export function rememberAdminSession(email: string, password: string) {
+  adminSession = { email, password };
+}
+
+export async function createUserByAdmin(input: {
+  email: string;
+  password: string;
+  displayName: string;
+  profileType: ProfileType;
+  dni?: string;
+}) {
+  const credential = await createUserWithEmailAndPassword(requireAuth(), input.email, input.password);
+  await updateProfile(credential.user, { displayName: input.displayName });
+
+  await setDoc(doc(firestore, 'users', credential.user.uid), {
+    role: 'user',
+    profileType: input.profileType,
+    displayName: input.displayName,
+    email: input.email,
+    dni: input.dni ?? null,
+    pointsBalance: 0,
+    totalPointsEarned: 0,
+    verifiedReportsCount: 0,
+    status: 'active',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  if (adminSession) {
+    try {
+      await signInWithEmailAndPassword(requireAuth(), adminSession.email, adminSession.password);
+    } catch {
+      // Si falla el re-inicio de sesión, el admin deberá volver a entrar.
+    }
+  }
+
+  return credential.user.uid;
+}
+
 export async function loginWithEmail(email: string, password: string) {
   const credential = await signInWithEmailAndPassword(requireAuth(), email, password);
   return credential.user;
