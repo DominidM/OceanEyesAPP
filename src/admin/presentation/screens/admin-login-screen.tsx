@@ -1,9 +1,13 @@
 import { router } from 'expo-router';
+import { Image } from 'expo-image';
+import { FontAwesome5 } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { loginWithEmail } from '@/shared/firebase/auth';
+
+const logoImg = require('../../../../assets/images/OCEAN-EYES-LOGO.png');
 
 export function AdminLoginScreen() {
   const [email, setEmail] = useState('admin@oceaneyes.com');
@@ -26,10 +30,13 @@ export function AdminLoginScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundImage: 'linear-gradient(180deg, #051F2D 0%, #0E3D52 35%, #134E5E 60%, #1A7F8A 85%, #22B0B8 100%)' }]}>
       <View style={styles.brandBlock}>
-        <Text style={styles.brand}>OceanEyes</Text>
-        <Text style={styles.brandSub}>Panel de administración</Text>
+        <Image source={logoImg} style={styles.logo} contentFit="contain" />
+        <View style={styles.brandText}>
+          <Text style={styles.brand}>OceanEyes</Text>
+          <Text style={styles.brandSub}>Panel de administración</Text>
+        </View>
       </View>
 
       <View style={styles.card}>
@@ -72,7 +79,13 @@ export function AdminLoginScreen() {
         </View>
       </View>
 
-      <Text style={styles.footer}>OceanEyes · Gestión de vigilancia marina</Text>
+      <View style={styles.bottomRow}>
+        <Pressable onPress={() => router.push('/')} style={styles.backBtn}>
+          <FontAwesome5 name="arrow-left" size={14} color={BrandColors.tertiary} />
+          <Text style={styles.backLabel}>Volver al inicio</Text>
+        </Pressable>
+        <Text style={styles.footer}>OceanEyes · Gestión de vigilancia marina</Text>
+      </View>
     </View>
   );
 }
@@ -84,14 +97,22 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: BrandColors.primary,
     padding: Spacing.five,
     cursor: 'auto',
   },
   brandBlock: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
+    gap: Spacing.three,
     marginBottom: Spacing.five,
+  },
+  logo: {
+    width: 36,
+    height: 36,
+    transform: [{ scale: 3.5 }, { translateY: 1 }],
+  },
+  brandText: {
+    gap: Spacing.one,
   },
   brand: {
     color: BrandColors.tertiary,
@@ -104,6 +125,31 @@ const styles = StyleSheet.create({
     color: BrandColors.secondary,
     fontFamily: Fonts.body,
     fontSize: 14,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    maxWidth: 440,
+    marginTop: Spacing.four,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two - 2,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three - 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    cursor: 'pointer',
+  },
+  backLabel: {
+    color: BrandColors.tertiary,
+    fontFamily: Fonts.label,
+    fontSize: 13,
+    fontWeight: '600',
   },
   card: {
     width: '100%',
@@ -181,10 +227,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   footer: {
-    color: BrandColors.secondary,
+    color: 'rgba(255,255,255,0.60)',
     fontFamily: Fonts.body,
-    fontSize: 12,
-    marginTop: Spacing.five,
-    opacity: 0.8,
+    fontSize: 13,
   },
 });

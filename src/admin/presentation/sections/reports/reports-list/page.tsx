@@ -19,7 +19,7 @@ import { firebaseAuth, firestore } from '@/shared/firebase/app';
 import { banDevice } from '@/shared/firebase/bans';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Card, Badge, IconButton, SectionHeader, PaginationFooter, EmptyState } from '@admin/presentation/components/ui';
+import { Card, Badge, IconButton, SectionHeader, PaginationFooter, EmptyState, LoadingState } from '@admin/presentation/components/ui';
 
 type AdminReport = {
   id: string;
@@ -140,7 +140,7 @@ export function ReportsList() {
       />
 
       {loading && reports.length === 0 && (
-        <Text style={[styles.empty, { color: colors.contentTextMuted }]}>Cargando reportes...</Text>
+        <LoadingState label="Cargando reportes..." />
       )}
       {!loading && totalDocs === 0 && (
         <EmptyState

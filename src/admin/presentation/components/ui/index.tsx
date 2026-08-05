@@ -1,5 +1,5 @@
-import React, { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { ComponentProps, useEffect, useRef } from 'react';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -204,6 +204,33 @@ export function EmptyState({
   );
 }
 
+export function LoadingState({ label }: { label?: string }) {
+  const { colors } = useAdminTheme();
+  const fade = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(fade, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 0.35, duration: 800, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [fade]);
+
+  return (
+    <View style={styles.loadingState}>
+      <Animated.View style={{ opacity: fade }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </Animated.View>
+      {label ? (
+        <Text style={[styles.loadingLabel, { color: colors.contentTextMuted }]}>{label}</Text>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
@@ -342,5 +369,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  loadingState: {
+    alignItems: 'center',
+    gap: Spacing.three,
+    paddingVertical: Spacing.six,
+  },
+  loadingLabel: {
+    fontFamily: Fonts.body,
+    fontSize: 14,
   },
 });

@@ -5,7 +5,7 @@ import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { banDevice, listBannedDevices, unbanDevice, type BannedDevice } from '@/shared/firebase/bans';
 import { useAdminTheme } from '@admin/theme/context';
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, SectionHeader, LoadingState, EmptyState } from '@admin/presentation/components/ui';
 
 export function BansScreen() {
   const { colors } = useAdminTheme();
@@ -67,10 +67,14 @@ export function BansScreen() {
         </Card>
 
         {loading && devices.length === 0 && (
-          <Text style={[styles.empty, { color: colors.contentTextMuted }]}>Cargando dispositivos...</Text>
+          <LoadingState label="Cargando dispositivos..." />
         )}
         {!loading && devices.length === 0 && (
-          <Text style={[styles.empty, { color: colors.contentTextMuted }]}>No hay dispositivos baneados.</Text>
+          <EmptyState
+            icon="shield-check-outline"
+            title="Sin dispositivos baneados"
+            description="No hay dispositivos bloqueados. Puedes banear manualmente o desde un reporte descartado."
+          />
         )}
 
         <View style={styles.list}>

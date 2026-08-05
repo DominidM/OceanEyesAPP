@@ -1,0 +1,1 @@
+export { RewardsScreen as default } from '@admin/presentation/screens/rewards-screen';

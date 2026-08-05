@@ -7,7 +7,7 @@ import { firebaseAuth, firestore } from '@/shared/firebase/app';
 import { setUserStatus } from '@/shared/firebase/auth';
 import type { UserProfile } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Badge, Card, Button, PaginationFooter, EmptyState, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Card, Button, PaginationFooter, EmptyState, SectionHeader, LoadingState } from '@admin/presentation/components/ui';
 
 type UserRow = UserProfile & { id: string };
 
@@ -98,7 +98,7 @@ export function UsersList() {
       />
 
       {loading && users.length === 0 && (
-        <Text style={[styles.empty, { color: colors.contentTextMuted }]}>Cargando usuarios...</Text>
+        <LoadingState label="Cargando usuarios..." />
       )}
       {!loading && totalDocs === 0 && (
         <EmptyState

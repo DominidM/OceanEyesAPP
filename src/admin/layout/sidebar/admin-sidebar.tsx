@@ -67,18 +67,6 @@ export function AdminSidebar() {
 }
 
 function NavItem({ item, active }: { item: AdminNavItem; active: boolean }) {
-  if (!item.href) {
-    return (
-      <View style={styles.navItem}>
-        <View style={styles.navLabelRow}>
-          <FontAwesome5 name={item.icon} size={15} color={SIDEBAR_DARK.text} style={styles.navIcon} />
-          <Text style={[styles.navLabel, { color: SIDEBAR_DARK.text, opacity: 0.5 }]}>{item.label}</Text>
-        </View>
-        <Text style={[styles.navSoon, { color: SIDEBAR_DARK.textMuted }]}>Pronto</Text>
-      </View>
-    );
-  }
-
   return (
     <Pressable
       style={[styles.navItem, active && { backgroundColor: SIDEBAR_DARK.activeBg }]}
@@ -167,12 +155,5 @@ const styles = StyleSheet.create({
   },
   navIcon: {
     width: 20,
-  },
-  navSoon: {
-    fontFamily: Fonts.label,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
   },
 });
