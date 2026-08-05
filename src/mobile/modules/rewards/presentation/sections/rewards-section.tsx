@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,23 +7,52 @@ import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/cons
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { SectionHeader } from '@/shared/components/section-header';
 import { useAuth } from '@/shared/firebase/auth-context';
+import { isFirebaseConfigured } from '@/shared/firebase/config';
+import { getAllRewards, getUserRedemptions } from '@/shared/firebase/rewards';
 
 import { PointsCard } from '../components/points-card';
 import { RecentFooter } from '../components/recent-footer';
 import { RewardItem } from '../components/reward-item';
 import { RewardsTutorial } from '../components/rewards-tutorial';
 import { SectionTabs, RewardsTab } from '../components/section-tabs';
-import { RECENT_CLAIMS, REWARDS } from '../data/rewards';
+import { levelLabelFor, toClaimCard, toRewardCard, type Reward } from '../data/rewards';
+import { RewardsColors } from '../theme';
 
 export function RewardsSection() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [tab, setTab] = useState<RewardsTab>('recompensas');
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [claims, setClaims] = useState<Reward[]>([]);
 
   const guest = !user || user.isAnonymous;
-  const items = tab === 'recompensas' ? REWARDS : RECENT_CLAIMS;
+  const items = tab === 'recompensas' ? rewards : claims;
+
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return;
+    getAllRewards()
+      .then((catalog) => setRewards(catalog.map(toRewardCard)))
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured() || guest || !user) {
+      setClaims([]);
+      return;
+    }
+    getUserRedemptions(user.uid)
+      .then((redemptions) => setClaims(redemptions.map(toClaimCard)))
+      .catch(() => undefined);
+  }, [guest, user]);
+
+  const balance = profile?.pointsBalance;
+  const levelLabel = guest || !profile ? undefined : levelLabelFor(profile.totalPointsEarned);
+  const progress =
+    guest || !profile
+      ? undefined
+      : { label: 'Recompensas canjeadas', value: String(claims.length), fill: Math.min(claims.length / 10, 1) };
 
   return (
     <View style={styles.root}>
@@ -47,18 +76,49 @@ export function RewardsSection() {
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
-        <PointsCard guest={guest} onLogin={() => router.push('/mobile/login')} />
+        <PointsCard
+          guest={guest}
+          onLogin={() => router.push('/mobile/login')}
+          balance={balance}
+          levelLabel={levelLabel}
+          progress={progress}
+        />
 
         <SectionTabs active={tab} onChange={setTab} />
 
         <View style={styles.list}>
-          {items.map((reward) => (
-            <RewardItem
-              key={reward.id}
-              reward={reward}
-              claimed={tab === 'recientes'}
-            />
-          ))}
+          {items.length > 0 ? (
+            items.map((reward) => (
+              <RewardItem key={reward.id} reward={reward} claimed={tab === 'recientes'} />
+            ))
+          ) : tab === 'recientes' ? (
+            <View style={styles.emptyCard}>
+              <AppSymbol
+                name={{ ios: 'clock.fill', android: 'schedule', web: 'schedule' }}
+                color={RewardsColors.textMuted}
+                size={28}
+              />
+              <Text style={styles.emptyTitle}>Sin canjes todavía</Text>
+              <Text style={styles.emptyText}>
+                {guest
+                  ? 'Inicia sesión para ver y canjear tus recompensas.'
+                  : 'Cuando canjees una recompensa, aparecerá aquí.'}
+              </Text>
+              {guest ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.push('/mobile/login')}
+                  style={({ pressed }) => [styles.emptyButton, pressed && styles.pressed]}>
+                  <Text style={styles.emptyButtonLabel}>Iniciar sesión</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>Sin recompensas disponibles</Text>
+              <Text style={styles.emptyText}>Vuelve pronto; pronto habrá nuevas recompensas.</Text>
+            </View>
+          )}
         </View>
 
         <RecentFooter />
@@ -84,6 +144,50 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 16,
+  },
+  emptyCard: {
+    alignItems: 'center',
+    gap: 8,
+    padding: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: RewardsColors.border,
+    backgroundColor: RewardsColors.surface,
+  },
+  emptyTitle: {
+    color: BrandColors.neutral,
+    fontFamily: Fonts.label,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 22,
+    includeFontPadding: false,
+  },
+  emptyText: {
+    color: RewardsColors.textMuted,
+    fontFamily: Fonts.body,
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
+  emptyButton: {
+    marginTop: 8,
+    minWidth: 140,
+    height: 40,
+    borderRadius: 9999,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: BrandColors.primary,
+  },
+  emptyButtonLabel: {
+    color: BrandColors.tertiary,
+    fontFamily: Fonts.label,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+    includeFontPadding: false,
   },
   headerRow: {
     flexDirection: 'row',

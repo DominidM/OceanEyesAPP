@@ -1,6 +1,6 @@
 # Plan de Base de Datos — OceanEyes (Hackathon)
 
-> Firestore NoSQL, Firebase Auth, Ethereum para trazabilidad de puntos.
+> Firestore NoSQL, Firebase Auth, Arbitrum (Sepolia) para trazabilidad de puntos.
 
 ---
 
@@ -11,7 +11,7 @@
 | **Pescador / Ciudadano** | App móvil | Registrar, reportar incidentes, ganar puntos, canjear recompensas |
 | **Administrador** | Panel web | Revisar reportes, verificar/descartar, gestionar recompensas, ver estadísticas |
 
-`role` en `users/{uid}`: `'fisher' | 'citizen'` (móvil) o `'admin'` (web).
+`role` en `users/{uid}`: `'user'` (móvil, asignado en registro) o `'admin'` (asignado por `seedAdminAndTestData()`). El tipo de perfil se guarda en `profileType`: `'fisher' | 'citizen'`. Los usuarios admin de prueba: `admin@oceaneyes.com` / `admin123`.
 
 ---
 
@@ -25,9 +25,11 @@ users/{uid}
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `role` | `'fisher' \| 'citizen' \| 'admin'` | Rol |
+| `role` | `'user' \| 'admin'` | Rol |
+| `profileType` | `'fisher' \| 'citizen'` | Tipo de perfil |
 | `displayName` | `string` | Nombre visible |
 | `email` | `string` | Correo |
+| `phone` | `string?` | Teléfono |
 | `walletAddress` | `string?` | Dirección Ethereum (opcional, para blockchain) |
 | `pointsBalance` | `number` | Puntos disponibles (default 0) |
 | `totalPointsEarned` | `number` | Puntos totales ganados |
@@ -50,8 +52,8 @@ reports/{reportId}
 | `category` | `'pesca_ilegal' \| 'basura_marina' \| 'variacion_mar'` | Tipo de incidente |
 | `title` | `string` | Título |
 | `description` | `string?` | Descripción detallada |
-| `location` | `{ lat, lng, address? }` | Geolocalización |
-| `photoURLs` | `string[]` | URLs de fotos (Storage → base64 si no usas Blaze) |
+| `location` | `{ latitude, longitude, address? }` | Geolocalización |
+| `photoURLs` | `string[]` | URLs de fotos (Storage) |
 | `status` | `'pendiente' \| 'en_revision' \| 'verificado' \| 'descartado'` | Estado |
 | `pointsAwarded` | `number` | Puntos otorgados (0 hasta verificar) |
 | `txHash` | `string?` | Hash de transacción Ethereum (cuando se usa blockchain) |
@@ -60,6 +62,7 @@ reports/{reportId}
 | `reviewedAt` | `timestamp?` | |
 | `reviewedBy` | `string?` | Admin UID |
 | `rejectionReason` | `string?` | Motivo de descarte |
+| `submittedAt` | `timestamp` | Fecha de envío |
 
 ### Categorías de reporte (las 3 del hackathon)
 
@@ -85,6 +88,8 @@ rewards/{rewardId}
 | `stock` | `number \| null` | Cantidad disponible (null = ilimitado) |
 | `active` | `boolean` | Disponible para canje |
 | `sponsor` | `string?` | Patrocinador (ONG, municipio, etc.) |
+| `imageURL` | `string?` | Imagen |
+| `createdAt` | `timestamp` | |
 
 ---
 
@@ -125,41 +130,12 @@ pointTransactions/{txId}
 
 ---
 
-## Integración Blockchain (Ethereum)
+## Integración Blockchain (Arbitrum)
+
+> ⚠️ Plan actualizado. El contrato, la justificación y los pasos de implementación viven ahora en **`docs/ARBITRUM_PLAN.md`** (deploy en **Arbitrum Sepolia**, contrato `PointLedger.sol`, ethers v6). Esta sección queda como referencia histórica.
 
 ### Objetivo
-Trazabilidad de puntos: cada vez que se otorgan puntos por un reporte verificado, se registra en un smart contract en una testnet de Ethereum (Sepolia). Esto da auditoría pública: cualquiera puede verificar que los puntos existen y no fueron inflados.
-
-### Smart Contract (mínimo para hackathon)
-
-```solidity
-// PointLedger.sol
-contract PointLedger {
-    struct Transaction {
-        address user;
-        uint256 amount;
-        string category;   // "pesca_ilegal", "basura_marina", "variacion_mar"
-        uint256 timestamp;
-    }
-
-    Transaction[] public transactions;
-
-    event PointsAwarded(address indexed user, uint256 amount, string category, uint256 timestamp);
-
-    function awardPoints(address user, uint256 amount, string memory category) public {
-        transactions.push(Transaction(user, amount, category, block.timestamp));
-        emit PointsAwarded(user, amount, category, block.timestamp);
-    }
-
-    function getTotalPoints(address user) public view returns (uint256) {
-        uint256 total = 0;
-        for (uint256 i = 0; i < transactions.length; i++) {
-            if (transactions[i].user == user) total += transactions[i].amount;
-        }
-        return total;
-    }
-}
-```
+Trazabilidad de puntos: cada vez que se otorgan puntos por un reporte verificado, se registra en un smart contract en Arbitrum Sepolia. Esto da auditoría pública: cualquiera puede verificar que los puntos existen y no fueron inflados.
 
 ### Flujo
 
@@ -167,20 +143,20 @@ contract PointLedger {
 Usuario reporta → Admin verifica → Firestore guarda puntos
                                        ↓
                                   Se llama al smart contract (via ethers.js)
-                                  awardPoints(wallet, amount, category)
+                                  awardPoints(wallet, category)
                                        ↓
                                   txHash se guarda en pointTransactions y reports
 ```
 
 ### Cuentas
 - Cada usuario tiene opcionalmente `walletAddress` en su perfil
-- Para hackathon: usar MetaMask en web, o RainbowKit/WalletConnect en mobile
-- Testnet: **Sepolia** (gratis, faucet disponible)
+- Para hackathon: conectar wallet del admin en el panel web (MetaMask) — el móvil no necesita wallet
+- Red: **Arbitrum Sepolia** (testnet, chainId `421614`, faucet disponible)
 
-### Instalación (cuando toque)
+### Instalación (pendiente)
 
 ```bash
-npm install ethers @web3modal/wagmi wagmi viem
+npm install ethers
 ```
 
 ---
@@ -204,32 +180,32 @@ npm install ethers @web3modal/wagmi wagmi viem
                      │ ethers.js
                      │
 ┌────────────────────┴─────────────────────────┐
-│           BLOCKCHAIN (Sepolia Testnet)        │
+│           BLOCKCHAIN (Arbitrum Sepolia)        │
 │  PointLedger.sol → registro público de puntos │
 └──────────────────────────────────────────────┘
 ```
 
 ---
 
-## Lo que ya tienes vs lo que falta
+## Estado actual (visto el 4/8/2026)
+
+> Para el estado vivo y completo ver `docs/STATUS.md`. Este archivo es el plan histórico de datos.
 
 ### Ya implementado ✓
 - Firebase Auth (login/registro)
-- Firestore collections: `users`, `reports`
-- Subida de fotos a Storage
-- Panel admin básico (revisar reportes)
-- UI del móvil (tabs, formulario de reporte en 5 pasos)
-- UI de recompensas (datos mock)
+- Firestore collections: `users`, `reports`, `rewards`, `redemptions`, `pointTransactions`
+- Subida de fotos a Storage + modo offline (cola en AsyncStorage)
+- Panel admin: dashboard conectado a Firestore con charts, moderación de reportes, listado de usuarios
+- UI del móvil (tabs, wizard de reporte en 5 pasos, recompensas, perfil)
+- `seedRewards()` + `seedAdminAndTestData()`
 
-### Falta implementar ✗
+### Falta implementar ✗ (blockchain)
 | Tarea | Prioridad |
 |-------|-----------|
-| Crear colección `rewards` y `redemptions` en Firestore | Alta |
-| Conectar admin dashboard a Firestore real (datos mock → queries) | Alta |
-| Adaptar categorías a las 3 del hackathon | Alta |
-| Registrar `pointTransactions` al verificar reportes | Alta |
-| Funcionalidad de canje de recompensas (móvil) | Alta |
+| Smart contract `PointLedger.sol` + deploy en Arbitrum Sepolia | Alta |
+| Integración ethers.js para registrar puntos on-chain + guardar `txHash` | Alta |
+| Botón "Conectar wallet" en el admin (MetaMask) | Media |
 | `walletAddress` en perfil de usuario | Media |
-| Smart contract `PointLedger.sol` + deploy en Sepolia | Media |
-| Integración ethers.js para registrar puntos en blockchain | Media |
-| Perfil de usuario real (no placeholder) | Baja |
+| Verificación del contrato en Arbiscan | Media |
+
+> Pasos detallados: `docs/ARBITRUM_PLAN.md`.

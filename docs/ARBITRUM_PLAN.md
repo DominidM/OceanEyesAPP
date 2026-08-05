@@ -226,39 +226,99 @@ tx.update(reportRef, { txHash });
 
 ---
 
-## 5. Entregables para la Hackathon
+## 5. Enfoque según las reglas de la hackathon
 
-| Entregable | Detalle |
-|-----------|---------|
-| **Video Pitch** (2-3 min) | Problema, solución, demo, valor de Arbitrum |
-| **Pitch Deck** (PDF) | Slides de presentación |
-| **Demo URL** | `http://oceaneyes.app` (Vercel/Cloudflare Pages) |
-| **Video Demo** | Grabación mostrando funcionalidades |
-| **Repositorio** | `github.com/DominidM/OceanEyesAPP` |
-| **Smart Contract** | `0x...` en Arbitrum Sepolia |
-| **Arbiscan** | Enlace al contrato verificado |
-| **Arquitectura** | Diagrama Excalidraw/Mermaid |
+Análisis de elegibilidad (requisitos obligatorios):
+
+- [x] **Deploy en red compatible con Arbitrum** → Arbitrum Sepolia (testnet) o Arbitrum One (mainnet).
+- [x] **≥ 1 smart contract desplegado y funcional** → `PointLedger.sol` (registro de puntos) y (opcional) `RewardRedemption.sol`.
+- [x] **MVP funcional** → app móvil Expo + panel admin ya construidos (Firebase conectado).
+- [x] **Documentación antes de la fecha límite** → planes + deliverables que se completan en la sección 8.
+- [x] **Uso real de blockchain** → justificado en la sección 1: los puntos ***solo*** son creíbles para patrocinadores/ONGs si son auditables e inmutables en cadena. El `txHash` se persiste junto a cada reporte verificado.
+
+> ⚠️ **Cuidado con el "uso superficial"**: la regla penaliza agregar blockchain solo por cumplir. En nuestro caso es central: la verificación de reportes PRECISA del registro on-chain para que el sistema de recompensas sea auditable. El pitch debe enfatizar esto.
+
+**Sobre los Bounties:**
+
+| Bounty | Stack | Relevancia para OceanEyes |
+|--------|-------|---------------------------|
+| **Basic** | Scaffold-ETH (Solidity) | El stack que usa el equipo. Si queremos optar por un bounty, migrar el contrato a un repo con Scaffold-ETH equivale al "Basic". |
+| **Intermediate** | Scaffold-Stylus (Rust) | Requeriría reescribir el contrato en Rust (Stylus). No recomendado si el equipo domina Solidity. |
+| **Advanced** | Scaffold-Stylus + IA | No aplica ahora (necesita Stylus + IA adicional). |
+
+**Decisión**: apuntar a **premios generales** con contrato en Solidity (Hardhat/Foundry). Si sobra tiempo, NO reescribir en Rust; priorizar los entregables de la sección 8.
 
 ---
 
-## 6. Repartición de Tareas (4 integrantes)
+## 6. Plan de Ejecución por Fases (con checklists)
+
+> Enfoque "vertical primero": lograr el contrato funcional + tx on-chain al DÍA 1 de integración, luego pulir el resto.
+
+### Fase 0 — Preparación (medio día)
+- [ ] Crear wallet dev (MetaMask) y fondear con ETH de Sepolia desde el faucet oficial de Arbitrum.
+- [ ] Instalar fundas de trabajo: `ethers` (app) + `hardhat` (contrato).
+- [ ] Definir **ruta técnica**: integrar desde el **panel admin (web)** porque ya existe `verifyReport()`. La wallet del admin vive en la web, no en el móvil (simplifica MetaMask).
+- [ ] Guardar `PRIVATE_KEY` del admin y `CONTRACT_ADDRESS` en `.env` (nunca en el repo).
+
+### Fase 1 — Contrato y deploy (día 1-2)
+- [ ] Crear proyecto Hardhat (`contracts/PointLedger.sol`, `RewardRedemption.sol`).
+- [ ] Compilar y testear localmente (`npx hardhat test`) — corregir el map de categorías.
+- [ ] Desplegar en **Arbitrum Sepolia** con script `deploy.js` (network config con RPC `https://sepolia-rollup.arbitrum.io/rpc`, chainId `421614`).
+- [ ] **Verificar el contrato en Arbiscan** (plugin `@nomicfoundation/hardhat-verify`).
+- [ ] Rellenar sección 8.4 con dirección + enlace Arbiscan.
+
+### Fase 2 — Integración ethers en `verifyReport()` (día 2-3)
+- [ ] `src/mobile/shared/blockchain/config.ts` (chain + RPC + explorer).
+- [ ] `src/mobile/shared/blockchain/ledger.ts`: `awardPointsOnChain()` + ABI.
+- [ ] En `verifyReport()` (reports.ts): tras la transacción atómica de Firestore, si `report.userId` tiene `walletAddress`, llamar al contrato y guardar `txHash` en el reporte y en `pointTransactions`.
+- [ ] **Fallback**: si no hay wallet/red, el reporte se verifica igual en Firestore pero se marca `txHash: null` (no debe romper el flujo).
+- [ ] Conectar wallet del admin (MetaMask en web) en el panel → `admin-shell` añade un botón "Conectar wallet".
+
+### Fase 3 — Captura de wallet + UI de puntos (día 3-4)
+- [ ] Registrar `walletAddress` en el perfil del usuario (al registrarse / en el tab Perfil).
+- [ ] Mostrar balance on-chain y link a Arbiscan por transacción (`txHash`) en la app y en el admin.
+- [ ] Mostrar en el dashboard del admin el nº de reportes con `txHash` (progreso de integración blockchain).
+
+### Fase 4 — Pulido y entregables (día 4-5)
+- [ ] Completar **todos** los entregables de la sección 8.
+- [ ] Revisar que el repo tiene todos los commits con fecha posterior al KickOff (31/07 4:00 p.m.).
+- [ ] Eliminar cualquier dato sensible del historial del repo.
+
+---
+
+## 7. Repartición de Tareas (4 integrantes)
 
 | Integrante | Responsabilidad |
 |-----------|----------------|
-| **Dominid** | Firestore, admin panel, dashboard, charts |
-| **Dev 2** | Smart contract Solidity, deploy en Sepolia, ethers.js |
-| **Dev 3** | App móvil (reportes UI, cámara, geolocalización) |
-| **Dev 4** | Landing page, video pitch, documentación, diseño |
+| **Dominid** | Firestore, admin panel, dashboard, charts + integración ethers en `verifyReport()` |
+| **Compañero** | Smart contracts Solidity, Hardhat, deploy + verificación en Arbiscan, entregar ABI |
+| **Dev 3** | App móvil (reportes UI, cámara, geolocalización), captura de `walletAddress` en Perfil |
+| **Dev 4** | Landing page, video pitch, pitch deck PDF, diagrama de arquitectura, documentación |
 
 ---
 
-## 7. Próximos Pasos
+## 8. Entregables para la Hackathon (checklist de seguimiento)
 
-- [ ] Instalar ethers.js
-- [ ] Escribir `PointLedger.sol` y compilar con Hardhat/Foundry
-- [ ] Deploy en Arbitrum Sepolia
-- [ ] Verificar contrato en Arbiscan
-- [ ] Integrar ethers.js en `verifyReport()`
-- [ ] Conectar wallet del admin (MetaMask en web)
-- [ ] Agregar campo `walletAddress` al registro de usuarios
-- [ ] Probar flujo completo: reportar → verificar → tx on-chain
+### 8.1 Medios
+- [ ] **Video Pitch (2-3 min)**: problema → solución → valor de Arbitrum (énfasis §5) → demo rápida.
+- [ ] **Pitch Deck (PDF)**: slides con arquitectura y justificación de Arbitrum.
+- [ ] **Video Demo**: flujo reportar → verificar → tx visible en Arbiscan.
+
+### 8.2 Links
+- [ ] **Demo URL** → panel admin desplegado (Vercel/Cloudflare Pages) + app Expo (EAS/APK).
+- [ ] **Repositorio público** → `github.com/DominidM/OceanEyesAPP`.
+- [ ] **Diagrama de arquitectura** → Excalidraw/Mermaid mostrando App ↔ Firestore ↔ Panel Admin ↔ PointLedger (Arbitrum).
+
+### 8.3 Bloqueo de dependencias (rellenar al final)
+- [ ] `ethers` instalado en `package.json`.
+- [ ] Contrato verificado y lista para mostrar.
+
+### 8.4 Datos del contrato (RELLENAR tras el deploy)
+- **Contrato**: `PointLedger.sol`
+- **Red**: Arbitrum Sepolia (chainId `421614`)
+- **Dirección**: `0x...`
+- **Arbiscan**: `https://sepolia.arbiscan.io/address/0x...`
+- **txHash de prueba**: `0x...`
+
+### 8.5 Archivo de resumen para jurado
+Crear `docs/DELIVERABLES.md` con todo lo anterior (dirección de contratos, red, Arbiscan, links de demo, video y arquitectura) en un solo lugar.

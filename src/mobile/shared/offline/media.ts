@@ -77,6 +77,11 @@ export async function uploadMediaToStorage(options: {
   const path = `reports/${options.reportId}/${options.mediaId}${extension}`;
   const storageRef = ref(storage, path);
   const contentType = mimeFromExtension(extension, options.kind);
-  await uploadBytes(storageRef, new File(options.localUri), { contentType });
+  const file = new File(options.localUri);
+  if (!file.exists) {
+    throw new Error(`No se encontró el archivo multimedia: ${options.localUri}`);
+  }
+  const bytes = await file.bytes();
+  await uploadBytes(storageRef, bytes, { contentType });
   return getDownloadURL(storageRef);
 }

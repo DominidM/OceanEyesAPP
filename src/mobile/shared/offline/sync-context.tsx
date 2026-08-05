@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
+import { useAuth } from '@/shared/firebase/auth-context';
 import { useConnectivity } from './connectivity-context';
 import {
   getSyncState,
@@ -23,6 +24,7 @@ const SyncContext = createContext<SyncContextValue>({
 
 export function SyncProvider({ children }: React.PropsWithChildren) {
   const { online } = useConnectivity();
+  const { user } = useAuth();
   const onlineRef = useRef(online);
   onlineRef.current = online;
   const [syncState, setSyncState] = useState<SyncState>(getSyncState);
@@ -36,6 +38,10 @@ export function SyncProvider({ children }: React.PropsWithChildren) {
   useEffect(() => {
     if (online) void requestSync('connectivity');
   }, [online]);
+
+  useEffect(() => {
+    if (user) void requestSync('auth');
+  }, [user]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (status) => {

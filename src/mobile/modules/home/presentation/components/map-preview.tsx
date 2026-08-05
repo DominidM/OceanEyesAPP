@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingBottom: 16,
     backgroundColor: 'transparent',
+    pointerEvents: 'box-none',
   },
   mapButton: {
     width: 227,

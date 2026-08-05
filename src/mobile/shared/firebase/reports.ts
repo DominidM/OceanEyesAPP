@@ -18,6 +18,7 @@ import { isFirebaseConfigured } from './config';
 import { firebaseAuth, firestore } from './app';
 import { REPORT_CATEGORIES, type Report, type ReportInput } from './types';
 
+import { getDeviceHash } from '@/shared/identity/device-id';
 import { stageMedia, uploadMediaToStorage } from '@/shared/offline/media';
 import {
   enqueueReport,
@@ -26,16 +27,25 @@ import {
   updatePendingReport,
 } from '@/shared/offline/outbox';
 
+export class AuthenticationRequiredError extends Error {
+  constructor(message = 'Debes iniciar sesión para enviar el reporte.') {
+    super(message);
+    this.name = 'AuthenticationRequiredError';
+  }
+}
+
 export async function createReport(input: ReportInput): Promise<string> {
   const user = firebaseAuth?.currentUser;
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
+  const deviceHash = await getDeviceHash();
   const ref = await addDoc(collection(firestore, 'reports'), {
     userId: user.uid,
     category: input.category,
     title: input.title,
     description: input.description ?? null,
     isAnonymous: input.isAnonymous,
+    deviceHash: deviceHash ?? null,
     location: input.location ?? null,
     photoURLs: input.photoURLs ?? [],
     status: 'pendiente',
@@ -54,12 +64,14 @@ export async function publishReportOnline(
   const user = firebaseAuth?.currentUser;
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
+  const deviceHash = await getDeviceHash();
   const ref = await addDoc(collection(firestore, 'reports'), {
     userId: user.uid,
     category: input.category,
     title: input.title,
     description: input.description ?? null,
     isAnonymous: input.isAnonymous,
+    deviceHash: deviceHash ?? null,
     location: input.location ?? null,
     photoURLs: [],
     status: 'pendiente',
@@ -98,13 +110,15 @@ export async function saveReportOfflineFirst(
       staged.push({ localUri: item.uri, kind: item.kind });
     }
   }
-  const pending = await enqueueReport(input, staged);
+  const deviceHash = await getDeviceHash();
+  const inputWithDevice = deviceHash ? { ...input, deviceHash } : input;
+  const pending = await enqueueReport(inputWithDevice, staged);
   return pending.id;
 }
 
 export async function publishPendingReport(pending: PendingReport): Promise<void> {
   const user = firebaseAuth?.currentUser;
-  if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
+  if (!user) throw new AuthenticationRequiredError();
 
   let reportId = pending.remoteId;
   if (!reportId) {
@@ -114,6 +128,7 @@ export async function publishPendingReport(pending: PendingReport): Promise<void
       title: pending.input.title,
       description: pending.input.description ?? null,
       isAnonymous: pending.input.isAnonymous,
+      deviceHash: pending.input.deviceHash ?? null,
       location: pending.input.location ?? null,
       photoURLs: [],
       status: 'pendiente',

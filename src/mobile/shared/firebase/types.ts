@@ -16,6 +16,10 @@ export type UserProfile = {
   totalPointsEarned: number;
   verifiedReportsCount: number;
   status: AccountStatus;
+  deviceHash?: string;
+  banReason?: string;
+  bannedBy?: string;
+  bannedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 };
@@ -37,6 +41,7 @@ export type ReportInput = {
   title: string;
   description?: string;
   isAnonymous: boolean;
+  deviceHash?: string;
   location?: {
     latitude: number;
     longitude: number;
@@ -52,6 +57,7 @@ export type Report = {
   title: string;
   description?: string;
   isAnonymous: boolean;
+  deviceHash?: string;
   location?: { latitude: number; longitude: number; address?: string };
   photoURLs: string[];
   status: ReportStatus;

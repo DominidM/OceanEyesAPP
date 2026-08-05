@@ -30,7 +30,21 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [manual, setManual] = useState(false);
+  const [mapRegion, setMapRegion] = useState<Region | null>(null);
+  const [recenterNonce, setRecenterNonce] = useState(0);
   const fetchedRef = useRef(false);
+
+  const resolvePlaceName = useCallback(async (latitude: number, longitude: number) => {
+    try {
+      const [address] = await Location.reverseGeocodeAsync({ latitude, longitude });
+      const parts = [address?.name, address?.street, address?.city].filter(
+        (part): part is string => Boolean(part),
+      );
+      setPlaceName(parts.length > 0 ? parts.join(', ') : null);
+    } catch {
+      setPlaceName(null);
+    }
+  }, []);
 
   const fetchLocation = useCallback(async () => {
     setLoading(true);
@@ -38,24 +52,19 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
     try {
       const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       setLocation(current);
-      try {
-        const [address] = await Location.reverseGeocodeAsync({
-          latitude: current.coords.latitude,
-          longitude: current.coords.longitude,
-        });
-        const parts = [address?.name, address?.street, address?.city].filter(
-          (part): part is string => Boolean(part),
-        );
-        setPlaceName(parts.length > 0 ? parts.join(', ') : null);
-      } catch {
-        setPlaceName(null);
-      }
+      setMapRegion({
+        latitude: current.coords.latitude,
+        longitude: current.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+      await resolvePlaceName(current.coords.latitude, current.coords.longitude);
     } catch {
       setError('No se pudo obtener tu ubicación');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resolvePlaceName]);
 
   useEffect(() => {
     if (permission?.granted && !fetchedRef.current) {
@@ -64,34 +73,46 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
     }
   }, [permission?.granted, fetchLocation]);
 
-  const region: Region | null = location
-    ? {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      }
-    : null;
+  const handleRegionChange = useCallback(
+    (next: Region) => {
+      setMapRegion(next);
+      void resolvePlaceName(next.latitude, next.longitude);
+    },
+    [resolvePlaceName],
+  );
 
-  const coordLabel = location
-    ? `Coordenadas: ${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`
+  const handleManualToggle = (value: boolean) => {
+    setManual(value);
+    if (!value && location) {
+      const { latitude, longitude } = location.coords;
+      setMapRegion({ latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 });
+      setRecenterNonce((nonce) => nonce + 1);
+      void resolvePlaceName(latitude, longitude);
+    }
+  };
+
+  const coordLabel = mapRegion
+    ? `Coordenadas: ${mapRegion.latitude.toFixed(4)}, ${mapRegion.longitude.toFixed(4)}`
     : loading
       ? 'Obteniendo ubicación...'
       : 'Ubicación no disponible';
 
-  const accuracy = location?.coords.accuracy;
-  const accuracyLabel =
-    accuracy != null ? `Precisión ±${Math.round(accuracy)} m` : 'Precisión no disponible';
+  const accuracy = manual ? null : (location?.coords.accuracy ?? null);
+  const accuracyLabel = manual
+    ? 'Punto elegido manualmente'
+    : accuracy != null
+      ? `Precisión ±${Math.round(accuracy)} m`
+      : 'Precisión no disponible';
 
   const showPermissionPanel = permission != null && !permission.granted;
 
   const handleConfirm = () => {
-    if (!location) return;
+    if (!mapRegion) return;
     onConfirm({
       placeName,
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      accuracy: location.coords.accuracy ?? null,
+      latitude: mapRegion.latitude,
+      longitude: mapRegion.longitude,
+      accuracy: manual ? null : (location?.coords.accuracy ?? null),
     });
   };
 
@@ -138,8 +159,13 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
       ) : (
         <>
           <View style={styles.mapArea}>
-            {region ? (
-              <LocationMap region={region} />
+            {mapRegion ? (
+              <LocationMap
+                key={recenterNonce}
+                region={mapRegion}
+                interactive={manual}
+                onRegionChangeComplete={handleRegionChange}
+              />
             ) : loading ? (
               <View style={styles.mapLoading}>
                 <ActivityIndicator color={C.accent} size="large" />
@@ -223,7 +249,7 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
               <Text style={styles.toggleLabel}>Ubicación manual</Text>
               <Switch
                 value={manual}
-                onValueChange={setManual}
+                onValueChange={handleManualToggle}
                 trackColor={{ false: C.toggleTrack, true: C.accent }}
                 thumbColor={C.toggleThumb}
                 ios_backgroundColor={C.toggleTrack}
@@ -232,11 +258,11 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
 
             <Pressable
               accessibilityRole="button"
-              disabled={!location}
+              disabled={!mapRegion}
               onPress={handleConfirm}
               style={({ pressed }) => [
                 styles.primaryButton,
-                !location && styles.primaryDisabled,
+                !mapRegion && styles.primaryDisabled,
                 pressed && styles.pressed,
               ]}>
               <Text style={styles.primaryLabel}>Confirmar ubicación</Text>
@@ -244,7 +270,7 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
 
             <Pressable
               accessibilityRole="button"
-              onPress={() => setManual(true)}
+              onPress={() => handleManualToggle(true)}
               style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
               <Text style={styles.secondaryLabel}>Usar ubicación manual</Text>
             </Pressable>

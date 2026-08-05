@@ -15,7 +15,7 @@ export default function MobileLayout() {
 
   return (
     <>
-      <StatusBar style="light" translucent={true} />
+      <StatusBar style="dark" translucent={true} />
       <AnimatedSplashOverlay />
       <Stack
         screenOptions={{

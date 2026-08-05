@@ -1,0 +1,10 @@
+node_modules/
+cache/
+artifacts/
+typechain-types/
+
+# SECRETOS — nunca versionar claves privadas
+.env
+.env.local
+.env.*.local
+!.env.example

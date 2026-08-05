@@ -26,7 +26,7 @@ type DniStepProps = {
 const BODY_TEXT = 'Puedes reportar como ciudadano, pescador o voluntario. Tu identidad no se publicará en la incidencia.';
 const CHECKBOX_LABEL = 'Acepto que mi ubicación se comparta con las autoridades para validar este reporte.';
 const SECURITY_NOTE = 'Tu identidad queda protegida y separada del contenido del reporte.';
-const GUEST_NOTE = 'Como invitado, tu reporte se envía de forma anónima.';
+const GUEST_NOTE = 'Como invitado, tu reporte se envía de forma anónima. Se registra solo una huella anónima del dispositivo para prevenir reportes falsos.';
 
 export function DniStep({
   dni,

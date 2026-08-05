@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomBarHeight } from '@/constants/theme';
+import { AppFonts as Fonts, BottomBarHeight, BrandColors } from '@/constants/theme';
 
 import { ReportCard, Report } from '../components/report-card';
 import { ReportsHeader, ReportChip } from '../components/reports-header';
@@ -19,24 +19,13 @@ import { requestSync } from '@/shared/offline/sync-engine';
 
 const REPORTS_CACHE_KEY = '@oceaneyes/cache/reports-mine';
 
-const chips: ReportChip[] = [
-  { label: 'Todos', active: true },
-  { label: 'Pendientes', count: 2 },
-  { label: 'Verificados' },
-  { label: 'En Revision' },
-  { label: 'Sin Enviar' },
-];
-
-const stats: ReportStat[] = [
-  { label: 'Total', value: '8' },
-  { label: 'Verificados', value: '6' },
-  { label: 'Puntos', value: '120', icon: { ios: 'star.fill', android: 'star', web: 'star' } },
-];
+type FilterKey = 'todos' | 'pendiente' | 'verificado' | 'en_revision' | 'descartado' | 'sin_enviar';
 
 export function ReportsSection() {
   const insets = useSafeAreaInsets();
   const [reports, setReports] = useState<Report[]>([]);
   const [queued, setQueued] = useState<PendingReport[]>([]);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>('todos');
 
   useEffect(() => {
     (async () => {
@@ -62,6 +51,76 @@ export function ReportsSection() {
     return subscribeOutbox(loadQueued);
   }, []);
 
+  const counts = useMemo(() => {
+    let pendiente = 0;
+    let verificado = 0;
+    let en_revision = 0;
+    let descartado = 0;
+    for (const report of reports) {
+      if (report.statusKey === 'pendiente') pendiente += 1;
+      else if (report.statusKey === 'verificado') verificado += 1;
+      else if (report.statusKey === 'en_revision') en_revision += 1;
+      else if (report.statusKey === 'descartado') descartado += 1;
+    }
+    return { pendiente, verificado, en_revision, descartado };
+  }, [reports]);
+
+  const chips: ReportChip[] = useMemo(
+    () => [
+      { label: 'Todos', active: activeFilter === 'todos', onPress: () => setActiveFilter('todos') },
+      {
+        label: 'Pendientes',
+        count: counts.pendiente,
+        active: activeFilter === 'pendiente',
+        onPress: () => setActiveFilter('pendiente'),
+      },
+      {
+        label: 'Verificados',
+        count: counts.verificado,
+        active: activeFilter === 'verificado',
+        onPress: () => setActiveFilter('verificado'),
+      },
+      {
+        label: 'En Revision',
+        count: counts.en_revision,
+        active: activeFilter === 'en_revision',
+        onPress: () => setActiveFilter('en_revision'),
+      },
+      {
+        label: 'Descartados',
+        count: counts.descartado,
+        active: activeFilter === 'descartado',
+        onPress: () => setActiveFilter('descartado'),
+      },
+      {
+        label: 'Sin Enviar',
+        count: queued.length,
+        active: activeFilter === 'sin_enviar',
+        onPress: () => setActiveFilter('sin_enviar'),
+      },
+    ],
+    [activeFilter, counts, queued],
+  );
+
+  const stats: ReportStat[] = useMemo(
+    () => [
+      { label: 'Total', value: String(reports.length + queued.length) },
+      { label: 'Verificados', value: String(counts.verificado) },
+      {
+        label: 'Puntos',
+        value: String(reports.reduce((sum, report) => sum + (report.pointsAwarded ?? 0), 0)),
+        icon: { ios: 'star.fill', android: 'star', web: 'star' },
+      },
+    ],
+    [reports, queued, counts.verificado],
+  );
+
+  const showQueued = activeFilter === 'todos' || activeFilter === 'sin_enviar';
+  const filteredQueued = showQueued ? queued : [];
+  const filteredReports =
+    activeFilter === 'todos' ? reports : activeFilter === 'sin_enviar' ? [] : reports.filter((report) => report.statusKey === activeFilter);
+  const listEmpty = filteredQueued.length === 0 && filteredReports.length === 0;
+
   return (
     <>
       <ReportsHeader chips={chips} />
@@ -73,12 +132,18 @@ export function ReportsSection() {
         <SyncWarning onSync={() => void requestSync('manual')} />
         <HistoryHeader />
         <View style={styles.reportList}>
-          {queued.map((pending) => (
+          {filteredQueued.map((pending) => (
             <ReportCard key={pending.id} report={toQueuedCard(pending)} />
           ))}
-          {reports.map((report) => (
+          {filteredReports.map((report) => (
             <ReportCard key={`${report.title}-${report.date}`} report={report} />
           ))}
+          {listEmpty ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateTitle}>Sin reportes</Text>
+              <Text style={styles.emptyStateText}>No hay reportes en este filtro.</Text>
+            </View>
+          ) : null}
         </View>
       </ScrollView>
     </>
@@ -101,6 +166,8 @@ function toQueuedCard(pending: PendingReport): Report {
         : pending.input.category === 'basura_marina'
           ? 'boat'
           : 'pending',
+    statusKey: 'pendiente',
+    pointsAwarded: 0,
   };
 }
 
@@ -125,6 +192,8 @@ function toCardReport(report: FirestoreReport): Report {
     statusText: status.text,
     statusIcon,
     thumbnail: report.category === 'pesca_ilegal' ? 'net' : report.category === 'basura_marina' ? 'boat' : 'pending',
+    statusKey: report.status,
+    pointsAwarded: report.pointsAwarded ?? 0,
   };
 }
 
@@ -140,5 +209,33 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 16,
     gap: 12,
+  },
+  emptyState: {
+    width: '100%',
+    maxWidth: 358,
+    alignSelf: 'center',
+    alignItems: 'center',
+    gap: 4,
+    padding: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: SurfaceColors.border,
+    backgroundColor: SurfaceColors.card,
+  },
+  emptyStateTitle: {
+    color: BrandColors.neutral,
+    fontFamily: Fonts.label,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 22,
+    includeFontPadding: false,
+  },
+  emptyStateText: {
+    color: SurfaceColors.mutedText,
+    fontFamily: Fonts.body,
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+    includeFontPadding: false,
   },
 });

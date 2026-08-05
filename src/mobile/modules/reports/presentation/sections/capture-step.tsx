@@ -1,5 +1,6 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import { DimensionValue, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -132,6 +133,7 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
 
   return (
     <View style={styles.screen}>
+      <StatusBar style="light" />
       <CameraView
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
@@ -531,13 +533,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   shutterInner: {
-    width: 64,
-    height: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 5,
-    borderRadius: 9999,
-    backgroundColor: 'transparent',
+    //Acá no pongan nada
   },
   recordDot: {
     width: 24,

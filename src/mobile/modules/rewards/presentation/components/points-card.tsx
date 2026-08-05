@@ -3,38 +3,52 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts } from '@/constants/theme';
-import { LEVEL_BADGE, POINTS_BALANCE, PROGRESS } from '../data/rewards';
 import { RewardsColors } from '../theme';
 import { shadow } from '@/shared/utils/shadows';
 const arrowIcon: SymbolName = { ios: 'arrow.right', android: 'arrow-forward', web: 'arrow-forward' };
 
-export function PointsCard({ guest = false, onLogin }: PointsCardProps) {
+export type PointsProgress = {
+  label: string;
+  value: string;
+  fill: number;
+};
+
+export function PointsCard({
+  guest = false,
+  onLogin,
+  balance,
+  levelLabel,
+  progress,
+}: PointsCardProps) {
+  const balanceText = guest || balance == null ? '—' : balance.toLocaleString('es-PE');
+  const levelText = guest ? 'Invitado' : levelLabel ?? 'Guardián del Mar';
+
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
         <View style={styles.balanceCol}>
           <Text style={styles.balanceLabel}>{guest ? 'Inicia sesión' : 'Saldo de puntos'}</Text>
-          <Text style={styles.balanceValue}>{guest ? '—' : POINTS_BALANCE}</Text>
+          <Text style={styles.balanceValue}>{balanceText}</Text>
         </View>
 
         <View style={styles.levelPill}>
           <View style={styles.levelDot} />
-          <Text style={styles.levelText}>{guest ? 'Invitado' : LEVEL_BADGE}</Text>
+          <Text style={styles.levelText}>{levelText}</Text>
         </View>
       </View>
 
-      {!guest && (
+      {!guest && progress ? (
         <>
           <View style={styles.statsRow}>
-            <Text style={styles.statText}>{PROGRESS.label}</Text>
-            <Text style={styles.statText}>{PROGRESS.value}</Text>
+            <Text style={styles.statText}>{progress.label}</Text>
+            <Text style={styles.statText}>{progress.value}</Text>
           </View>
 
           <View style={styles.track}>
-            <View style={[styles.fill, { width: `${PROGRESS.fill * 100}%` }]} />
+            <View style={[styles.fill, { width: `${progress.fill * 100}%` }]} />
           </View>
         </>
-      )}
+      ) : null}
 
       <Pressable
         accessibilityRole="button"
@@ -54,6 +68,9 @@ export function PointsCard({ guest = false, onLogin }: PointsCardProps) {
 type PointsCardProps = {
   guest?: boolean;
   onLogin?: () => void;
+  balance?: number;
+  levelLabel?: string;
+  progress?: PointsProgress;
 };
 
 const styles = StyleSheet.create({

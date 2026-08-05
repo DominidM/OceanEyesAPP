@@ -8,9 +8,9 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { shadow } from '@/shared/utils/shadows';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { subscribeReports } from '@/shared/firebase/reports';
-import type { Report as FirestoreReport } from '@/shared/firebase/types';
 
-import { RealTimeMap, type MapReport } from '../components/real-time-map';
+import { RealTimeMap } from '../components/real-time-map';
+import { isMapReport, toMapReport, type MapReport } from '../components/map-report';
 
 export function MapScreen() {
   const insets = useSafeAreaInsets();
@@ -60,23 +60,6 @@ function LegendItem({ color, label }: { color: string; label: string }) {
       <Text style={styles.legendLabel}>{label}</Text>
     </View>
   );
-}
-
-function toMapReport(report: FirestoreReport): MapReport | null {
-  const latitude = report.location?.latitude;
-  const longitude = report.location?.longitude;
-  if (latitude == null || longitude == null) return null;
-  return {
-    id: report.id,
-    latitude,
-    longitude,
-    category: report.category,
-    status: report.status,
-  };
-}
-
-function isMapReport(report: MapReport | null): report is MapReport {
-  return report != null;
 }
 
 const styles = StyleSheet.create({

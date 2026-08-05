@@ -1,6 +1,6 @@
 # OceanEyes — Estado Actual del Proyecto
 
-> Documento generado para la hackathon. Última actualización: 3/8/2026.
+> Documento generado para la hackathon. Última actualización: 4/8/2026.
 
 ---
 
@@ -11,16 +11,19 @@ src/
 ├── app/                       # Expo Router (file-based routing)
 │   ├── _layout.tsx             # Root: ThemeProvider + AuthProvider
 │   ├── index.tsx               # Web → Landing | Native → /mobile
+│   ├── (landing)/              # Landing web: descargas, faq, contacto (+ api/contact+api.ts)
 │   ├── mobile/
 │   │   ├── _layout.tsx         # Splash + fonts + Stack
 │   │   ├── index.tsx           # → HomeScreen (tabs)
 │   │   ├── login.tsx           # → MobileLoginScreen
-│   │   └── report.tsx          # → ReportCreateScreen (wizard 5 pasos)
+│   │   ├── report.tsx          # → ReportCreateScreen (wizard 5 pasos)
+│   │   └── map.tsx             # → MapScreen (mapa en tiempo real)
 │   └── admin/
 │       ├── _layout.tsx         # Web-only guard + auth
 │       ├── index.tsx           # → DashboardScreen
 │       ├── login.tsx           # → AdminLoginScreen
-│       └── reports.tsx         # → ReportsScreen (moderación)
+│       ├── reports.tsx         # → ReportsScreen (moderación)
+│       └── users.tsx           # → UsersScreen (gestión)
 │
 ├── mobile/                     # App móvil (@/*)
 │   ├── constants/theme.ts      # Colores, fuentes, espaciado
@@ -29,6 +32,7 @@ src/
 │   │   ├── components/         # AppSymbol, BottomTabBar, PhoneFrame, SectionHeader
 │   │   ├── config/main-tabs.ts # Tabs: inicio, reportes, recompensas, perfil
 │   │   ├── utils/shadows.ts    # Sombras cross-platform
+│   │   ├── offline/            # Cola offline: outbox, sync-engine, media, connectivity
 │   │   └── firebase/
 │   │       ├── config.ts       # Firebase config (env vars)
 │   │       ├── app.ts          # Inicialización Firestore, Storage, Auth
@@ -36,23 +40,27 @@ src/
 │   │       ├── auth-context.tsx # AuthProvider + useAuth hook
 │   │       ├── reports.ts      # createReport, getMyReports, getAllReports, verifyReport
 │   │       ├── rewards.ts      # getAllRewards, redeemReward, getUserRedemptions
-│   │       ├── seed.ts         # seedRewards() para poblar catálogo
+│   │       ├── seed.ts         # seedRewards() + seedAdminAndTestData()
 │   │       └── types.ts        # Todos los tipos de Firestore
 │   └── modules/
 │       ├── auth/               # Login móvil (mobile-login-screen.tsx)
-│       ├── home/               # Tab Inicio (HomeScreen, PhoneFrame, ActionCards)
+│       ├── home/               # Tab Inicio (HomeScreen, PhoneFrame, ActionCards, mapa)
 │       ├── reports/            # Tab Reportes + wizard 5 pasos
 │       ├── rewards/            # Tab Recompensas (PointsCard, RewardItem)
 │       └── profile/            # Tab Perfil (placeholder)
 │
 ├── admin/                      # Panel web (@admin/*)
 │   ├── shared/
-│   │   ├── components/admin-shell.tsx  # Sidebar + topbar + content
-│   │   └── config/admin-nav.ts         # Nav: Dashboard, Reportes, Usuarios, Recompensas
+│   │   ├── components/admin-shell.tsx  # Sidebar + topbar + breadcrumb + tema + logout
+│   │   ├── components/charts/          # BarChart, DonutChart (SVG)
+│   │   ├── config/admin-nav.ts         # Nav: Dashboard, Reportes, Usuarios, Recompensas
+│   │   ├── theme/                      # context.tsx (light/dark) + colors.ts
+│   │   └── ui/index.tsx                # Card, SectionTitle, Badge, Button, KpiStat
 │   └── modules/
 │       ├── auth/               # AdminLoginScreen
-│       ├── dashboard/          # DashboardScreen (StatsStrip + RecentReports)
-│       └── reports/            # ReportsScreen (moderación de reportes)
+│       ├── dashboard/          # DashboardCharts (Firestore real) + RecentReportsSection
+│       ├── reports/            # ReportsScreen (moderación de reportes)
+│       └── users/              # UsersScreen (listado paginado)
 │
 ├── landing/                    # Landing page web (@landing/*)
 │   └── presentation/
@@ -78,12 +86,15 @@ src/
 |------|-----------|-------|
 | `/` | Web | Landing page |
 | `/` | Native | Redirect → `/mobile` |
+| `/descargas`, `/faq`, `/contacto` | Web | Landing sections |
 | `/mobile` | Mobile | HomeScreen (4 tabs) |
 | `/mobile/report` | Mobile | Wizard de reporte (5 pasos) |
 | `/mobile/login` | Mobile | Login / Registro |
+| `/mobile/map` | Mobile | Mapa en tiempo real |
 | `/admin` | Web | Dashboard admin |
 | `/admin/login` | Web | Login admin |
 | `/admin/reports` | Web | Moderación de reportes |
+| `/admin/users` | Web | Gestión de usuarios |
 
 ---
 
@@ -259,25 +270,29 @@ seedRewards()  // Inserta 5 recompensas iniciales
 | Componente | Ruta | Estado |
 |-----------|------|--------|
 | `AdminLoginScreen` | `/admin/login` | Funcional (login con Firebase) |
-| `AdminShell` | Layout | Sidebar + topbar + contenido |
-| `DashboardScreen` | `/admin` | **Datos mock** (hardcodeados) |
-| `ReportsScreen` | `/admin/reports` | Conectado a Firestore (lectura/escritura) |
+| `AdminShell` | Layout | Sidebar + topbar + breadcrumb + tema light/dark + logout |
+| `DashboardScreen` | `/admin` | **Conectado a Firestore** (KPIs, BarChart por categoría, Donut por estado) |
+| `RecentReportsSection` | `/admin` | Reportes recientes paginados (5 + "Cargar más") |
+| `ReportsScreen` | `/admin/reports` | Conectado a Firestore (lectura + verificación/descartar) |
+| `UsersScreen` | `/admin/users` | Listado de usuarios paginado (10) |
 
 ### Pendiente en Admin
-- [ ] Conectar `DashboardScreen` a Firestore real (queries de stats)
-- [ ] Sección Usuarios (listado, gestión)
-- [ ] Sección Recompensas (CRUD del catálogo)
+- [ ] Sección Recompensas (CRUD del catálogo, nav muestra "Pronto")
 - [ ] Gestión de canjes (aprobar/entregar redemptions)
+- [ ] Botón "Conectar wallet" (MetaMask) en el AdminShell (blockchain)
 
 ---
 
 ## 6. Pendiente para Blockchain
 
-- [ ] Smart contract `PointLedger.sol` deployado en Sepolia testnet
-- [ ] Instalar `ethers` / `wagmi` / `viem`
-- [ ] Conectar wallet (MetaMask en web, WalletConnect en mobile)
+> Plan detallado y pasos en `docs/ARBITRUM_PLAN.md`.
+
+- [ ] Smart contract `PointLedger.sol` deployado en **Arbitrum Sepolia** (testnet)
+- [ ] Instalar `ethers` (decisión: ethers v6, no wagmi/viem)
+- [ ] Conectar wallet del admin (MetaMask en web)
 - [ ] Guardar `walletAddress` en perfil de usuario
-- [ ] Registrar `txHash` en `pointTransactions` al verificar reporte
+- [ ] Llamar `awardPoints()` en `verifyReport()` y registrar `txHash` en `reports` + `pointTransactions`
+- [ ] Verificar contrato en Arbiscan
 
 ---
 

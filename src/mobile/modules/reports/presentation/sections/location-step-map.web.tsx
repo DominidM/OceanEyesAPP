@@ -10,6 +10,8 @@ type Region = {
 
 type LocationMapProps = {
   region: Region;
+  interactive?: boolean;
+  onRegionChangeComplete?: (region: Region) => void;
 };
 
 export function LocationMap({ region }: LocationMapProps) {
