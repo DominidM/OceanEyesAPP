@@ -15,6 +15,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
+import { banDevice } from '@/shared/firebase/bans';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
 import { Card, Badge, Button } from '@admin/presentation/components/ui';
@@ -26,6 +27,7 @@ type AdminReport = {
   status: ReportStatus;
   isAnonymous: boolean;
   userId: string;
+  deviceHash?: string | null;
   createdAt?: { toDate?: () => Date };
 };
 
@@ -77,6 +79,14 @@ export function ReportsList() {
       createdAt: serverTimestamp(),
     });
     loadReports(true);
+  };
+
+  const handleBanDevice = async (report: AdminReport) => {
+    if (!report.deviceHash) return;
+    await banDevice(report.deviceHash, {
+      reason: `Reporte falso/descartado: ${report.id}`,
+      bannedBy: firebaseAuth?.currentUser?.uid,
+    });
   };
 
   const statusChip = (status: ReportStatus) => {
@@ -157,6 +167,9 @@ export function ReportsList() {
                   )}
                   {(report.status === 'pendiente' || report.status === 'en_revision') && (
                     <Button label="Rechazar" variant="danger" onPress={() => changeStatus(report, 'descartado')} />
+                  )}
+                  {report.status === 'descartado' && report.deviceHash && (
+                    <Button label="Banear dispositivo" variant="danger" onPress={() => handleBanDevice(report)} />
                   )}
                 </View>
               </Pressable>

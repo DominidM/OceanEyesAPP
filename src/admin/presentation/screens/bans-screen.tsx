@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { AppFonts as Fonts, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { banDevice, listBannedDevices, unbanDevice, type BannedDevice } from '@/shared/firebase/bans';
-import { useAdminTheme } from '@admin/shared/theme/context';
-import { AdminShell } from '@admin/shared/components/admin-shell';
-import { Badge, Button, Card } from '@admin/shared/ui';
+import { useAdminTheme } from '@admin/theme/context';
+import { AdminShell } from '@admin/layout/admin-shell';
+import { Badge, Button, Card } from '@admin/presentation/components/ui';
 
 export function BansScreen() {
   const { colors } = useAdminTheme();

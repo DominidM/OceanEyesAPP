@@ -1,1 +1,1 @@
-export { BansScreen as default } from '@admin/modules/bans/presentation/screens/bans-screen';
+export { BansScreen as default } from '@admin/presentation/screens/bans-screen';

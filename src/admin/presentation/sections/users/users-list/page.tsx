@@ -3,7 +3,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
-import { firestore } from '@/shared/firebase/app';
+import { firebaseAuth, firestore } from '@/shared/firebase/app';
+import { setUserStatus } from '@/shared/firebase/auth';
 import type { UserProfile } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
 import { Badge, Card, Button } from '@admin/presentation/components/ui';
@@ -38,6 +39,15 @@ export function UsersList() {
 
   useEffect(() => { loadUsers(true); }, []);
 
+  const toggleStatus = async (u: UserRow) => {
+    const next = u.status === 'suspended' ? 'active' : 'suspended';
+    await setUserStatus(u.id, next, {
+      reason: next === 'suspended' ? 'Suspendido por el administrador.' : undefined,
+      adminUid: firebaseAuth?.currentUser?.uid,
+    });
+    setUsers((prev) => prev.map((row) => (row.id === u.id ? { ...row, status: next } : row)));
+  };
+
   const roleConfig = (role: string) => {
     switch (role) {
       case 'admin': return { label: 'Admin', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' };
@@ -60,11 +70,13 @@ export function UsersList() {
           <Text style={[styles.th, styles.thRole, { color: colors.contentTextMuted }]}>Rol</Text>
           <Text style={[styles.th, styles.thNum, { color: colors.contentTextMuted }]}>Puntos</Text>
           <Text style={[styles.th, styles.thNum, { color: colors.contentTextMuted }]}>Verificados</Text>
+          <Text style={[styles.th, styles.thActions, { color: colors.contentTextMuted }]}>Acción</Text>
         </View>
 
         <View>
           {users.map((u) => {
             const rc = roleConfig(u.role);
+            const suspended = u.status === 'suspended';
             return (
               <Pressable
                 key={u.id}
@@ -84,9 +96,19 @@ export function UsersList() {
                 </View>
                 <View style={styles.cellRole}>
                   <Badge label={rc.label} color={rc.color} bg={rc.bg} />
+                  {suspended && <Badge label="Suspendido" color={colors.danger} bg={colors.dangerBg} />}
                 </View>
                 <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.pointsBalance ?? 0}</Text>
                 <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.verifiedReportsCount ?? 0}</Text>
+                <View style={styles.cellActions}>
+                  {u.role !== 'admin' && (
+                    <Button
+                      label={suspended ? 'Activar' : 'Suspender'}
+                      variant={suspended ? 'primary' : 'danger'}
+                      onPress={() => toggleStatus(u)}
+                    />
+                  )}
+                </View>
               </Pressable>
             );
           })}
@@ -115,6 +137,7 @@ const styles = StyleSheet.create({
   thMain: { flex: 1 },
   thRole: { width: 110, textAlign: 'right' },
   thNum: { width: 96, textAlign: 'right' },
+  thActions: { width: 120, textAlign: 'right' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -127,7 +150,8 @@ const styles = StyleSheet.create({
   cellMain: { flex: 1, gap: 2, minWidth: 0 },
   name: { fontFamily: Fonts.body, fontSize: 14, fontWeight: '600' },
   email: { fontFamily: Fonts.body, fontSize: 12 },
-  cellRole: { width: 110, alignItems: 'flex-end' },
+  cellRole: { width: 110, alignItems: 'flex-end', gap: 4 },
   cellNum: { width: 96, fontFamily: Fonts.label, fontSize: 14, fontWeight: '700', textAlign: 'right' },
+  cellActions: { width: 120, alignItems: 'flex-end' },
   more: { alignSelf: 'flex-start' },
 });
