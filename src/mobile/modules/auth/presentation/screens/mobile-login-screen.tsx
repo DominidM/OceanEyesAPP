@@ -4,7 +4,7 @@ import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { isGoogleSignInAvailable, loginWithEmail, registerUser, signInWithGoogle, /* signInAsGuest */ } from '@/shared/firebase/auth';
+import { isGoogleSignInAvailable, isAppleSignInAvailable, loginWithEmail, registerUser, signInWithGoogle, signInWithApple, /* signInAsGuest */ } from '@/shared/firebase/auth';
 import type { ProfileType } from '@/shared/firebase/types';
 
 export default function MobileLoginScreen() {
@@ -74,6 +74,28 @@ export default function MobileLoginScreen() {
     }
   };
 
+  const submitWithApple = async () => {
+    setError('');
+    if (!isFirebaseConfigured()) {
+      setError('Firebase aún no está configurado. Completa el archivo .env.local.');
+      return;
+    }
+    const available = await isAppleSignInAvailable();
+    if (!available) {
+      setError('Sign in with Apple requiere una development build en iOS. Ejecuta npx expo run:ios.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const user = await signInWithApple();
+      if (user) router.replace('/mobile');
+    } catch {
+      setError('No se pudo iniciar sesión con Apple. Inténtalo nuevamente.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <View style={styles.screen}>
       <Text style={styles.brand}>OceanEyes</Text>
@@ -87,6 +109,12 @@ export default function MobileLoginScreen() {
                 <Text style={styles.googleLogoText}>G</Text>
               </View>
               <Text style={styles.googleLabel}>Continuar con Google</Text>
+            </Pressable>
+            <Pressable disabled={busy} onPress={submitWithApple} style={styles.appleButton}>
+              <View style={styles.appleLogo}>
+                <Text style={styles.appleLogoText}></Text>
+              </View>
+              <Text style={styles.appleLabel}>Iniciar sesión con Apple</Text>
             </Pressable>
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
@@ -147,6 +175,10 @@ const styles = StyleSheet.create({
   googleLogo: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#4285F4', alignItems: 'center', justifyContent: 'center' },
   googleLogoText: { color: '#FFFFFF', fontFamily: Fonts.label, fontSize: 13, fontWeight: '700', lineHeight: 16 },
   googleLabel: { color: BrandColors.neutral, fontFamily: Fonts.label, fontWeight: '700' },
+  appleButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, backgroundColor: '#111111', borderRadius: 999, paddingVertical: Spacing.three },
+  appleLogo: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  appleLogoText: { color: '#FFFFFF', fontFamily: Fonts.body, fontSize: 18, lineHeight: 20 },
+  appleLabel: { color: '#FFFFFF', fontFamily: Fonts.label, fontWeight: '700' },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(19, 78, 94, 0.2)' },
   dividerText: { color: 'rgba(44, 44, 44, 0.5)', fontFamily: Fonts.body, fontSize: 12 },

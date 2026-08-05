@@ -1,5 +1,6 @@
 import {
   GoogleAuthProvider,
+  OAuthProvider,
   createUserWithEmailAndPassword,
   signInAnonymously,
   signInWithCredential,
@@ -31,6 +32,16 @@ export function isGoogleSignInAvailable() {
   if (Platform.OS === 'web') return false;
   try {
     return TurboModuleRegistry.get('RNGoogleSignin') != null || NativeModules.RNGoogleSignin != null;
+  } catch {
+    return false;
+  }
+}
+
+export async function isAppleSignInAvailable() {
+  if (Platform.OS !== 'ios') return false;
+  try {
+    const AppleAuthentication = await import('expo-apple-authentication');
+    return await AppleAuthentication.isAvailableAsync();
   } catch {
     return false;
   }
@@ -176,6 +187,38 @@ export async function signInWithGoogle() {
 
   const credential = GoogleAuthProvider.credential(idToken);
   const { user } = await signInWithCredential(requireAuth(), credential);
+  await ensureUserProfile(user);
+  return user;
+}
+
+export async function signInWithApple() {
+  if (Platform.OS !== 'ios') {
+    throw new Error('Iniciar sesión con Apple solo está disponible en iOS.');
+  }
+  const AppleAuthentication = await import('expo-apple-authentication');
+
+  const apple = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+  });
+  if (!apple.identityToken) {
+    throw new Error('No se pudo obtener el token de Apple. Revisa la configuración de Sign in with Apple.');
+  }
+
+  const provider = new OAuthProvider('apple.com');
+  provider.addScope('email');
+  provider.addScope('fullName');
+  const credential = provider.credential({
+    idToken: apple.identityToken,
+  });
+
+  const { user } = await signInWithCredential(requireAuth(), credential);
+  if (apple.fullName?.givenName || apple.fullName?.familyName) {
+    const name = [apple.fullName.givenName, apple.fullName.familyName].filter(Boolean).join(' ');
+    await updateProfile(user, { displayName: name }).catch(() => {});
+  }
   await ensureUserProfile(user);
   return user;
 }
