@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  getCountFromServer,
   getDocs,
   limit as fireLimit,
   orderBy,
@@ -10,7 +11,7 @@ import {
   updateDoc,
   doc,
 } from 'firebase/firestore';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
@@ -18,7 +19,7 @@ import { firebaseAuth, firestore } from '@/shared/firebase/app';
 import { banDevice } from '@/shared/firebase/bans';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Card, Badge, Button } from '@admin/presentation/components/ui';
+import { Card, Badge, IconButton, SectionHeader, PaginationFooter, EmptyState } from '@admin/presentation/components/ui';
 
 type AdminReport = {
   id: string;
@@ -42,28 +43,59 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function ReportsList() {
   const { colors } = useAdminTheme();
   const [reports, setReports] = useState<AdminReport[]>([]);
-  const [lastDoc, setLastDoc] = useState<any>(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageCursors, setPageCursors] = useState<any[]>([]);
+  const [totalDocs, setTotalDocs] = useState(0);
   const [loading, setLoading] = useState(true);
+  const currentPageRef = useRef(currentPage);
 
-  const loadReports = useCallback(async (reset = false) => {
+  useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(totalDocs / PAGE_SIZE));
+  const start = reports.length > 0 ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
+  const end = Math.min(currentPage * PAGE_SIZE, totalDocs);
+
+  const loadPage = useCallback(async (page: number) => {
     setLoading(true);
     try {
       let q = query(collection(firestore, 'reports'), orderBy('createdAt', 'desc'), fireLimit(PAGE_SIZE));
-      if (!reset && lastDoc) q = query(q, startAfter(lastDoc));
+      if (page > 1 && pageCursors.length >= page - 1) {
+        q = query(q, startAfter(pageCursors[page - 2]));
+      }
 
       const snap = await getDocs(q);
       const docs = snap.docs.map((item) => ({ id: item.id, ...item.data() }) as AdminReport);
-      setReports(reset ? docs : [...reports, ...docs]);
-      setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
-      setHasMore(snap.docs.length === PAGE_SIZE);
+      setReports(docs);
+      setCurrentPage(page);
+
+      if (snap.docs.length > 0) {
+        setPageCursors((prev) => {
+          const next = [...prev];
+          next[page - 1] = snap.docs[snap.docs.length - 1];
+          return next;
+        });
+      } else {
+        setPageCursors((prev) => prev.slice(0, page - 1));
+      }
     } catch {
     } finally {
       setLoading(false);
     }
-  }, [lastDoc, reports]);
+  }, [pageCursors]);
 
-  useEffect(() => { loadReports(true); }, []);
+  const fetchTotal = useCallback(async () => {
+    try {
+      const snap = await getCountFromServer(collection(firestore, 'reports'));
+      setTotalDocs(snap.data().count);
+    } catch {
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotal();
+    loadPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const changeStatus = async (report: AdminReport, status: Extract<ReportStatus, 'en_revision' | 'verificado' | 'descartado'>) => {
     await updateDoc(doc(firestore, 'reports', report.id), {
@@ -78,7 +110,7 @@ export function ReportsList() {
       changedBy: firebaseAuth?.currentUser?.uid,
       createdAt: serverTimestamp(),
     });
-    loadReports(true);
+    loadPage(currentPageRef.current);
   };
 
   const handleBanDevice = async (report: AdminReport) => {
@@ -102,84 +134,92 @@ export function ReportsList() {
 
   return (
     <View style={styles.content}>
-      <View style={styles.headerRow}>
-        <View style={styles.headerText}>
-          <Text style={[styles.title, { color: colors.contentText }]}>Moderación de incidencias</Text>
-          <Text style={[styles.subtitle, { color: colors.contentTextMuted }]}>
-            Revisa reportes de pesca, basura marina y variaciones del mar.
-          </Text>
-        </View>
-        <Button label="Actualizar" variant="secondary" onPress={() => loadReports(true)} />
-      </View>
+      <SectionHeader
+        title="Moderación de incidencias"
+        subtitle="Revisa reportes de pesca, basura marina y variaciones del mar."
+      />
 
       {loading && reports.length === 0 && (
         <Text style={[styles.empty, { color: colors.contentTextMuted }]}>Cargando reportes...</Text>
       )}
-      {!loading && reports.length === 0 && (
-        <Text style={[styles.empty, { color: colors.contentTextMuted }]}>No hay reportes todavía.</Text>
+      {!loading && totalDocs === 0 && (
+        <EmptyState
+          icon="clipboard-text-outline"
+          title="Sin reportes"
+          description="No hay incidencias registradas todavía. Los usuarios pueden reportar pesca ilegal, basura marina y variaciones del mar."
+        />
       )}
 
-      <Card style={styles.tableCard}>
-        <View style={[styles.tableHead, { borderBottomColor: colors.cardBorder }]}>
-          <Text style={[styles.th, styles.thMain, { color: colors.contentTextMuted }]}>Incidente</Text>
-          <Text style={[styles.th, styles.thDate, { color: colors.contentTextMuted }]}>Fecha</Text>
-          <Text style={[styles.th, styles.thCategory, { color: colors.contentTextMuted }]}>Categoría</Text>
-          <Text style={[styles.th, styles.thStatus, { color: colors.contentTextMuted }]}>Estado</Text>
-          <Text style={[styles.th, styles.thActions, { color: colors.contentTextMuted }]}>Acciones</Text>
-        </View>
+      {totalDocs > 0 && (
+        <Card style={styles.tableCard}>
+          <View style={[styles.tableHead, { borderBottomColor: colors.cardBorder }]}>
+            <Text style={[styles.th, styles.thMain, { color: colors.contentTextMuted }]}>Incidente</Text>
+            <Text style={[styles.th, styles.thDate, { color: colors.contentTextMuted }]}>Fecha</Text>
+            <Text style={[styles.th, styles.thCategory, { color: colors.contentTextMuted }]}>Categoría</Text>
+            <Text style={[styles.th, styles.thStatus, { color: colors.contentTextMuted }]}>Estado</Text>
+            <Text style={[styles.th, styles.thActions, { color: colors.contentTextMuted }]}>Acciones</Text>
+          </View>
 
-        <View>
-          {reports.map((report) => {
-            const st = statusChip(report.status);
-            const dateStr = report.createdAt?.toDate?.()
-              ? report.createdAt.toDate().toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })
-              : '—';
-            return (
-              <Pressable
-                key={report.id}
-                style={({ hovered }) => [
-                  styles.row,
-                  { borderBottomColor: colors.cardBorder },
-                  hovered && { backgroundColor: hoverBg },
-                ]}
-              >
-                <View style={styles.cellMain}>
-                  <Text style={[styles.rowTitle, { color: colors.cardText }]} numberOfLines={1}>
-                    {report.title}
+          <View>
+            {reports.map((report) => {
+              const st = statusChip(report.status);
+              const dateStr = report.createdAt?.toDate?.()
+                ? report.createdAt.toDate().toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })
+                : '—';
+              return (
+                <Pressable
+                  key={report.id}
+                  style={({ hovered }) => [
+                    styles.row,
+                    { borderBottomColor: colors.cardBorder },
+                    hovered && { backgroundColor: hoverBg },
+                  ]}
+                >
+                  <View style={styles.cellMain}>
+                    <Text style={[styles.rowTitle, { color: colors.cardText }]} numberOfLines={1}>
+                      {report.title}
+                    </Text>
+                    <Text style={[styles.rowMeta, { color: colors.contentTextMuted }]}>
+                      #{report.id.slice(0, 6)} · {report.isAnonymous ? 'Anónimo' : 'Identificado'}
+                    </Text>
+                  </View>
+                  <Text style={[styles.cellDate, { color: colors.contentTextMuted }]}>{dateStr}</Text>
+                  <Text style={[styles.cellCategory, { color: colors.contentTextMuted }]} numberOfLines={1}>
+                    {CATEGORY_LABELS[report.category] ?? report.category}
                   </Text>
-                  <Text style={[styles.rowMeta, { color: colors.contentTextMuted }]}>
-                    #{report.id.slice(0, 6)} · {report.isAnonymous ? 'Anónimo' : 'Identificado'}
-                  </Text>
-                </View>
-                <Text style={[styles.cellDate, { color: colors.contentTextMuted }]}>{dateStr}</Text>
-                <Text style={[styles.cellCategory, { color: colors.contentTextMuted }]} numberOfLines={1}>
-                  {CATEGORY_LABELS[report.category] ?? report.category}
-                </Text>
-                <View style={styles.cellStatus}>
-                  <Badge label={st.label} color={st.color} bg={st.bg} />
-                </View>
-                <View style={styles.cellActions}>
-                  {report.status === 'pendiente' && (
-                    <Button label="Revisar" variant="secondary" onPress={() => changeStatus(report, 'en_revision')} />
-                  )}
-                  {(report.status === 'pendiente' || report.status === 'en_revision') && (
-                    <Button label="Verificar" variant="primary" onPress={() => changeStatus(report, 'verificado')} />
-                  )}
-                  {(report.status === 'pendiente' || report.status === 'en_revision') && (
-                    <Button label="Rechazar" variant="danger" onPress={() => changeStatus(report, 'descartado')} />
-                  )}
-                  {report.status === 'descartado' && report.deviceHash && (
-                    <Button label="Banear dispositivo" variant="danger" onPress={() => handleBanDevice(report)} />
-                  )}
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Card>
+                  <View style={styles.cellStatus}>
+                    <Badge label={st.label} color={st.color} bg={st.bg} />
+                  </View>
+                  <View style={styles.cellActions}>
+                    {report.status === 'pendiente' && (
+                      <IconButton icon="eye-outline" label="Revisar" color={colors.contentTextMuted} onPress={() => changeStatus(report, 'en_revision')} />
+                    )}
+                    {(report.status === 'pendiente' || report.status === 'en_revision') && (
+                      <IconButton icon="check-circle-outline" label="Verificar" color={colors.success} onPress={() => changeStatus(report, 'verificado')} />
+                    )}
+                    {(report.status === 'pendiente' || report.status === 'en_revision') && (
+                      <IconButton icon="close-circle-outline" label="Rechazar" color={colors.danger} onPress={() => changeStatus(report, 'descartado')} />
+                    )}
+                    {report.status === 'descartado' && report.deviceHash && (
+                      <IconButton icon="cancel" label="Banear dispositivo" color={colors.danger} onPress={() => handleBanDevice(report)} />
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
 
-      {hasMore && !loading && (
-        <Button label="Cargar más reportes" variant="secondary" onPress={() => loadReports(false)} style={styles.more} />
+          <PaginationFooter
+            start={start}
+            end={end}
+            total={totalDocs}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrev={() => loadPage(currentPage - 1)}
+            onNext={() => loadPage(currentPage + 1)}
+            loading={loading}
+          />
+        </Card>
       )}
     </View>
   );
@@ -187,10 +227,6 @@ export function ReportsList() {
 
 const styles = StyleSheet.create({
   content: { gap: Spacing.four },
-  headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: Spacing.four },
-  headerText: { flex: 1, gap: Spacing.one },
-  title: { fontFamily: Fonts.headline, fontSize: 20, fontWeight: '700' },
-  subtitle: { fontFamily: Fonts.body, fontSize: 14, lineHeight: 21 },
   empty: { fontFamily: Fonts.body, fontSize: 14 },
   tableCard: { gap: 0, padding: 0, overflow: 'hidden' },
   tableHead: {
@@ -199,13 +235,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderBottomWidth: 1,
+    gap: Spacing.three,
   },
   th: { fontFamily: Fonts.label, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
   thMain: { flex: 1 },
   thDate: { width: 76 },
   thCategory: { width: 128 },
-  thStatus: { width: 108, textAlign: 'right' },
-  thActions: { width: 260, textAlign: 'right' },
+  thStatus: { width: 108, textAlign: 'center' },
+  thActions: { width: 160, textAlign: 'center' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -220,7 +257,6 @@ const styles = StyleSheet.create({
   rowMeta: { fontFamily: Fonts.body, fontSize: 12 },
   cellDate: { width: 76, fontFamily: Fonts.body, fontSize: 12 },
   cellCategory: { width: 128, fontFamily: Fonts.body, fontSize: 12, textTransform: 'capitalize' },
-  cellStatus: { width: 108, alignItems: 'flex-end' },
-  cellActions: { width: 260, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: Spacing.one },
-  more: { alignSelf: 'flex-start' },
+  cellStatus: { width: 108, alignItems: 'center' },
+  cellActions: { width: 160, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: Spacing.one },
 });

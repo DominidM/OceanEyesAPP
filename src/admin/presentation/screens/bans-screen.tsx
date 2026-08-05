@@ -5,7 +5,7 @@ import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { banDevice, listBannedDevices, unbanDevice, type BannedDevice } from '@/shared/firebase/bans';
 import { useAdminTheme } from '@admin/theme/context';
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, SectionHeader } from '@admin/presentation/components/ui';
 
 export function BansScreen() {
   const { colors } = useAdminTheme();
@@ -44,6 +44,10 @@ export function BansScreen() {
   return (
     <AdminShell title="Dispositivos baneados">
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <SectionHeader
+          title="Dispositivos baneados"
+          subtitle="Administra los dispositivos bloqueados por reportes falsos."
+        />
         <Card style={styles.formCard}>
           <Text style={[styles.formLabel, { color: colors.contentText }]}>Banear dispositivo manualmente</Text>
           <Text style={[styles.formHint, { color: colors.contentTextMuted }]}>

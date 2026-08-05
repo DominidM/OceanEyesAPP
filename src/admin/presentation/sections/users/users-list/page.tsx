@@ -1,5 +1,5 @@
-import { collection, getDocs, limit as fireLimit, orderBy, query, startAfter } from 'firebase/firestore';
-import React, { useCallback, useEffect, useState } from 'react';
+import { collection, getCountFromServer, getDocs, limit as fireLimit, orderBy, query, startAfter } from 'firebase/firestore';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
@@ -7,7 +7,7 @@ import { firebaseAuth, firestore } from '@/shared/firebase/app';
 import { setUserStatus } from '@/shared/firebase/auth';
 import type { UserProfile } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Badge, Card, Button } from '@admin/presentation/components/ui';
+import { Badge, Card, Button, PaginationFooter, EmptyState, SectionHeader } from '@admin/presentation/components/ui';
 
 type UserRow = UserProfile & { id: string };
 
@@ -16,28 +16,59 @@ const PAGE_SIZE = 10;
 export function UsersList() {
   const { colors } = useAdminTheme();
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [lastDoc, setLastDoc] = useState<any>(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageCursors, setPageCursors] = useState<any[]>([]);
+  const [totalDocs, setTotalDocs] = useState(0);
   const [loading, setLoading] = useState(true);
+  const currentPageRef = useRef(currentPage);
 
-  const loadUsers = useCallback(async (reset = false) => {
+  useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(totalDocs / PAGE_SIZE));
+  const start = users.length > 0 ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
+  const end = Math.min(currentPage * PAGE_SIZE, totalDocs);
+
+  const loadPage = useCallback(async (page: number) => {
     setLoading(true);
     try {
       let q = query(collection(firestore, 'users'), orderBy('createdAt', 'desc'), fireLimit(PAGE_SIZE));
-      if (!reset && lastDoc) q = query(q, startAfter(lastDoc));
+      if (page > 1 && pageCursors.length >= page - 1) {
+        q = query(q, startAfter(pageCursors[page - 2]));
+      }
 
       const snap = await getDocs(q);
       const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as UserRow);
-      setUsers(reset ? docs : [...users, ...docs]);
-      setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
-      setHasMore(snap.docs.length === PAGE_SIZE);
+      setUsers(docs);
+      setCurrentPage(page);
+
+      if (snap.docs.length > 0) {
+        setPageCursors((prev) => {
+          const next = [...prev];
+          next[page - 1] = snap.docs[snap.docs.length - 1];
+          return next;
+        });
+      } else {
+        setPageCursors((prev) => prev.slice(0, page - 1));
+      }
     } catch {
     } finally {
       setLoading(false);
     }
-  }, [lastDoc, users]);
+  }, [pageCursors]);
 
-  useEffect(() => { loadUsers(true); }, []);
+  const fetchTotal = useCallback(async () => {
+    try {
+      const snap = await getCountFromServer(collection(firestore, 'users'));
+      setTotalDocs(snap.data().count);
+    } catch {
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotal();
+    loadPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleStatus = async (u: UserRow) => {
     const next = u.status === 'suspended' ? 'active' : 'suspended';
@@ -46,6 +77,7 @@ export function UsersList() {
       adminUid: firebaseAuth?.currentUser?.uid,
     });
     setUsers((prev) => prev.map((row) => (row.id === u.id ? { ...row, status: next } : row)));
+    await loadPage(currentPageRef.current);
   };
 
   const roleConfig = (role: string) => {
@@ -60,63 +92,84 @@ export function UsersList() {
 
   return (
     <View style={styles.content}>
+      <SectionHeader
+        title="Administración de usuarios"
+        subtitle="Gestiona roles, puntos y suspende cuentas de la plataforma."
+      />
+
       {loading && users.length === 0 && (
         <Text style={[styles.empty, { color: colors.contentTextMuted }]}>Cargando usuarios...</Text>
       )}
+      {!loading && totalDocs === 0 && (
+        <EmptyState
+          icon="account-group-outline"
+          title="Sin usuarios"
+          description="No hay usuarios registrados en la plataforma todavía."
+        />
+      )}
 
-      <Card style={styles.tableCard}>
-        <View style={[styles.tableHead, { borderBottomColor: colors.cardBorder }]}>
-          <Text style={[styles.th, styles.thMain, { color: colors.contentTextMuted }]}>Usuario</Text>
-          <Text style={[styles.th, styles.thRole, { color: colors.contentTextMuted }]}>Rol</Text>
-          <Text style={[styles.th, styles.thNum, { color: colors.contentTextMuted }]}>Puntos</Text>
-          <Text style={[styles.th, styles.thNum, { color: colors.contentTextMuted }]}>Verificados</Text>
-          <Text style={[styles.th, styles.thActions, { color: colors.contentTextMuted }]}>Acción</Text>
-        </View>
+      {totalDocs > 0 && (
+        <Card style={styles.tableCard}>
+          <View style={[styles.tableHead, { borderBottomColor: colors.cardBorder }]}>
+            <Text style={[styles.th, styles.thMain, { color: colors.contentTextMuted }]}>Usuario</Text>
+            <Text style={[styles.th, styles.thRole, { color: colors.contentTextMuted }]}>Rol</Text>
+            <Text style={[styles.th, styles.thNum, { color: colors.contentTextMuted }]}>Puntos</Text>
+            <Text style={[styles.th, styles.thNum, { color: colors.contentTextMuted }]}>Verificados</Text>
+            <Text style={[styles.th, styles.thActions, { color: colors.contentTextMuted }]}>Acción</Text>
+          </View>
 
-        <View>
-          {users.map((u) => {
-            const rc = roleConfig(u.role);
-            const suspended = u.status === 'suspended';
-            return (
-              <Pressable
-                key={u.id}
-                style={({ hovered }) => [
-                  styles.row,
-                  { borderBottomColor: colors.cardBorder },
-                  hovered && { backgroundColor: hoverBg },
-                ]}
-              >
-                <View style={styles.cellMain}>
-                  <Text style={[styles.name, { color: colors.cardText }]} numberOfLines={1}>
-                    {u.displayName ?? 'Sin nombre'}
-                  </Text>
-                  <Text style={[styles.email, { color: colors.contentTextMuted }]} numberOfLines={1}>
-                    {u.email ?? 'sin email'}
-                  </Text>
-                </View>
-                <View style={styles.cellRole}>
-                  <Badge label={rc.label} color={rc.color} bg={rc.bg} />
-                  {suspended && <Badge label="Suspendido" color={colors.danger} bg={colors.dangerBg} />}
-                </View>
-                <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.pointsBalance ?? 0}</Text>
-                <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.verifiedReportsCount ?? 0}</Text>
-                <View style={styles.cellActions}>
-                  {u.role !== 'admin' && (
-                    <Button
-                      label={suspended ? 'Activar' : 'Suspender'}
-                      variant={suspended ? 'primary' : 'danger'}
-                      onPress={() => toggleStatus(u)}
-                    />
-                  )}
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Card>
+          <View>
+            {users.map((u) => {
+              const rc = roleConfig(u.role);
+              const suspended = u.status === 'suspended';
+              return (
+                <Pressable
+                  key={u.id}
+                  style={({ hovered }) => [
+                    styles.row,
+                    { borderBottomColor: colors.cardBorder },
+                    hovered && { backgroundColor: hoverBg },
+                  ]}
+                >
+                  <View style={styles.cellMain}>
+                    <Text style={[styles.name, { color: colors.cardText }]} numberOfLines={1}>
+                      {u.displayName ?? 'Sin nombre'}
+                    </Text>
+                    <Text style={[styles.email, { color: colors.contentTextMuted }]} numberOfLines={1}>
+                      {u.email ?? 'sin email'}
+                    </Text>
+                  </View>
+                  <View style={styles.cellRole}>
+                    <Badge label={rc.label} color={rc.color} bg={rc.bg} />
+                    {suspended && <Badge label="Suspendido" color={colors.danger} bg={colors.dangerBg} />}
+                  </View>
+                  <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.pointsBalance ?? 0}</Text>
+                  <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.verifiedReportsCount ?? 0}</Text>
+                  <View style={styles.cellActions}>
+                    {u.role !== 'admin' && (
+                      <Button
+                        label={suspended ? 'Activar' : 'Suspender'}
+                        variant={suspended ? 'primary' : 'danger'}
+                        onPress={() => toggleStatus(u)}
+                      />
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
 
-      {hasMore && !loading && (
-        <Button label="Cargar más" variant="secondary" onPress={() => loadUsers(false)} style={styles.more} />
+          <PaginationFooter
+            start={start}
+            end={end}
+            total={totalDocs}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPrev={() => loadPage(currentPage - 1)}
+            onNext={() => loadPage(currentPage + 1)}
+            loading={loading}
+          />
+        </Card>
       )}
     </View>
   );
@@ -132,6 +185,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderBottomWidth: 1,
+    gap: Spacing.three,
   },
   th: { fontFamily: Fonts.label, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
   thMain: { flex: 1 },
@@ -153,5 +207,4 @@ const styles = StyleSheet.create({
   cellRole: { width: 110, alignItems: 'flex-end', gap: 4 },
   cellNum: { width: 96, fontFamily: Fonts.label, fontSize: 14, fontWeight: '700', textAlign: 'right' },
   cellActions: { width: 120, alignItems: 'flex-end' },
-  more: { alignSelf: 'flex-start' },
 });

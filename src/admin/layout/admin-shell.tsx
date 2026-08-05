@@ -1,5 +1,7 @@
 import React, { PropsWithChildren } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { themeTransition } from '@admin/config/admin-theme';
@@ -13,11 +15,13 @@ type AdminShellProps = PropsWithChildren<{
 
 export function AdminShell({ children, title }: AdminShellProps) {
   const { colors, mode } = useAdminTheme();
+  const router = useRouter();
   const isDark = mode === 'dark';
 
   const chromeBg = isDark ? '#0A0A0A' : '#FFFFFF';
   const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(19,78,94,0.12)';
   const chromeText = isDark ? 'rgba(226,232,240,0.55)' : 'rgba(26,26,26,0.65)';
+  const chromeStrong = isDark ? '#E2E8F0' : '#1A1A1A';
 
   return (
     <View style={[styles.shell, { backgroundColor: colors.appBg }]}>
@@ -25,9 +29,12 @@ export function AdminShell({ children, title }: AdminShellProps) {
       <View style={[styles.main, { backgroundColor: colors.contentBg }]}>
         <AdminHeader title={title} />
         <View style={[styles.breadcrumb, { backgroundColor: chromeBg, borderBottomColor: borderColor }]}>
-          <Text style={[styles.breadcrumbText, { color: chromeText }]}>
-            Panel / {title}
-          </Text>
+          <Pressable onPress={() => router.push('/admin')} style={styles.breadcrumbLink}>
+            <FontAwesome5 name="home" size={12} color={chromeText} />
+            <Text style={[styles.breadcrumbText, { color: chromeText }]}>Panel</Text>
+          </Pressable>
+          <Text style={[styles.breadcrumbSep, { color: chromeText }]}>›</Text>
+          <Text style={[styles.breadcrumbCurrent, { color: chromeStrong }]}>{title}</Text>
         </View>
         <ScrollView
           style={styles.content}
@@ -55,14 +62,37 @@ const styles = StyleSheet.create({
   },
   breadcrumb: {
     ...themeTransition,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
     borderBottomWidth: 1,
     paddingHorizontal: Spacing.five,
-    paddingVertical: Spacing.two,
+    paddingVertical: Spacing.three,
+  },
+  breadcrumbLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two - 2,
+    paddingVertical: 2,
+    paddingHorizontal: Spacing.one,
+    borderRadius: 6,
+    cursor: 'pointer',
   },
   breadcrumbText: {
     ...themeTransition,
     fontFamily: Fonts.body,
     fontSize: 13,
+  },
+  breadcrumbSep: {
+    fontFamily: Fonts.body,
+    fontSize: 14,
+    marginHorizontal: -2,
+  },
+  breadcrumbCurrent: {
+    ...themeTransition,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
