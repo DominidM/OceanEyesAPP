@@ -1,10 +1,10 @@
-import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView from 'react-native-maps';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { useCurrentLocation } from '@/shared/hooks/use-current-location';
 
 import type { MapReport } from './map-report';
 import { ReportDetailSheet } from './report-detail-sheet';
@@ -38,9 +38,8 @@ type RealTimeMapProps = {
 };
 
 export function RealTimeMap({ reports }: RealTimeMapProps) {
-  const [permission, requestPermission] = Location.useForegroundPermissions();
+  const { permission, requestPermission, position, loading } = useCurrentLocation();
   const [region, setRegion] = useState<Region | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<MapReport | null>(null);
   const markerTapped = useRef(false);
   const mapRef = useRef<MapView>(null);
@@ -68,37 +67,17 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
   };
 
   useEffect(() => {
-    if (!permission) return;
-
-    if (!permission.granted) {
-      setRegion(DEFAULT_REGION);
-      setLoading(false);
-      return;
-    }
-
-    let active = true;
-    setLoading(true);
-    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
-      .then((current) => {
-        if (!active) return;
-        setRegion({
-          latitude: current.coords.latitude,
-          longitude: current.coords.longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        });
-      })
-      .catch(() => {
-        if (active) setRegion(DEFAULT_REGION);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
+    if (position) {
+      setRegion({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
       });
-
-    return () => {
-      active = false;
-    };
-  }, [permission]);
+    } else if (!loading) {
+      setRegion(DEFAULT_REGION);
+    }
+  }, [position, loading]);
 
   const showPermissionPrompt = permission != null && !permission.granted;
 

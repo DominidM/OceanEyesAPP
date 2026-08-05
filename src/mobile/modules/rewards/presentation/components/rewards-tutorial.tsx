@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { useBottomSheetModal } from '@/shared/hooks/use-bottom-sheet-modal';
 import { shadow } from '@/shared/utils/shadows';
 
 import { TUTORIAL_STEPS } from '../data/tutorial';
@@ -18,14 +19,12 @@ export function RewardsTutorial({ visible, onClose }: RewardsTutorialProps) {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const [step, setStep] = useState(0);
-  const [rendered, setRendered] = useState(visible);
   const total = TUTORIAL_STEPS.length;
   const current = TUTORIAL_STEPS[step];
 
   const fade = useRef(new Animated.Value(0)).current;
   const translate = useRef(new Animated.Value(18)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const slideY = useRef(new Animated.Value(1)).current;
+  const { backdropOpacity, translateY, rendered, close } = useBottomSheetModal(visible, onClose);
 
   useEffect(() => {
     if (!visible) return;
@@ -37,30 +36,6 @@ export function RewardsTutorial({ visible, onClose }: RewardsTutorialProps) {
       Animated.timing(translate, { toValue: 0, duration: 240, useNativeDriver: true }),
     ]).start();
   }, [visible, fade, translate]);
-
-  useEffect(() => {
-    if (visible) {
-      setRendered(true);
-      backdropOpacity.setValue(0);
-      slideY.setValue(1);
-      Animated.parallel([
-        Animated.timing(backdropOpacity, { toValue: 1, duration: 240, useNativeDriver: true }),
-        Animated.timing(slideY, { toValue: 0, duration: 280, useNativeDriver: true }),
-      ]).start();
-    } else if (rendered) {
-      setRendered(false);
-    }
-  }, [visible, rendered, backdropOpacity, slideY]);
-
-  const close = () => {
-    Animated.parallel([
-      Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      Animated.timing(slideY, { toValue: 1, duration: 260, useNativeDriver: true }),
-    ]).start(() => {
-      setRendered(false);
-      onClose();
-    });
-  };
 
   const animateStep = () => {
     fade.setValue(0);
@@ -104,7 +79,7 @@ export function RewardsTutorial({ visible, onClose }: RewardsTutorialProps) {
             { paddingBottom: insets.bottom + 24 },
             {
               transform: [
-                { translateY: slideY.interpolate({ inputRange: [0, 1], outputRange: [0, height] }) },
+                { translateY: translateY.interpolate({ inputRange: [0, 1], outputRange: [0, height] }) },
               ],
             },
           ]}>

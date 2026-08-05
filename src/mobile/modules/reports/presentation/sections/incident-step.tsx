@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { formatDuration } from '@/shared/utils/format-duration';
 
 import { getIncidentType, INCIDENT_TYPES } from '../incident-types';
 import { IncidentColors as C } from '../theme';
@@ -76,10 +77,7 @@ export function IncidentStep({ initialIncidentId, onBack, onContinue }: Incident
     });
   };
 
-  const totalSeconds = Math.floor(recorderState.durationMillis / 1000);
-  const timerLabel = `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(
-    totalSeconds % 60,
-  ).padStart(2, '0')}`;
+  const timerLabel = formatDuration(recorderState.durationMillis);
 
   return (
     <View style={styles.screen}>

@@ -1,13 +1,12 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { useLiveReports } from '@/shared/hooks/use-live-reports';
 import { shadow } from '@/shared/utils/shadows';
-import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { subscribeReports } from '@/shared/firebase/reports';
 
 import { RealTimeMap } from '../components/real-time-map';
 import { isMapReport, toMapReport, type MapReport } from '../components/map-report';
@@ -15,12 +14,7 @@ import { isMapReport, toMapReport, type MapReport } from '../components/map-repo
 export function MapScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [reports, setReports] = useState<MapReport[]>([]);
-
-  useEffect(() => {
-    if (!isFirebaseConfigured()) return;
-    return subscribeReports((items) => setReports(items.map(toMapReport).filter(isMapReport)));
-  }, []);
+  const { reports } = useLiveReports<MapReport>((items) => items.map(toMapReport).filter(isMapReport));
 
   return (
     <View style={styles.screen}>

@@ -1,11 +1,12 @@
 import { Image } from 'expo-image';
-import { useNetworkState } from 'expo-network';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol, type SymbolName } from '@/shared/components/app-symbol';
+import { useConnectivity } from '@/shared/offline/connectivity-context';
+import { formatDuration } from '@/shared/utils/format-duration';
 
 import { getIncidentType } from '../incident-types';
 import { SummaryColors as C } from '../theme';
@@ -42,18 +43,10 @@ function formatDate(date: Date): string {
   return `${day} ${month} ${year}, ${hours}:${minutes} ${meridiem}`;
 }
 
-function formatDuration(millis: number): string {
-  const totalSeconds = Math.floor(millis / 1000);
-  return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(
-    totalSeconds % 60,
-  ).padStart(2, '0')}`;
-}
-
 export function SummaryStep({ photo, location, incident, audio, createdAt, onBack, onEdit, onSend, sending = false, sendError = '' }: SummaryStepProps) {
   const insets = useSafeAreaInsets();
   const [verified, setVerified] = useState(false);
-  const network = useNetworkState();
-  const online = network.isConnected === true && network.isInternetReachable !== false;
+  const { online } = useConnectivity();
 
   const incidentType = incident ? getIncidentType(incident.id) : undefined;
   const incidentIcon: SymbolName =

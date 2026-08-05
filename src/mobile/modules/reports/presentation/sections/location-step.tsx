@@ -1,10 +1,11 @@
 import * as Location from 'expo-location';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { useCurrentLocation } from '@/shared/hooks/use-current-location';
 import { shadow } from '@/shared/utils/shadows';
 
 import { LocationColors as C } from '../theme';
@@ -24,15 +25,11 @@ type LocationStepProps = {
 
 export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
   const insets = useSafeAreaInsets();
-  const [permission, requestPermission] = Location.useForegroundPermissions();
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const { permission, requestPermission, position, loading, error, refetch: fetchLocation } = useCurrentLocation();
   const [placeName, setPlaceName] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [manual, setManual] = useState(false);
   const [mapRegion, setMapRegion] = useState<Region | null>(null);
   const [recenterNonce, setRecenterNonce] = useState(0);
-  const fetchedRef = useRef(false);
 
   const resolvePlaceName = useCallback(async (latitude: number, longitude: number) => {
     try {
@@ -46,32 +43,16 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
     }
   }, []);
 
-  const fetchLocation = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setLocation(current);
-      setMapRegion({
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-      await resolvePlaceName(current.coords.latitude, current.coords.longitude);
-    } catch {
-      setError('No se pudo obtener tu ubicación');
-    } finally {
-      setLoading(false);
-    }
-  }, [resolvePlaceName]);
-
   useEffect(() => {
-    if (permission?.granted && !fetchedRef.current) {
-      fetchedRef.current = true;
-      fetchLocation();
-    }
-  }, [permission?.granted, fetchLocation]);
+    if (!position) return;
+    setMapRegion({
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    });
+    void resolvePlaceName(position.coords.latitude, position.coords.longitude);
+  }, [position, resolvePlaceName]);
 
   const handleRegionChange = useCallback(
     (next: Region) => {
@@ -83,8 +64,8 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
 
   const handleManualToggle = (value: boolean) => {
     setManual(value);
-    if (!value && location) {
-      const { latitude, longitude } = location.coords;
+    if (!value && position) {
+      const { latitude, longitude } = position.coords;
       setMapRegion({ latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 });
       setRecenterNonce((nonce) => nonce + 1);
       void resolvePlaceName(latitude, longitude);
@@ -97,7 +78,7 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
       ? 'Obteniendo ubicación...'
       : 'Ubicación no disponible';
 
-  const accuracy = manual ? null : (location?.coords.accuracy ?? null);
+  const accuracy = manual ? null : (position?.coords.accuracy ?? null);
   const accuracyLabel = manual
     ? 'Punto elegido manualmente'
     : accuracy != null
@@ -112,7 +93,7 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
       placeName,
       latitude: mapRegion.latitude,
       longitude: mapRegion.longitude,
-      accuracy: manual ? null : (location?.coords.accuracy ?? null),
+      accuracy: manual ? null : (position?.coords.accuracy ?? null),
     });
   };
 

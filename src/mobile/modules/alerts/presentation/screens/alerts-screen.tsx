@@ -1,56 +1,24 @@
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
-import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { subscribeReports } from '@/shared/firebase/reports';
+import { useCurrentLocation } from '@/shared/hooks/use-current-location';
+import { useLiveReports } from '@/shared/hooks/use-live-reports';
 import type { Report as FirestoreReport } from '@/shared/firebase/types';
 
 import { AlertCard, type Alert } from '../components/alert-card';
 import { haversineKm } from '../utils/distance';
 
-type Coords = {
-  latitude: number;
-  longitude: number;
-};
-
 export function AlertsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [permission, requestPermission] = Location.useForegroundPermissions();
-  const [position, setPosition] = useState<Coords | null>(null);
-  const [locating, setLocating] = useState(true);
-  const [reports, setReports] = useState<FirestoreReport[]>([]);
-
-  const fetchPosition = useCallback(async () => {
-    setLocating(true);
-    try {
-      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setPosition({ latitude: current.coords.latitude, longitude: current.coords.longitude });
-    } catch {
-      setPosition(null);
-    } finally {
-      setLocating(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!permission) return;
-    if (!permission.granted) {
-      setLocating(false);
-      return;
-    }
-    void fetchPosition();
-  }, [permission, fetchPosition]);
-
-  useEffect(() => {
-    if (!isFirebaseConfigured()) return;
-    return subscribeReports(setReports);
-  }, []);
+  const { permission, requestPermission, position, loading: locating, refetch: fetchPosition } =
+    useCurrentLocation();
+  const { reports } = useLiveReports();
 
   const alerts = useMemo(() => toAlerts(reports, position), [reports, position]);
 
@@ -136,9 +104,10 @@ export function AlertsScreen() {
   );
 }
 
-function toAlerts(reports: FirestoreReport[], position: Coords | null): Alert[] {
+function toAlerts(reports: FirestoreReport[], position: Location.LocationObject | null): Alert[] {
   if (!position) return [];
 
+  const { latitude, longitude } = position.coords;
   const alerts: Alert[] = [];
   for (const report of reports) {
     const location = report.location;
@@ -156,12 +125,7 @@ function toAlerts(reports: FirestoreReport[], position: Coords | null): Alert[] 
       category: report.category,
       title: report.title,
       address: location.address,
-      distanceKm: haversineKm(
-        position.latitude,
-        position.longitude,
-        location.latitude,
-        location.longitude,
-      ),
+      distanceKm: haversineKm(latitude, longitude, location.latitude, location.longitude),
       date: date.toLocaleDateString(),
     });
   }

@@ -8,6 +8,7 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { SectionHeader } from '@/shared/components/section-header';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { logout } from '@/shared/firebase/auth';
+import { useGuestStatus } from '@/shared/hooks/use-guest-status';
 import type { ProfileType } from '@/shared/firebase/types';
 import { shadow } from '@/shared/utils/shadows';
 
@@ -21,7 +22,7 @@ export function ProfileSection() {
   const router = useRouter();
   const { user, profile } = useAuth();
 
-  const guest = !user || user.isAnonymous;
+  const guest = useGuestStatus();
 
   const handleLogout = async () => {
     await logout();

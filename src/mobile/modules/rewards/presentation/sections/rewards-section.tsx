@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,45 +7,25 @@ import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/cons
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { SectionHeader } from '@/shared/components/section-header';
 import { useAuth } from '@/shared/firebase/auth-context';
-import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { getAllRewards, getUserRedemptions } from '@/shared/firebase/rewards';
 
 import { PointsCard } from '../components/points-card';
 import { RecentFooter } from '../components/recent-footer';
 import { RewardItem } from '../components/reward-item';
 import { RewardsTutorial } from '../components/rewards-tutorial';
 import { SectionTabs, RewardsTab } from '../components/section-tabs';
-import { levelLabelFor, toClaimCard, toRewardCard, type Reward } from '../data/rewards';
+import { levelLabelFor } from '../data/rewards';
+import { useRewardsData } from '../hooks/use-rewards-data';
 import { RewardsColors } from '../theme';
 
 export function RewardsSection() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
+  const { rewards, claims, guest } = useRewardsData();
   const [tab, setTab] = useState<RewardsTab>('recompensas');
   const [tutorialOpen, setTutorialOpen] = useState(false);
-  const [rewards, setRewards] = useState<Reward[]>([]);
-  const [claims, setClaims] = useState<Reward[]>([]);
 
-  const guest = !user || user.isAnonymous;
   const items = tab === 'recompensas' ? rewards : claims;
-
-  useEffect(() => {
-    if (!isFirebaseConfigured()) return;
-    getAllRewards()
-      .then((catalog) => setRewards(catalog.map(toRewardCard)))
-      .catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
-    if (!isFirebaseConfigured() || guest || !user) {
-      setClaims([]);
-      return;
-    }
-    getUserRedemptions(user.uid)
-      .then((redemptions) => setClaims(redemptions.map(toClaimCard)))
-      .catch(() => undefined);
-  }, [guest, user]);
 
   const balance = profile?.pointsBalance;
   const levelLabel = guest || !profile ? undefined : levelLabelFor(profile.totalPointsEarned);

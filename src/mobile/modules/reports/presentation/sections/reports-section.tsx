@@ -1,21 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors } from '@/constants/theme';
+import type { Report as FirestoreReport, ReportStatus } from '@/shared/firebase/types';
+import type { PendingReport } from '@/shared/offline/outbox';
+import { requestSync } from '@/shared/offline/sync-engine';
 
 import { ReportCard, Report } from '../components/report-card';
 import { ReportsHeader, ReportChip } from '../components/reports-header';
 import { StatsStrip, ReportStat } from '../components/stats-strip';
 import { SyncWarning } from '../components/sync-warning';
 import { HistoryHeader } from '../components/history-header';
+import { useMyReportsWithCache } from '../hooks/use-my-reports-with-cache';
 import { SurfaceColors } from '../theme';
-import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { getMyReports } from '@/shared/firebase/reports';
-import type { Report as FirestoreReport, ReportStatus } from '@/shared/firebase/types';
-import { getCached, setCached } from '@/shared/offline/read-cache';
-import { getPendingReports, subscribeOutbox, type PendingReport } from '@/shared/offline/outbox';
-import { requestSync } from '@/shared/offline/sync-engine';
 
 const REPORTS_CACHE_KEY = '@oceaneyes/cache/reports-mine';
 
@@ -23,33 +21,11 @@ type FilterKey = 'todos' | 'pendiente' | 'verificado' | 'en_revision' | 'descart
 
 export function ReportsSection() {
   const insets = useSafeAreaInsets();
-  const [reports, setReports] = useState<Report[]>([]);
-  const [queued, setQueued] = useState<PendingReport[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterKey>('todos');
-
-  useEffect(() => {
-    (async () => {
-      const cached = await getCached<Report[]>(REPORTS_CACHE_KEY);
-      if (cached?.length) setReports(cached);
-      if (!isFirebaseConfigured()) return;
-      try {
-        const items = await getMyReports();
-        const cards = items.map(toCardReport);
-        setReports(cards);
-        await setCached(REPORTS_CACHE_KEY, cards);
-      } catch {
-        // keep cached data
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    const loadQueued = () => {
-      getPendingReports().then(setQueued).catch(() => undefined);
-    };
-    loadQueued();
-    return subscribeOutbox(loadQueued);
-  }, []);
+  const { reports, queued } = useMyReportsWithCache<Report>(
+    REPORTS_CACHE_KEY,
+    (items) => items.map(toCardReport),
+  );
 
   const counts = useMemo(() => {
     let pendiente = 0;

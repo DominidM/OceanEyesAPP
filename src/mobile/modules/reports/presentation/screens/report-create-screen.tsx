@@ -5,8 +5,11 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { useAuth } from '@/shared/firebase/auth-context';
+import { useGuestStatus } from '@/shared/hooks/use-guest-status';
 import { shadow } from '@/shared/utils/shadows';
 
+import { useReportSubmission } from '../hooks/use-report-submission';
 import { DniStep } from '../sections/dni-step';
 import { CaptureStep } from '../sections/capture-step';
 import { IncidentStep, type IncidentSelection, type ReportAudio } from '../sections/incident-step';
@@ -15,12 +18,6 @@ import type { CaptureMedia } from '../sections/media-preview';
 import { ReportTopBar } from '../sections/report-top-bar';
 import { SummaryStep } from '../sections/summary-step';
 import { ReportFlowColors as C, SummaryColors as SC } from '../theme';
-import { useAuth } from '@/shared/firebase/auth-context';
-import { signInAsGuest } from '@/shared/firebase/auth';
-import { publishReportOnline, saveReportOfflineFirst } from '@/shared/firebase/reports';
-import { useBan } from '@/shared/identity/ban-context';
-import { useConnectivity } from '@/shared/offline/connectivity-context';
-import { isNetworkError } from '@/shared/offline/sync-engine';
 
 const TOTAL_STEPS = 5;
 const STEP_PROGRESS = 20;
@@ -28,10 +25,9 @@ const STEP_PROGRESS = 20;
 export function ReportCreateScreen() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
-  const { verdict } = useBan();
-  const { online } = useConnectivity();
+  const isGuest = useGuestStatus();
+  const { submit, sending, sendError, queued, submitted } = useReportSubmission();
   const [step, setStep] = useState(1);
-  const [submitted, setSubmitted] = useState(false);
   const [dni, setDni] = useState('');
   const [consent, setConsent] = useState(false);
   const [anonymous, setAnonymous] = useState(true);
@@ -40,14 +36,9 @@ export function ReportCreateScreen() {
   const [incident, setIncident] = useState<IncidentSelection['incident'] | null>(null);
   const [audio, setAudio] = useState<ReportAudio | null>(null);
   const [createdAt] = useState(() => new Date());
-  const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState('');
-  const [queued, setQueued] = useState(false);
 
   const profileDni = profile?.dni && /^\d{8}$/.test(profile.dni) ? profile.dni : '';
   const hasDni = Boolean(profileDni);
-  // const isGuest = Boolean(user?.isAnonymous);
-  const isGuest = !user || Boolean(user?.isAnonymous); // invitado sin sesión también se trata como anónimo
 
   useEffect(() => {
     if (hasDni && dni !== profileDni) setDni(profileDni);
@@ -86,16 +77,10 @@ export function ReportCreateScreen() {
     setStep(5);
   };
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!incident || sending) return;
-    if (verdict !== 'ok') {
-      setSendError('Tu cuenta o dispositivo está bloqueado para enviar reportes.');
-      return;
-    }
-    setSendError('');
-    setSending(true);
-    try {
-      const input = {
+    void submit(
+      {
         category: incident.id,
         title: incident.label,
         isAnonymous: anonymous,
@@ -103,45 +88,9 @@ export function ReportCreateScreen() {
           location?.latitude != null && location.longitude != null
             ? { latitude: location.latitude, longitude: location.longitude, address: location.placeName ?? undefined }
             : undefined,
-      };
-      const mediaList = media ? [{ uri: media.uri, kind: media.type }] : [];
-
-      // Invitado sin sesión: se crea una sesión anónima solo al momento de enviar.
-      // Requiere habilitar el sign-in anónimo en Firebase Auth. Si falla (p. ej. Firebase
-      // sin configurar), el reporte se encola localmente en lugar de bloquear al usuario.
-      if (!user) {
-        try {
-          await signInAsGuest();
-        } catch {
-          await saveReportOfflineFirst(input, mediaList);
-          setQueued(true);
-          setSubmitted(true);
-          return;
-        }
-      }
-
-      if (online) {
-        try {
-          await publishReportOnline(input, mediaList);
-          setQueued(false);
-        } catch (error) {
-          if (isNetworkError(error)) {
-            await saveReportOfflineFirst(input, mediaList);
-            setQueued(true);
-          } else {
-            throw error;
-          }
-        }
-      } else {
-        await saveReportOfflineFirst(input, mediaList);
-        setQueued(true);
-      }
-      setSubmitted(true);
-    } catch {
-      setSendError('No se pudo guardar el reporte. Revisa tu conexión e inténtalo nuevamente.');
-    } finally {
-      setSending(false);
-    }
+      },
+      media ? [{ uri: media.uri, kind: media.type }] : [],
+    );
   };
 
   if (loading) return null;

@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Animated, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { useBottomSheetModal } from '@/shared/hooks/use-bottom-sheet-modal';
 import { shadow } from '@/shared/utils/shadows';
 import { REPORT_CATEGORIES, type ReportStatus } from '@/shared/firebase/types';
 
@@ -24,36 +25,8 @@ const STATUS_META: Record<ReportStatus, { label: string; bg: string; text: strin
 export function ReportDetailSheet({ report, onClose }: ReportDetailSheetProps) {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const [rendered, setRendered] = useState(false);
   const visible = report != null;
-
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (visible) {
-      setRendered(true);
-      backdropOpacity.setValue(0);
-      translateY.setValue(1);
-      Animated.parallel([
-        Animated.timing(backdropOpacity, { toValue: 1, duration: 240, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: 0, duration: 280, useNativeDriver: true }),
-      ]).start();
-    } else if (rendered) {
-      setRendered(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
-
-  const close = () => {
-    Animated.parallel([
-      Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 1, duration: 260, useNativeDriver: true }),
-    ]).start(() => {
-      setRendered(false);
-      onClose();
-    });
-  };
+  const { backdropOpacity, translateY, rendered, close } = useBottomSheetModal(visible, onClose);
 
   if (!visible) return null;
 
