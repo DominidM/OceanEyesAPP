@@ -191,6 +191,13 @@ export async function signInWithGoogle() {
   return user;
 }
 
+export async function signInWithGoogleIdToken(idToken: string) {
+  const credential = GoogleAuthProvider.credential(idToken);
+  const { user } = await signInWithCredential(requireAuth(), credential);
+  await ensureUserProfile(user);
+  return user;
+}
+
 export async function signInWithApple() {
   if (Platform.OS !== 'ios') {
     throw new Error('Iniciar sesión con Apple solo está disponible en iOS.');

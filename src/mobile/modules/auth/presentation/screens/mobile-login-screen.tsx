@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
+import * as Google from 'expo-auth-session/providers/google';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { isGoogleSignInAvailable, isAppleSignInAvailable, loginWithEmail, registerUser, signInAsGuest, signInWithGoogle, signInWithApple } from '@/shared/firebase/auth';
+import { isAppleSignInAvailable, loginWithEmail, registerUser, signInAsGuest, signInWithApple, signInWithGoogleIdToken } from '@/shared/firebase/auth';
 import type { ProfileType } from '@/shared/firebase/types';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -73,6 +74,11 @@ export default function MobileLoginScreen() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  const [googleRequest, , promptGoogleAsync] = Google.useIdTokenAuthRequest({
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  });
+
   const submit = async () => {
     setError('');
     if (!isFirebaseConfigured()) {
@@ -122,13 +128,15 @@ export default function MobileLoginScreen() {
       setError('Firebase aún no está configurado. Completa el archivo .env.local.');
       return;
     }
-    if (!isGoogleSignInAvailable()) {
-      setError('Google Sign-In requiere una development build. Ejecuta npx expo run:ios o run:android.');
+    if (!googleRequest) {
+      setError('Google Sign-In no está configurado. Revisa EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID en el archivo .env.');
       return;
     }
     setBusy(true);
     try {
-      const user = await signInWithGoogle();
+      const result = await promptGoogleAsync();
+      if (result?.type !== 'success' || !result.params?.id_token) return;
+      const user = await signInWithGoogleIdToken(result.params.id_token);
       if (user) router.replace('/mobile');
     } catch (e) {
       setError(

@@ -19,6 +19,10 @@ export function ReportGallery({ photoURLs }: ReportGalleryProps) {
   const [expanded, setExpanded] = useState(false);
   const stripRef = useRef<ScrollView | null>(null);
 
+  useEffect(() => {
+    stripRef.current?.scrollTo({ x: current * (THUMB_W + THUMB_GAP), animated: true });
+  }, [current]);
+
   if (!photoURLs || photoURLs.length === 0) return null;
 
   const count = photoURLs.length;
@@ -27,10 +31,6 @@ export function ReportGallery({ photoURLs }: ReportGalleryProps) {
   const go = (dir: 1 | -1) => {
     setCurrent((prev) => (prev + dir + count) % count);
   };
-
-  useEffect(() => {
-    stripRef.current?.scrollTo({ x: current * (THUMB_W + THUMB_GAP), animated: true });
-  }, [current]);
 
   return (
     <View style={styles.container}>
