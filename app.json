@@ -61,6 +61,12 @@
         {
           "microphonePermission": "OceanEyes necesita acceso al micrófono para grabar el audio del reporte."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "oceaneyes"
+        }
       ]
     ],
     "experiments": {

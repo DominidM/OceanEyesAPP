@@ -17,6 +17,7 @@ import { AppText } from '@/shared/components/app-text';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { clearLocalData } from '@/shared/offline/clear-data';
 import { useSync } from '@/shared/offline/sync-context';
+import { requestNotificationPermission } from '@/shared/notifications/report-notifications';
 import { usePreferences, type FontScaleOption } from '@/shared/settings/preferences';
 import { shadow } from '@/shared/utils/shadows';
 
@@ -193,6 +194,20 @@ export function SettingsScreen() {
     ]);
   };
 
+  const handleNotificationToggle = async (key: 'notifyNear' | 'notifyStatus', value: boolean) => {
+    if (value) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        Alert.alert(
+          'Notificaciones desactivadas',
+          'Activa las notificaciones en los ajustes del sistema para recibir avisos de OceanEyes.',
+        );
+        return;
+      }
+    }
+    await setPreference(key, value);
+  };
+
   return (
     <View style={styles.root}>
       <View style={[styles.topBar, { paddingTop: insets.top }]}>
@@ -224,7 +239,7 @@ export function SettingsScreen() {
               <Switch
                 accessibilityLabel="Alertas de reportes cercanos"
                 value={notifyNear}
-                onValueChange={(value) => void setPreference('notifyNear', value)}
+                onValueChange={(value) => void handleNotificationToggle('notifyNear', value)}
                 {...switchTone}
               />
             }
@@ -236,7 +251,7 @@ export function SettingsScreen() {
               <Switch
                 accessibilityLabel="Estado de mis reportes"
                 value={notifyStatus}
-                onValueChange={(value) => void setPreference('notifyStatus', value)}
+                onValueChange={(value) => void handleNotificationToggle('notifyStatus', value)}
                 {...switchTone}
               />
             }
