@@ -1,6 +1,6 @@
 import * as Audio from 'expo-audio';
 import React, { useState } from 'react';
-import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import {Pressable, ScrollView, StyleSheet, TextInput, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,7 +8,14 @@ import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { formatDuration } from '@/shared/utils/format-duration';
 
-import { getIncidentType, INCIDENT_TYPES } from '../incident-types';
+import {
+  CUSTOM_INCIDENT_ICONS,
+  CUSTOM_INCIDENT_ICON_KEYS,
+  getIncidentType,
+  INCIDENT_TYPES,
+  isCustomIconKey,
+  type CustomIconKey,
+} from '../incident-types';
 import { IncidentColors as C } from '../theme';
 
 export type ReportAudio = {
@@ -19,21 +26,25 @@ export type ReportAudio = {
 import type { ReportCategory } from '@/shared/firebase/types';
 
 export type IncidentSelection = {
-  incident: { id: ReportCategory; label: string };
+  incident: { id: ReportCategory; label: string; iconKey?: string };
   audio: ReportAudio | null;
 };
 
 type IncidentStepProps = {
-  initialIncidentId?: ReportCategory;
+  initial?: IncidentSelection['incident'] | null;
   onBack: () => void;
   onContinue: (selection: IncidentSelection) => void;
 };
 
-export function IncidentStep({ initialIncidentId, onBack, onContinue }: IncidentStepProps) {
+const CUSTOM_INCIDENT_MAX_LENGTH = 60;
+
+export function IncidentStep({ initial, onBack, onContinue }: IncidentStepProps) {
   const insets = useSafeAreaInsets();
-  const initialId = initialIncidentId ?? INCIDENT_TYPES[0].id;
-  const [selectedId, setSelectedId] = useState<ReportCategory>(
-    getIncidentType(initialId) ? initialId : INCIDENT_TYPES[0].id,
+  const initialId = initial?.id && getIncidentType(initial.id) ? initial.id : INCIDENT_TYPES[0].id;
+  const [selectedId, setSelectedId] = useState<ReportCategory>(initialId);
+  const [customText, setCustomText] = useState(initial?.id === 'otro' ? initial.label : '');
+  const [customIconKey, setCustomIconKey] = useState<CustomIconKey | null>(
+    initial?.iconKey && isCustomIconKey(initial.iconKey) ? initial.iconKey : 'warning',
   );
   const [micDenied, setMicDenied] = useState(false);
 
@@ -72,11 +83,18 @@ export function IncidentStep({ initialIncidentId, onBack, onContinue }: Incident
       await recorder.stop();
     }
     const incident = getIncidentType(selectedId) ?? INCIDENT_TYPES[0];
+    const isCustom = selectedId === 'otro';
     onContinue({
-      incident: { id: incident.id, label: incident.label },
+      incident: {
+        id: incident.id,
+        label: isCustom ? customText.trim() : incident.label,
+        iconKey: isCustom ? customIconKey ?? 'warning' : undefined,
+      },
       audio: recorder.uri ? { uri: recorder.uri, durationMillis: recorderState.durationMillis } : null,
     });
   };
+
+  const canContinue = selectedId !== 'otro' || customText.trim().length > 0;
 
   const timerLabel = formatDuration(recorderState.durationMillis);
 
@@ -143,6 +161,44 @@ export function IncidentStep({ initialIncidentId, onBack, onContinue }: Incident
           })}
         </View>
 
+        {selectedId === 'otro' ? (
+          <View style={styles.customCard}>
+            <AppText style={styles.customTitle}>Describe el incidente</AppText>
+            <TextInput
+              value={customText}
+              onChangeText={setCustomText}
+              maxLength={CUSTOM_INCIDENT_MAX_LENGTH}
+              placeholder="Escribe el incidente"
+              placeholderTextColor={C.textBody}
+              style={styles.customInput}
+            />
+            <AppText style={styles.customHint}>Elige un ícono que lo represente mejor</AppText>
+            <View style={styles.iconGrid}>
+              {CUSTOM_INCIDENT_ICON_KEYS.map((key) => {
+                const selectedIcon = key === customIconKey;
+                return (
+                  <Pressable
+                    key={key}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: selectedIcon }}
+                    onPress={() => setCustomIconKey(key)}
+                    style={({ pressed }) => [
+                      styles.iconOption,
+                      selectedIcon && styles.iconOptionSelected,
+                      pressed && styles.pressed,
+                    ]}>
+                    <AppSymbol
+                      name={CUSTOM_INCIDENT_ICONS[key]}
+                      color={selectedIcon ? C.accent : C.textStrong}
+                      size={24}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.audioCard}>
           <View style={styles.audioRow}>
             <View style={styles.audioIcon}>
@@ -179,8 +235,10 @@ export function IncidentStep({ initialIncidentId, onBack, onContinue }: Incident
       <View style={[styles.ctaArea, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <Pressable
           accessibilityRole="button"
+          accessibilityState={{ disabled: !canContinue }}
+          disabled={!canContinue}
           onPress={handleContinue}
-          style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+          style={({ pressed }) => [styles.cta, !canContinue && styles.ctaDisabled, pressed && styles.pressed]}>
           <AppText style={styles.ctaLabel}>Continuar</AppText>
         </Pressable>
       </View>
@@ -309,6 +367,60 @@ const styles = StyleSheet.create({
     backgroundColor: C.badgeBg,
     borderRadius: 9999,
   },
+  customCard: {
+    marginTop: 12,
+    gap: 12,
+    padding: 16,
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.cardBorder,
+    borderRadius: 12,
+  },
+  customTitle: {
+    color: C.textStrong,
+    fontFamily: Fonts.label,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+    textTransform: 'uppercase',
+    includeFontPadding: false,
+  },
+  customInput: {
+    height: 48,
+    paddingHorizontal: 14,
+    color: C.textStrong,
+    fontFamily: Fonts.body,
+    fontSize: 14,
+    backgroundColor: C.cardBg,
+    borderWidth: 1,
+    borderColor: C.cardBorder,
+    borderRadius: 8,
+  },
+  customHint: {
+    color: C.textBody,
+    fontFamily: Fonts.body,
+    fontSize: 12,
+    lineHeight: 16,
+    includeFontPadding: false,
+  },
+  iconGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  iconOption: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.cardBg,
+    borderWidth: 2,
+    borderColor: C.cardBorder,
+    borderRadius: 9999,
+  },
+  iconOptionSelected: {
+    borderColor: C.accent,
+  },
   audioCard: {
     marginTop: 16,
     gap: 16,
@@ -417,6 +529,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 12,
     elevation: 6,
+  },
+  ctaDisabled: {
+    opacity: 0.4,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   ctaLabel: {
     color: '#FFFFFF',

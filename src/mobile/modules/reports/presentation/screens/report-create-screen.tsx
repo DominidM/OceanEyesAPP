@@ -89,6 +89,7 @@ export function ReportCreateScreen() {
           location?.latitude != null && location.longitude != null
             ? { latitude: location.latitude, longitude: location.longitude, address: location.placeName ?? undefined }
             : undefined,
+        customIcon: incident.iconKey,
       },
       media ? [{ uri: media.uri, kind: media.type }] : [],
     );
@@ -140,7 +141,7 @@ export function ReportCreateScreen() {
         <LocationStep onBack={() => setStep(2)} onConfirm={handleConfirmLocation} />
       ) : step === 4 ? (
         <IncidentStep
-          initialIncidentId={incident?.id}
+          initial={incident}
           onBack={() => setStep(3)}
           onContinue={handleIncidentContinue}
         />

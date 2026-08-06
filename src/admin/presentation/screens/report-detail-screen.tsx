@@ -19,6 +19,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   pesca_ilegal: 'Pesca ilegal',
   basura_marina: 'Basura en el mar u orillas',
   variacion_mar: 'Variación del mar',
+  derrame_hidrocarburos: 'Derrame de hidrocarburos',
+  fauna_herida: 'Fauna marina herida o varada',
+  redes_fantasmas: 'Redes o aparejos abandonados',
+  embarcacion_sospechosa: 'Embarcación sospechosa',
+  marea_roja: 'Marea roja o cambio de color del agua',
+  otro: 'Otro incidente',
 };
 
 export function ReportDetailScreen() {

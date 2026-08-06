@@ -33,7 +33,12 @@ const TEST_REPORTS: { title: string; category: ReportCategory; description: stri
   { title: 'Corriente anómala zona de pesca', category: 'variacion_mar', description: 'Cambio repentino en temperatura del agua. De 22°C a 28°C en menos de 2 horas. Peces desapareciendo.' },
   { title: 'Pesca con explosivos Punta Sal', category: 'pesca_ilegal', description: 'Se escucharon 3 detonaciones. Peces muertos flotando en área de 50 m. Testigos vieron embarcación huir.' },
   { title: 'Residuos de pesca en muelle central', category: 'basura_marina', description: 'Restos de pescado, vísceras y redes rotas acumuladas en el muelle. Mal olor y presencia de aves carroñeras.' },
-  { title: 'Marea roja frente a caleta', category: 'variacion_mar', description: 'Mancha rojiza de aproximadamente 300 m de diámetro. Agua con olor fuerte. Peces muertos en la orilla.' },
+  { title: 'Marea roja frente a caleta', category: 'marea_roja', description: 'Mancha rojiza de aproximadamente 300 m de diámetro. Agua con olor fuerte. Peces muertos en la orilla.' },
+  { title: 'Mancha oscura con olor a petróleo', category: 'derrame_hidrocarburos', description: 'Mancha iridiscente de 100 m con olor a hidrocarburos a 500 m de la desembocadura.' },
+  { title: 'Lobo marino enmallado en orilla', category: 'fauna_herida', description: 'Lobo marino joven varado con red enredada en la aleta. Sangra y muestra signos de fatiga.' },
+  { title: 'Redes fantasma sobre arrecife', category: 'redes_fantasmas', description: 'Conjunto de redes abandonadas enganchadas al fondo, con peces y crustáceos atrapados.' },
+  { title: 'Embarcación sin luces cerca de la reserva', category: 'embarcacion_sospechosa', description: 'Lancha rápida sin identificación navegando de noche hacia la zona protegida.' },
+  { title: 'Fuga de aceite en el muelle pesquero', category: 'otro', description: 'Derrame de aceite de una embarcación atracada; hay mancha en el agua junto a los pilotes.' },
 ];
 
 export async function seedAdminAndTestData(adminEmail: string, adminPassword: string) {
@@ -65,6 +70,7 @@ export async function seedAdminAndTestData(adminEmail: string, adminPassword: st
   // 2. Crear reportes de prueba con diferentes estados
   const statuses: Array<'pendiente' | 'en_revision' | 'verificado' | 'descartado'> = [
     'pendiente', 'en_revision', 'verificado', 'pendiente', 'pendiente', 'verificado', 'descartado', 'pendiente',
+    'pendiente', 'en_revision', 'verificado', 'pendiente', 'pendiente',
   ];
 
   for (let i = 0; i < TEST_REPORTS.length; i++) {

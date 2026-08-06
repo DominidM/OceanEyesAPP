@@ -11,12 +11,19 @@ export type MapReport = {
   description?: string;
   createdAt: number;
   address?: string;
+  customIcon?: string;
 };
 
 export const CATEGORY_COLORS: Record<ReportCategory, string> = {
   pesca_ilegal: '#C0392B',
   basura_marina: '#F59E0B',
   variacion_mar: '#2563EB',
+  derrame_hidrocarburos: '#7F1D1D',
+  fauna_herida: '#DB2777',
+  redes_fantasmas: '#0891B2',
+  embarcacion_sospechosa: '#7C3AED',
+  marea_roja: '#0F766E',
+  otro: '#64748B',
 };
 
 export const STATUS_OPACITY: Record<ReportStatus, number> = {
@@ -40,6 +47,7 @@ export function toMapReport(report: ReportDto): MapReport | null {
     description: report.description ?? undefined,
     createdAt: new Date(report.createdAt).getTime(),
     address: report.location?.address,
+    customIcon: report.customIcon ?? undefined,
   };
 }
 

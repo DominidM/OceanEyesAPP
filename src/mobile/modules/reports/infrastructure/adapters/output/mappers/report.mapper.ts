@@ -29,6 +29,7 @@ export function toDomainReport(raw: FirestoreReport): Report {
     reviewedAt: raw.reviewedAt ? toDate(raw.reviewedAt) : null,
     reviewedBy: raw.reviewedBy ?? null,
     rejectionReason: raw.rejectionReason ?? null,
+    customIcon: raw.customIcon ?? null,
   };
 }
 
@@ -40,5 +41,6 @@ export function newReportToInput(newReport: NewReport): ReportInput {
     isAnonymous: newReport.isAnonymous,
     deviceHash: newReport.deviceHash ?? undefined,
     location: newReport.location ?? undefined,
+    customIcon: newReport.customIcon ?? undefined,
   };
 }

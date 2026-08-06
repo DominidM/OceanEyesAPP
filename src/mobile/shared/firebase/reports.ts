@@ -34,13 +34,13 @@ export class AuthenticationRequiredError extends Error {
   }
 }
 
-export async function createReport(input: ReportInput): Promise<string> {
-  const user = firebaseAuth?.currentUser;
-  if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
-
-  const deviceHash = await getDeviceHash();
-  const ref = await addDoc(collection(firestore, 'reports'), {
-    userId: user.uid,
+function buildReportDocFields(
+  input: ReportInput,
+  userId: string,
+  deviceHash: string | null,
+): Record<string, unknown> {
+  return {
+    userId,
     category: input.category,
     title: input.title,
     description: input.description ?? null,
@@ -50,9 +50,18 @@ export async function createReport(input: ReportInput): Promise<string> {
     photoURLs: input.photoURLs ?? [],
     status: 'pendiente',
     pointsAwarded: 0,
+    customIcon: input.customIcon ?? null,
     createdAt: serverTimestamp(),
     submittedAt: serverTimestamp(),
-  });
+  };
+}
+
+export async function createReport(input: ReportInput): Promise<string> {
+  const user = firebaseAuth?.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
+
+  const deviceHash = await getDeviceHash();
+  const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(input, user.uid, deviceHash));
 
   return ref.id;
 }
@@ -65,20 +74,7 @@ export async function publishReportOnline(
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
   const deviceHash = await getDeviceHash();
-  const ref = await addDoc(collection(firestore, 'reports'), {
-    userId: user.uid,
-    category: input.category,
-    title: input.title,
-    description: input.description ?? null,
-    isAnonymous: input.isAnonymous,
-    deviceHash: deviceHash ?? null,
-    location: input.location ?? null,
-    photoURLs: [],
-    status: 'pendiente',
-    pointsAwarded: 0,
-    createdAt: serverTimestamp(),
-    submittedAt: serverTimestamp(),
-  });
+  const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(input, user.uid, deviceHash));
 
   const photoURLs: string[] = [];
   for (let index = 0; index < (media ?? []).length; index += 1) {
@@ -122,20 +118,7 @@ export async function publishPendingReport(pending: PendingReport): Promise<void
 
   let reportId = pending.remoteId;
   if (!reportId) {
-    const ref = await addDoc(collection(firestore, 'reports'), {
-      userId: user.uid,
-      category: pending.input.category,
-      title: pending.input.title,
-      description: pending.input.description ?? null,
-      isAnonymous: pending.input.isAnonymous,
-      deviceHash: pending.input.deviceHash ?? null,
-      location: pending.input.location ?? null,
-      photoURLs: [],
-      status: 'pendiente',
-      pointsAwarded: 0,
-      createdAt: serverTimestamp(),
-      submittedAt: serverTimestamp(),
-    });
+    const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(pending.input, user.uid, pending.input.deviceHash ?? null));
     reportId = ref.id;
     await updatePendingReport(pending.id, { remoteId: reportId });
   }

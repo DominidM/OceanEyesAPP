@@ -26,6 +26,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   pesca_ilegal: 'Pesca ilegal',
   basura_marina: 'Basura',
   variacion_mar: 'Variación del mar',
+  derrame_hidrocarburos: 'Derrame de hidrocarburos',
+  fauna_herida: 'Fauna herida',
+  redes_fantasmas: 'Redes abandonadas',
+  embarcacion_sospechosa: 'Embarcación sospechosa',
+  marea_roja: 'Marea roja',
+  otro: 'Otro',
 };
 
 export function ReportsList() {

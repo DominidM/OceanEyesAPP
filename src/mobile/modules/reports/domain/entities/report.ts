@@ -12,6 +12,7 @@ export type NewReport = {
   isAnonymous: boolean;
   deviceHash: string | null;
   location: GeoLocation | null;
+  customIcon: string | null;
 };
 
 export type Report = {
@@ -32,6 +33,7 @@ export type Report = {
   readonly reviewedAt: Date | null;
   readonly reviewedBy: string | null;
   readonly rejectionReason: string | null;
+  readonly customIcon: string | null;
 };
 
 export function createNewReport(input: {
@@ -41,6 +43,7 @@ export function createNewReport(input: {
   isAnonymous: boolean;
   deviceHash?: string | null;
   location?: { latitude: number; longitude: number; address?: string } | null;
+  customIcon?: string | null;
 }): NewReport {
   assertReportCategory(input.category);
   if (!input.title || !input.title.trim()) {
@@ -55,5 +58,6 @@ export function createNewReport(input: {
     location: input.location
       ? createGeoLocation(input.location.latitude, input.location.longitude, input.location.address)
       : null,
+    customIcon: input.customIcon?.trim() || null,
   };
 }

@@ -33,6 +33,7 @@ export function useReportSubmission() {
             isAnonymous: input.isAnonymous,
             location: input.location,
             media,
+            customIcon: input.customIcon,
           },
           { online },
         );

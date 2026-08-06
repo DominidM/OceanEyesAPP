@@ -13,12 +13,24 @@ const CATEGORY_COLORS: Record<string, string> = {
   pesca_ilegal: '#EF4444',
   basura_marina: '#F59E0B',
   variacion_mar: '#3B82F6',
+  derrame_hidrocarburos: '#7F1D1D',
+  fauna_herida: '#DB2777',
+  redes_fantasmas: '#0891B2',
+  embarcacion_sospechosa: '#7C3AED',
+  marea_roja: '#0F766E',
+  otro: '#64748B',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
   pesca_ilegal: 'Pesca ilegal',
   basura_marina: 'Basura',
   variacion_mar: 'Variación',
+  derrame_hidrocarburos: 'Derrame',
+  fauna_herida: 'Fauna herida',
+  redes_fantasmas: 'Redes',
+  embarcacion_sospechosa: 'Embarcación',
+  marea_roja: 'Marea roja',
+  otro: 'Otro',
 };
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string; icon: string }> = {

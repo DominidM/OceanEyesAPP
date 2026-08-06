@@ -18,6 +18,7 @@ export type ReportDto = {
   submittedAt: string;
   reviewedAt: string | null;
   reviewedBy: string | null;
+  customIcon: string | null;
 };
 
 export type CreateReportResultDto = {
@@ -42,5 +43,6 @@ export function mapReportToDto(report: Report): ReportDto {
     submittedAt: report.submittedAt.toISOString(),
     reviewedAt: report.reviewedAt ? report.reviewedAt.toISOString() : null,
     reviewedBy: report.reviewedBy,
+    customIcon: report.customIcon,
   };
 }

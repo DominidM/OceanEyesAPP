@@ -9,7 +9,7 @@ import { AppSymbol, type SymbolName } from '@/shared/components/app-symbol';
 import { useConnectivity } from '@/shared/offline/connectivity-context';
 import { formatDuration } from '@/shared/utils/format-duration';
 
-import { getIncidentType } from '../incident-types';
+import { resolveIncidentIcon } from '../incident-types';
 import { SummaryColors as C } from '../theme';
 import type { CaptureMedia } from './media-preview';
 import type { ReportLocation } from './location-step';
@@ -49,9 +49,9 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
   const [verified, setVerified] = useState(false);
   const { online } = useConnectivity();
 
-  const incidentType = incident ? getIncidentType(incident.id) : undefined;
-  const incidentIcon: SymbolName =
-    incidentType?.icon ?? { ios: 'drop.fill', android: 'water-drop', web: 'water-drop' };
+  const incidentIcon: SymbolName = incident
+    ? resolveIncidentIcon(incident.id, incident.iconKey)
+    : { ios: 'drop.fill', android: 'water-drop', web: 'water-drop' };
 
   const locationValue = location?.placeName
     ? location.placeName

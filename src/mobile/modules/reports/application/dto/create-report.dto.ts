@@ -12,4 +12,5 @@ export type CreateReportCommand = {
     address?: string;
   };
   media?: SubmissionMedia[];
+  customIcon?: string;
 };
