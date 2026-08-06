@@ -119,13 +119,13 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.four,
   },
   headlineRow: {
-    height: 35,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
     marginBottom: 25,
   },
   headline: {
+    flexShrink: 1,
     color: BrandColors.neutral,
     fontFamily: Fonts.headline,
     fontSize: 28,

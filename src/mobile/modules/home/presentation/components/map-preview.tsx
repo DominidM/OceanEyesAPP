@@ -49,9 +49,8 @@ const styles = StyleSheet.create({
     pointerEvents: 'box-none',
   },
   mapButton: {
-    width: 227,
     maxWidth: '100%',
-    height: 36,
+    minHeight: 36,
     borderRadius: 9999,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -62,11 +61,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.92)',
   },
   mapButtonText: {
+    flexShrink: 1,
     color: BrandColors.neutral,
     fontFamily: Fonts.label,
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.78,
