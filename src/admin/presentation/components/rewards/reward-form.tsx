@@ -91,7 +91,10 @@ export function RewardForm({ initial, submitLabel, busyLabel, onCancel, onSubmit
 
   return (
     <Card style={styles.card}>
-      <View style={styles.form}>
+      <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+        <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de la recompensa</Text>
+
+        <View style={styles.form}>
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.contentTextMuted }]}>Título</Text>
           <TextInput
@@ -175,20 +178,28 @@ export function RewardForm({ initial, submitLabel, busyLabel, onCancel, onSubmit
             {stateOption(false, 'Inactivo')}
           </View>
         </View>
-
-        <View style={styles.actions}>
-          <Button label={busy ? busyLabel : submitLabel} onPress={handleSubmit} disabled={busy} />
-          <Button label="Cancelar" variant="secondary" onPress={onCancel} disabled={busy} />
         </View>
-
-        {!!error && <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>}
       </View>
+
+      <View style={styles.actions}>
+        <Button label={busy ? busyLabel : submitLabel} onPress={handleSubmit} disabled={busy} />
+        <Button label="Cancelar" variant="secondary" onPress={onCancel} disabled={busy} />
+      </View>
+
+      {!!error && <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>}
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { maxWidth: 520 },
+  card: { gap: Spacing.three },
+  subBlock: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  subBlockTitle: { fontFamily: Fonts.label, fontSize: 14, fontWeight: '700' },
   form: { gap: Spacing.three },
   field: { gap: Spacing.one },
   label: { fontFamily: Fonts.label, fontSize: 13, fontWeight: '700' },
@@ -215,6 +226,6 @@ const styles = StyleSheet.create({
     cursor: 'pointer',
   },
   stateLabel: { fontFamily: Fonts.label, fontSize: 14, fontWeight: '600' },
-  actions: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.one },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: Spacing.two, marginTop: Spacing.one },
   error: { fontFamily: Fonts.body, fontSize: 13, textAlign: 'center' },
 });

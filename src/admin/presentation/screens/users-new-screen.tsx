@@ -81,72 +81,80 @@ export function UsersNewScreen() {
       />
 
       <Card style={styles.card}>
-        <View style={styles.form}>
-          <View style={styles.field}>
-            <Text style={[styles.label, { color: colors.contentTextMuted }]}>Nombre completo</Text>
-            <TextInput
-              autoCapitalize="words"
-              onChangeText={setDisplayName}
-              placeholder="Ej. María Quispe"
-              placeholderTextColor={colors.contentTextMuted}
-              style={inputStyle}
-              value={displayName}
-            />
-          </View>
+        <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+          <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de usuario</Text>
 
-          <View style={styles.field}>
-            <Text style={[styles.label, { color: colors.contentTextMuted }]}>Correo electrónico</Text>
-            <TextInput
-              autoCapitalize="none"
-              keyboardType="email-address"
-              onChangeText={setEmail}
-              placeholder="usuario@correo.com"
-              placeholderTextColor={colors.contentTextMuted}
-              style={inputStyle}
-              value={email}
-            />
-          </View>
+          <View style={styles.form}>
+            <View style={styles.fieldRow}>
+              <View style={styles.field}>
+                <Text style={[styles.label, { color: colors.contentTextMuted }]}>Nombre completo</Text>
+                <TextInput
+                  autoCapitalize="words"
+                  onChangeText={setDisplayName}
+                  placeholder="Ej. María Quispe"
+                  placeholderTextColor={colors.contentTextMuted}
+                  style={inputStyle}
+                  value={displayName}
+                />
+              </View>
 
-          <View style={styles.field}>
-            <Text style={[styles.label, { color: colors.contentTextMuted }]}>Contraseña</Text>
-            <TextInput
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              placeholderTextColor={colors.contentTextMuted}
-              secureTextEntry
-              style={inputStyle}
-              value={password}
-            />
-          </View>
+              <View style={styles.field}>
+                <Text style={[styles.label, { color: colors.contentTextMuted }]}>Correo electrónico</Text>
+                <TextInput
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  onChangeText={setEmail}
+                  placeholder="usuario@correo.com"
+                  placeholderTextColor={colors.contentTextMuted}
+                  style={inputStyle}
+                  value={email}
+                />
+              </View>
+            </View>
 
-          <View style={styles.field}>
-            <Text style={[styles.label, { color: colors.contentTextMuted }]}>DNI (opcional)</Text>
-            <TextInput
-              keyboardType="number-pad"
-              onChangeText={setDni}
-              placeholder="12345678"
-              placeholderTextColor={colors.contentTextMuted}
-              style={inputStyle}
-              value={dni}
-            />
-          </View>
+            <View style={styles.fieldRow}>
+              <View style={styles.field}>
+                <Text style={[styles.label, { color: colors.contentTextMuted }]}>Contraseña</Text>
+                <TextInput
+                  onChangeText={setPassword}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.contentTextMuted}
+                  secureTextEntry
+                  style={inputStyle}
+                  value={password}
+                />
+              </View>
 
-          <View style={styles.field}>
-            <Text style={[styles.label, { color: colors.contentTextMuted }]}>Tipo de perfil</Text>
-            <View style={styles.typeRow}>
-              {typeOption('citizen', 'Ciudadano')}
-              {typeOption('fisher', 'Pescador')}
+              <View style={styles.field}>
+                <Text style={[styles.label, { color: colors.contentTextMuted }]}>DNI (opcional)</Text>
+                <TextInput
+                  keyboardType="number-pad"
+                  onChangeText={setDni}
+                  placeholder="12345678"
+                  placeholderTextColor={colors.contentTextMuted}
+                  style={inputStyle}
+                  value={dni}
+                />
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: colors.contentTextMuted }]}>Tipo de perfil</Text>
+              <View style={styles.typeRow}>
+                {typeOption('citizen', 'Ciudadano')}
+                {typeOption('fisher', 'Pescador')}
+              </View>
             </View>
           </View>
-
-          <View style={styles.actions}>
-            <Button label={busy ? 'Creando...' : 'Crear usuario'} onPress={handleSubmit} />
-            <Button label="Cancelar" variant="secondary" onPress={() => router.push('/admin/users')} />
-          </View>
-
-          {!!error && <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>}
-          {!!success && <Text style={[styles.success, { color: colors.success }]}>{success}</Text>}
         </View>
+
+        <View style={styles.actions}>
+          <Button label={busy ? 'Creando...' : 'Crear usuario'} onPress={handleSubmit} />
+          <Button label="Cancelar" variant="secondary" onPress={() => router.push('/admin/users')} />
+        </View>
+
+        {!!error && <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>}
+        {!!success && <Text style={[styles.success, { color: colors.success }]}>{success}</Text>}
       </Card>
     </AdminShell>
   );
@@ -155,9 +163,17 @@ export function UsersNewScreen() {
 export default UsersNewScreen;
 
 const styles = StyleSheet.create({
-  card: { maxWidth: 480 },
+  card: { gap: Spacing.three },
+  subBlock: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  subBlockTitle: { fontFamily: Fonts.label, fontSize: 14, fontWeight: '700' },
   form: { gap: Spacing.three },
-  field: { gap: Spacing.one },
+  fieldRow: { flexDirection: 'row', gap: Spacing.three },
+  field: { flex: 1, minWidth: 0, gap: Spacing.one },
   label: { fontFamily: Fonts.label, fontSize: 13, fontWeight: '700' },
   input: {
     borderWidth: 1,
@@ -179,7 +195,7 @@ const styles = StyleSheet.create({
     cursor: 'pointer',
   },
   typeLabel: { fontFamily: Fonts.label, fontSize: 14, fontWeight: '600' },
-  actions: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.one },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: Spacing.two, marginTop: Spacing.one },
   error: { fontFamily: Fonts.body, fontSize: 13, textAlign: 'center' },
   success: { fontFamily: Fonts.body, fontSize: 13, textAlign: 'center' },
 });
