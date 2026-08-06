@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,8 +14,9 @@ import { RecentFooter } from '../components/recent-footer';
 import { RewardItem } from '../components/reward-item';
 import { RewardsTutorial } from '../components/rewards-tutorial';
 import { SectionTabs, RewardsTab } from '../components/section-tabs';
-import { levelLabelFor } from '../data/rewards';
+import { levelLabelFor, toActivityItem } from '../data/rewards';
 import { useRewardsData } from '../hooks/use-rewards-data';
+import { usePointTransactions } from '../hooks/use-point-transactions';
 import { RewardsColors } from '../theme';
 
 export function RewardsSection() {
@@ -23,10 +24,23 @@ export function RewardsSection() {
   const router = useRouter();
   const { profile } = useAuth();
   const { rewards, claims, guest } = useRewardsData();
+  const { transactions } = usePointTransactions();
   const [tab, setTab] = useState<RewardsTab>('recompensas');
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
   const items = tab === 'recompensas' ? rewards : claims;
+
+  const rewardTitleById = useMemo(
+    () => new Map(rewards.map((reward) => [reward.id, reward.title])),
+    [rewards],
+  );
+  const recentActivity = useMemo(
+    () =>
+      transactions
+        .slice(0, 3)
+        .map((tx) => toActivityItem(tx, tx.rewardId ? rewardTitleById.get(tx.rewardId) : undefined)),
+    [transactions, rewardTitleById],
+  );
 
   const balance = profile?.pointsBalance;
   const levelLabel = guest || !profile ? undefined : levelLabelFor(profile.totalPointsEarned);
@@ -102,7 +116,12 @@ export function RewardsSection() {
           )}
         </View>
 
-        <RecentFooter />
+        <RecentFooter
+          items={recentActivity}
+          guest={guest}
+          onSeeAll={() => router.push('/mobile/recent-activity')}
+          onLogin={() => router.push('/mobile/login')}
+        />
       </ScrollView>
 
       <RewardsTutorial visible={tutorialOpen} onClose={() => setTutorialOpen(false)} />

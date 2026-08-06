@@ -1,5 +1,5 @@
 import type { SymbolName } from '@/shared/components/app-symbol';
-import type { Redemption, Reward as FirestoreReward } from '@/shared/firebase/types';
+import type { PointTransaction, Redemption, Reward as FirestoreReward } from '@/shared/firebase/types';
 
 export type Reward = {
   id: string;
@@ -28,6 +28,49 @@ export function toClaimCard(redemption: Redemption): Reward {
     title: 'Recompensa canjeada',
     subtitle: `Canjeado ${date.toLocaleDateString()}`,
     points: String(redemption.pointsSpent),
+    icon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' },
+  };
+}
+
+export type ActivityItem = {
+  id: string;
+  title: string;
+  date: string;
+  delta: string;
+  positive: boolean;
+  icon: SymbolName;
+};
+
+export function toActivityItem(tx: PointTransaction, rewardTitle?: string): ActivityItem {
+  const date = tx.createdAt?.toDate?.() ?? new Date();
+  const formatted = date.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  if (tx.type === 'redemption') {
+    return {
+      id: tx.id,
+      title: rewardTitle ? `Canjeaste ${rewardTitle}` : 'Recompensa canjeada',
+      date: formatted,
+      delta: String(tx.amount),
+      positive: false,
+      icon: { ios: 'gift.fill', android: 'redeem', web: 'redeem' },
+    };
+  }
+  if (tx.type === 'bonus') {
+    return {
+      id: tx.id,
+      title: 'Bono de puntos',
+      date: formatted,
+      delta: `+${tx.amount}`,
+      positive: true,
+      icon: { ios: 'star.fill', android: 'star', web: 'star' },
+    };
+  }
+  return {
+    id: tx.id,
+    title: 'Reporte verificado',
+    date: formatted,
+    delta: `+${tx.amount}`,
+    positive: true,
     icon: { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' },
   };
 }

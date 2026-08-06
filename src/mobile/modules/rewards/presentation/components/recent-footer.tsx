@@ -1,34 +1,61 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
-import { AppFonts as Fonts } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
+
+import { ActivityRow } from './activity-row';
+import type { ActivityItem } from '../data/rewards';
 import { RewardsColors } from '../theme';
 
 const personIcon: SymbolName = { ios: 'person.fill', android: 'person', web: 'person' };
-const COMMUNITY_TEXT = 'Únete a la comunidad que reporta y protege el mar.';
 
-export function RecentFooter() {
+type RecentFooterProps = {
+  items: ActivityItem[];
+  guest?: boolean;
+  onSeeAll?: () => void;
+  onLogin?: () => void;
+};
+
+export function RecentFooter({ items, guest = false, onSeeAll, onLogin }: RecentFooterProps) {
+  const showEmpty = items.length === 0;
+
   return (
     <View style={styles.footer}>
       <View style={styles.headingRow}>
         <AppText style={styles.heading}>Actividad reciente</AppText>
-        <AppText style={styles.link}>Ver todo</AppText>
+        {!showEmpty && onSeeAll ? (
+          <Pressable accessibilityRole="button" onPress={onSeeAll} style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
+            <AppText style={styles.linkText}>Ver todo</AppText>
+          </Pressable>
+        ) : null}
       </View>
 
-      <View style={styles.bodyRow}>
-        <View style={styles.avatarStack}>
+      {showEmpty ? (
+        <View style={styles.emptyRow}>
           <View style={styles.avatar}>
             <AppSymbol name={personIcon} color="#6D625B" size={14} />
           </View>
-          <View style={[styles.avatar, styles.avatarOverlap]}>
-            <AppSymbol name={personIcon} color="#6D625B" size={14} />
-          </View>
+          <AppText style={styles.emptyText}>
+            {guest ? 'Inicia sesión para ver tu actividad de puntos.' : 'Aún no hay actividad de puntos.'}
+          </AppText>
+          {guest && onLogin ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={onLogin}
+              style={({ pressed }) => [styles.loginButton, pressed && styles.pressed]}>
+              <AppText style={styles.loginButtonLabel}>Iniciar sesión</AppText>
+            </Pressable>
+          ) : null}
         </View>
-
-        <AppText style={styles.text}>{COMMUNITY_TEXT}</AppText>
-      </View>
+      ) : (
+        <View>
+          {items.map((item) => (
+            <ActivityRow key={item.id} item={item} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -55,21 +82,20 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   link: {
+    paddingVertical: 4,
+  },
+  linkText: {
     color: RewardsColors.accent,
     fontFamily: Fonts.body,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
   },
-  bodyRow: {
+  emptyRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
     paddingVertical: 8,
-  },
-  avatarStack: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   avatar: {
     width: 39.2,
@@ -81,15 +107,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(44, 44, 44, 0.08)',
   },
-  avatarOverlap: {
-    marginLeft: -12,
-  },
-  text: {
+  emptyText: {
     flex: 1,
     color: RewardsColors.textMuted,
     fontFamily: Fonts.body,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
+  },
+  loginButton: {
+    height: 36,
+    borderRadius: 9999,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: BrandColors.primary,
+  },
+  loginButtonLabel: {
+    color: '#FFFFFF',
+    fontFamily: Fonts.label,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  pressed: {
+    opacity: 0.78,
   },
 });
