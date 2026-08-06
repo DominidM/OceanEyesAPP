@@ -5,6 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AdminShell } from '@admin/layout/admin-shell';
 import { Badge, Button, Card, SectionHeader } from '@admin/presentation/components/ui';
+import { ReportDataList } from '@admin/presentation/components/reports/report-data-list';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { getUserProfile } from '@/shared/firebase/auth';
 import type { UserProfile } from '@/shared/firebase/types';
@@ -77,25 +78,24 @@ export function UserProfileScreen() {
 
         {!loading && profile && (
           <>
-            <View style={styles.headingRow}>
-              <Text style={[styles.name, { color: colors.cardText }]}>{profile.displayName ?? 'Sin nombre'}</Text>
-              {rc && <Badge label={rc.label} color={rc.color} bg={rc.bg} />}
-              {suspended && <Badge label="Suspendido" color={colors.danger} bg={colors.dangerBg} />}
-            </View>
+            <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+              <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de usuario</Text>
 
-            <View style={styles.infoList}>
-              {rows.map((r) => (
-                <View key={r.label} style={[styles.infoRow, { borderBottomColor: colors.cardBorder }]}>
-                  <Text style={[styles.infoLabel, { color: colors.contentTextMuted }]}>{r.label}</Text>
-                  <Text style={[styles.infoValue, { color: colors.cardText }]}>{r.value}</Text>
-                </View>
-              ))}
+              <View style={styles.headingRow}>
+                {rc && <Badge label={rc.label} color={rc.color} bg={rc.bg} />}
+                {suspended && <Badge label="Suspendido" color={colors.danger} bg={colors.dangerBg} />}
+              </View>
+
+              <ReportDataList rows={rows} />
             </View>
 
             {profile.banReason ? (
-              <View style={[styles.banBox, { backgroundColor: colors.dangerBg }]}>
-                <Text style={[styles.banTitle, { color: colors.danger }]}>Motivo de suspensión</Text>
-                <Text style={[styles.banText, { color: colors.contentText }]}>{profile.banReason}</Text>
+              <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+                <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Suspensión</Text>
+                <View style={[styles.innerSubBlock, { borderColor: colors.cardBorder }]}>
+                  <Text style={[styles.subBlockHint, { color: colors.contentTextMuted }]}>Motivo de suspensión</Text>
+                  <Text style={[styles.banText, { color: colors.contentText }]}>{profile.banReason}</Text>
+                </View>
               </View>
             ) : null}
           </>
@@ -117,24 +117,24 @@ export function UserProfileScreen() {
 export default UserProfileScreen;
 
 const styles = StyleSheet.create({
-  card: { maxWidth: 560 },
+  card: { gap: Spacing.three },
   notFound: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.four },
   notFoundText: { fontFamily: Fonts.body, fontSize: 14 },
-  headingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginBottom: Spacing.three, flexWrap: 'wrap' },
-  name: { fontFamily: Fonts.headline, fontSize: 22, fontWeight: '700' },
-  infoList: { gap: 0 },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    paddingVertical: Spacing.three,
-    gap: Spacing.three,
+  subBlock: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: Spacing.three,
+    gap: Spacing.two,
   },
-  infoLabel: { fontFamily: Fonts.label, fontSize: 13, fontWeight: '600' },
-  infoValue: { fontFamily: Fonts.body, fontSize: 14, textAlign: 'right', flexShrink: 1 },
-  banBox: { borderRadius: 12, padding: Spacing.three, marginTop: Spacing.four, gap: Spacing.one },
-  banTitle: { fontFamily: Fonts.label, fontSize: 13, fontWeight: '700' },
+  innerSubBlock: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: Spacing.two,
+    gap: Spacing.two,
+  },
+  subBlockTitle: { fontFamily: Fonts.label, fontSize: 14, fontWeight: '700' },
+  subBlockHint: { fontFamily: Fonts.body, fontSize: 13 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexWrap: 'wrap' },
   banText: { fontFamily: Fonts.body, fontSize: 14 },
   footerActions: { alignItems: 'flex-start' },
   link: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two - 2, cursor: 'pointer' },
