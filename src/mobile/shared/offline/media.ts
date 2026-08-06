@@ -67,6 +67,15 @@ export async function removeStagedMedia(uris: string[]): Promise<void> {
   }
 }
 
+export async function removeAllStagedMedia(): Promise<void> {
+  try {
+    const dir = new Directory(Paths.document, 'outbox');
+    if (dir.exists) dir.delete();
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function uploadMediaToStorage(options: {
   localUri: string;
   kind: 'photo' | 'video';

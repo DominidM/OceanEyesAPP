@@ -1,11 +1,14 @@
 import {
+  EmailAuthProvider,
   GoogleAuthProvider,
   OAuthProvider,
   createUserWithEmailAndPassword,
+  reauthenticateWithCredential,
   signInAnonymously,
   signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
   updateProfile,
 } from 'firebase/auth';
 import {
@@ -252,6 +255,23 @@ export async function updateUserProfile(uid: string, changes: Partial<Pick<UserP
     ...changes,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const auth = requireAuth();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Inicia sesión para cambiar tu contraseña.');
+  }
+  const usesPassword = user.providerData.some((provider) => provider.providerId === 'password');
+  if (!usesPassword) {
+    throw new Error('Tu cuenta no usa contraseña. Inicia sesión con Google o Apple para continuar.');
+  }
+  await reauthenticateWithCredential(
+    user,
+    EmailAuthProvider.credential(user.email ?? '', currentPassword),
+  );
+  await updatePassword(user, newPassword);
 }
 
 export async function setUserStatus(

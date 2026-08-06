@@ -329,6 +329,7 @@ export function ProfileSection() {
         right={
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Configuración"
             onPress={() => router.push('/mobile/settings')}
             style={({ pressed }) => [styles.gearButton, pressed && styles.pressed]}>
             <AppSymbol name={gearIcon} color={BrandColors.primary} size={20} />

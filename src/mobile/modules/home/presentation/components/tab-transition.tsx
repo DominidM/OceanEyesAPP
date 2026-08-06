@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeOut, Keyframe } from 'react-native-reanimated';
 
 import { MainTabKey } from '@/shared/config/main-tabs';
+import { usePreferences } from '@/shared/settings/preferences';
 
 type TabTransitionProps = {
   section: MainTabKey;
@@ -25,9 +26,14 @@ const EXIT = FadeOut.duration(100);
 
 export function TabTransition({ section, children }: TabTransitionProps) {
   const prevRef = useRef<MainTabKey | null>(null);
+  const { reduceMotion } = usePreferences();
 
   const prev = prevRef.current;
   prevRef.current = section;
+
+  if (reduceMotion) {
+    return <View style={styles.fill}>{children}</View>;
+  }
 
   let entering = ENTER_FORWARD;
   if (prev != null && prev !== section) {

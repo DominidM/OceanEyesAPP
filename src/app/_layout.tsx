@@ -43,6 +43,7 @@ import { BanProvider, useBan } from '@/shared/identity/ban-context';
 import { BlockScreen } from '@/shared/components/block-screen';
 import { ConnectivityProvider } from '@/shared/offline/connectivity-context';
 import { SyncProvider } from '@/shared/offline/sync-context';
+import { PreferencesProvider } from '@/shared/settings/preferences';
 
 const AppLightTheme: Theme = {
   ...DefaultTheme,
@@ -106,15 +107,17 @@ export default function RootLayout() {
           <BanGate>
             <ConnectivityProvider>
               <SyncProvider>
-                {Platform.OS === 'web' ? (
-                  <View style={styles.webRoot}>
-                    {isLandingPath && <CustomCursor />}
-                    <SplashGate initialPath={splashInitialPath} />
-                    <Slot />
-                  </View>
-                ) : (
-                  <Stack screenOptions={{ headerShown: false }} />
-                )}
+                <PreferencesProvider>
+                  {Platform.OS === 'web' ? (
+                    <View style={styles.webRoot}>
+                      {isLandingPath && <CustomCursor />}
+                      <SplashGate initialPath={splashInitialPath} />
+                      <Slot />
+                    </View>
+                  ) : (
+                    <Stack screenOptions={{ headerShown: false }} />
+                  )}
+                </PreferencesProvider>
               </SyncProvider>
             </ConnectivityProvider>
           </BanGate>

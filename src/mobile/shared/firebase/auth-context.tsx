@@ -1,5 +1,5 @@
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 import { firebaseAuth } from './app';
 import { getUserProfile } from './auth';
@@ -9,14 +9,28 @@ type AuthContextValue = {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  refreshProfile: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextValue>({ user: null, profile: null, loading: true });
+const AuthContext = createContext<AuthContextValue>({
+  user: null,
+  profile: null,
+  loading: true,
+  refreshProfile: async () => undefined,
+});
 
 export function AuthProvider({ children }: React.PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshProfile = useCallback(async () => {
+    if (!firebaseAuth?.currentUser) {
+      setProfile(null);
+      return;
+    }
+    setProfile(await getUserProfile(firebaseAuth.currentUser.uid));
+  }, []);
 
   useEffect(() => {
     if (!firebaseAuth) {
@@ -30,7 +44,11 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
     });
   }, []);
 
-  return <AuthContext.Provider value={{ user, profile, loading }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

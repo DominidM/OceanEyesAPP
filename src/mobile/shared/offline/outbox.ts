@@ -84,3 +84,8 @@ export async function removePendingReport(id: string): Promise<void> {
   const all = await getPendingReports();
   await persist(all.filter((report) => report.id !== id));
 }
+
+export async function clearOutbox(): Promise<void> {
+  await AsyncStorage.removeItem(STORAGE_KEY);
+  emit();
+}
