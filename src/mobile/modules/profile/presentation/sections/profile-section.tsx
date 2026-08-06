@@ -27,6 +27,7 @@ const phoneIcon: SymbolName = { ios: 'phone.fill', android: 'call', web: 'call' 
 const dniIcon: SymbolName = { ios: 'creditcard.fill', android: 'badge', web: 'badge' };
 const walletIcon: SymbolName = { ios: 'wallet.pass.fill', android: 'account-balance-wallet', web: 'account-balance-wallet' };
 const personIcon: SymbolName = { ios: 'person.fill', android: 'person', web: 'person' };
+const gearIcon: SymbolName = { ios: 'gearshape.fill', android: 'settings', web: 'settings' };
 const starIcon: SymbolName = { ios: 'star.fill', android: 'star', web: 'star' };
 const trophyIcon: SymbolName = { ios: 'trophy.fill', android: 'emoji-events', web: 'emoji-events' };
 const verifiedIcon: SymbolName = { ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' };
@@ -323,7 +324,17 @@ export function ProfileSection() {
 
   return (
     <>
-      <SectionHeader title="Perfil" />
+      <SectionHeader
+        title="Perfil"
+        right={
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/mobile/settings')}
+            style={({ pressed }) => [styles.gearButton, pressed && styles.pressed]}>
+            <AppSymbol name={gearIcon} color={BrandColors.primary} size={20} />
+          </Pressable>
+        }
+      />
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -444,6 +455,14 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.78,
+  },
+  gearButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(19, 78, 94, 0.1)',
   },
 
   /* Hero */

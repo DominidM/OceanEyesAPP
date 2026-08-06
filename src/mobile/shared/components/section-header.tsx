@@ -6,9 +6,10 @@ import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 
 type SectionHeaderProps = PropsWithChildren<{
   title: string;
+  right?: React.ReactNode;
 }>;
 
-export function SectionHeader({ title, children }: SectionHeaderProps) {
+export function SectionHeader({ title, children, right }: SectionHeaderProps) {
   const insets = useSafeAreaInsets();
   const hasChildren = children != null;
 
@@ -17,6 +18,7 @@ export function SectionHeader({ title, children }: SectionHeaderProps) {
       style={[styles.header, { paddingTop: insets.top, height: (hasChildren ? 113 : 72) + insets.top }]}>
       <View style={styles.headerTop}>
         <Text style={styles.title}>{title}</Text>
+        {right}
       </View>
       {children}
     </View>
@@ -34,9 +36,12 @@ const styles = StyleSheet.create({
     height: 62,
     paddingTop: 10,
     paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
+    flex: 1,
     color: BrandColors.neutral,
     fontFamily: Fonts.headline,
     fontSize: 26,
