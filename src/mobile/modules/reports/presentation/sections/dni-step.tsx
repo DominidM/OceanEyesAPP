@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, Spacing } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { shadow } from '@/shared/utils/shadows';
@@ -53,14 +54,14 @@ export function DniStep({
         </View>
       </View>
 
-      <Text style={styles.headline}>Reportar un incidente</Text>
-      <Text style={styles.body}>{BODY_TEXT}</Text>
+      <AppText style={styles.headline}>Reportar un incidente</AppText>
+      <AppText style={styles.body}>{BODY_TEXT}</AppText>
 
       <View style={styles.form}>
         {guest ? (
           <View style={styles.guestNote}>
             <AppSymbol name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }} color={C.securityText} size={14} />
-            <Text style={styles.guestNoteText}>{GUEST_NOTE}</Text>
+            <AppText style={styles.guestNoteText}>{GUEST_NOTE}</AppText>
           </View>
         ) : (
           <ConsentCheckbox checked={anonymous} onToggle={onAnonymousToggle} label="Enviar como reporte anónimo" />
@@ -80,16 +81,16 @@ export function DniStep({
             pressed && canContinue && styles.pressed,
             !canContinue && styles.primaryDisabled,
           ]}>
-          <Text style={styles.primaryLabel}>Continuar</Text>
+          <AppText style={styles.primaryLabel}>Continuar</AppText>
         </Pressable>
         <Pressable accessibilityRole="button" onPress={onCancel} hitSlop={8} style={styles.secondary}>
-          <Text style={styles.secondaryLabel}>Cancelar</Text>
+          <AppText style={styles.secondaryLabel}>Cancelar</AppText>
         </Pressable>
       </View>
 
       <View style={styles.securityNote}>
         <AppSymbol name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }} color={C.securityText} size={14} />
-        <Text style={styles.securityText}>{SECURITY_NOTE}</Text>
+        <AppText style={styles.securityText}>{SECURITY_NOTE}</AppText>
       </View>
     </View>
   );

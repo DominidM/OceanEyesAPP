@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 
@@ -29,10 +30,10 @@ export function ReportCard({ report }: { report: Report }) {
       <ReportThumbnail type={report.thumbnail} />
       <View style={styles.reportContent}>
         <View style={styles.reportHeader}>
-          <Text style={styles.reportTitle} numberOfLines={1}>
+          <AppText style={styles.reportTitle} numberOfLines={1}>
             {report.title}
-          </Text>
-          <Text style={styles.reportTime}>{report.time}</Text>
+          </AppText>
+          <AppText style={styles.reportTime}>{report.time}</AppText>
         </View>
 
         <DetailRow
@@ -61,7 +62,7 @@ function DetailRow({ icon, text }: { icon: SymbolName; text: string }) {
   return (
     <View style={styles.detailRow}>
       <AppSymbol name={icon} color={SurfaceColors.mutedText} size={12} />
-      <Text style={styles.detailText}>{text}</Text>
+      <AppText style={styles.detailText}>{text}</AppText>
     </View>
   );
 }
@@ -80,7 +81,7 @@ function StatusBadge({
   return (
     <View style={[styles.statusBadge, { backgroundColor: bg }]}>
       <AppSymbol name={icon} color={color} size={12} />
-      <Text style={[styles.statusText, { color }]}>{label}</Text>
+      <AppText style={[styles.statusText, { color }]}>{label}</AppText>
     </View>
   );
 }

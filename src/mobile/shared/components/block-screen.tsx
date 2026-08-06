@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 
@@ -32,8 +33,8 @@ export function BlockScreen({ verdict, reason }: { verdict: Exclude<BanVerdict, 
       <View style={styles.iconCircle}>
         <AppSymbol name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }} color="#FFFFFF" size={36} />
       </View>
-      <Text style={styles.title}>{message.title}</Text>
-      <Text style={styles.body}>{reason ?? message.body}</Text>
+      <AppText style={styles.title}>{message.title}</AppText>
+      <AppText style={styles.body}>{reason ?? message.body}</AppText>
     </View>
   );
 }

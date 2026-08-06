@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -28,7 +29,7 @@ export function TopBar({ onPendingPress }: { onPendingPress?: () => void }) {
             size={24}
           />
         </View>
-        <Text style={styles.brandName}>Ocean Eyes</Text>
+        <AppText style={styles.brandName}>Ocean Eyes</AppText>
       </View>
 
       <View style={styles.headerActions}>
@@ -44,9 +45,9 @@ function StatusPill() {
   return (
     <View style={styles.statusRow}>
       <View style={[styles.onlineDot, !online && styles.offlineDot]} />
-      <Text style={[styles.onlineText, !online && styles.offlineText]}>
+      <AppText style={[styles.onlineText, !online && styles.offlineText]}>
         {online ? 'Online' : 'Offline'}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -65,9 +66,9 @@ function PendingBadge({ onPress }: { onPress?: () => void }) {
         color={BrandColors.primary}
         size={14}
       />
-      <Text style={styles.pendingText} numberOfLines={1} ellipsizeMode="tail">
+      <AppText style={styles.pendingText} numberOfLines={1} ellipsizeMode="tail">
         {pendingCount} reporte{pendingCount === 1 ? '' : 's'} pendiente{pendingCount === 1 ? '' : 's'}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }

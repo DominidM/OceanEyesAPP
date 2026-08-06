@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts } from '@/constants/theme';
 import { RewardsColors } from '../theme';
@@ -27,21 +28,21 @@ export function PointsCard({
     <View style={styles.card}>
       <View style={styles.topRow}>
         <View style={styles.balanceCol}>
-          <Text style={styles.balanceLabel}>{guest ? 'Inicia sesión' : 'Saldo de puntos'}</Text>
-          <Text style={styles.balanceValue}>{balanceText}</Text>
+          <AppText style={styles.balanceLabel}>{guest ? 'Inicia sesión' : 'Saldo de puntos'}</AppText>
+          <AppText style={styles.balanceValue}>{balanceText}</AppText>
         </View>
 
         <View style={styles.levelPill}>
           <View style={styles.levelDot} />
-          <Text style={styles.levelText}>{levelText}</Text>
+          <AppText style={styles.levelText}>{levelText}</AppText>
         </View>
       </View>
 
       {!guest && progress ? (
         <>
           <View style={styles.statsRow}>
-            <Text style={styles.statText}>{progress.label}</Text>
-            <Text style={styles.statText}>{progress.value}</Text>
+            <AppText style={styles.statText}>{progress.label}</AppText>
+            <AppText style={styles.statText}>{progress.value}</AppText>
           </View>
 
           <View style={styles.track}>
@@ -54,7 +55,7 @@ export function PointsCard({
         accessibilityRole="button"
         onPress={guest ? onLogin : undefined}
         style={styles.button}>
-        <Text style={styles.buttonText}>{guest ? 'Inicia sesión para canjear' : 'Canjear puntos'}</Text>
+        <AppText style={styles.buttonText}>{guest ? 'Inicia sesión para canjear' : 'Canjear puntos'}</AppText>
         <AppSymbol
           name={guest ? { ios: 'lock.fill', android: 'lock', web: 'lock' } : arrowIcon}
           color={RewardsColors.accent}

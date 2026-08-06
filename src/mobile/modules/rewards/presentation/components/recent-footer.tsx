@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts } from '@/constants/theme';
 import { RewardsColors } from '../theme';
@@ -12,8 +13,8 @@ export function RecentFooter() {
   return (
     <View style={styles.footer}>
       <View style={styles.headingRow}>
-        <Text style={styles.heading}>Actividad reciente</Text>
-        <Text style={styles.link}>Ver todo</Text>
+        <AppText style={styles.heading}>Actividad reciente</AppText>
+        <AppText style={styles.link}>Ver todo</AppText>
       </View>
 
       <View style={styles.bodyRow}>
@@ -26,7 +27,7 @@ export function RecentFooter() {
           </View>
         </View>
 
-        <Text style={styles.text}>{COMMUNITY_TEXT}</Text>
+        <AppText style={styles.text}>{COMMUNITY_TEXT}</AppText>
       </View>
     </View>
   );

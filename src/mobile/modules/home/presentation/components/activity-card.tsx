@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { shadow } from '@/shared/utils/shadows';
@@ -20,14 +21,14 @@ export function ActivityCard({ stats }: { stats: ActivityStat[] }) {
             key={item.label}
             style={[styles.statItem, index === 1 && styles.middleStat]}
             accessibilityLabel={`${item.value} ${item.label}`}>
-            <Text style={[styles.statValue, { color: item.color }]}>{item.value}</Text>
-            <Text style={styles.statLabel}>{item.label}</Text>
+            <AppText style={[styles.statValue, { color: item.color }]}>{item.value}</AppText>
+            <AppText style={styles.statLabel}>{item.label}</AppText>
           </View>
         ))}
       </View>
 
       <View style={styles.levelRow}>
-        <Text style={styles.levelText}>Nivel: Guardian del Mar</Text>
+        <AppText style={styles.levelText}>Nivel: Guardian del Mar</AppText>
         <AppSymbol
           name={{ ios: 'medal.fill', android: 'military-tech', web: 'workspace-premium' }}
           color={BrandColors.primary}

@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { changePassword } from '@/shared/firebase/auth';
 import { useAuth } from '@/shared/firebase/auth-context';
@@ -62,16 +63,16 @@ export function ChangePasswordScreen() {
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
           <AppSymbol name={backIcon} color={BrandColors.primary} size={22} />
         </Pressable>
-        <Text style={styles.topBarTitle}>Cambiar contraseña</Text>
+        <AppText style={styles.topBarTitle}>Cambiar contraseña</AppText>
         <View style={styles.topBarSpacer} />
       </View>
 
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
+        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.card}>
-          <Text style={styles.label}>Contraseña actual</Text>
+          <AppText style={styles.label}>Contraseña actual</AppText>
           <TextInput
             value={current}
             onChangeText={setCurrent}
@@ -81,7 +82,7 @@ export function ChangePasswordScreen() {
             style={styles.input}
           />
 
-          <Text style={styles.label}>Nueva contraseña</Text>
+          <AppText style={styles.label}>Nueva contraseña</AppText>
           <TextInput
             value={next}
             onChangeText={setNext}
@@ -91,7 +92,7 @@ export function ChangePasswordScreen() {
             style={styles.input}
           />
 
-          <Text style={styles.label}>Confirmar nueva contraseña</Text>
+          <AppText style={styles.label}>Confirmar nueva contraseña</AppText>
           <TextInput
             value={confirm}
             onChangeText={setConfirm}
@@ -101,7 +102,7 @@ export function ChangePasswordScreen() {
             style={styles.input}
           />
 
-          {!!error && <Text style={styles.error}>{error}</Text>}
+          {!!error && <AppText style={styles.error}>{error}</AppText>}
 
           <Pressable
             accessibilityRole="button"
@@ -109,7 +110,7 @@ export function ChangePasswordScreen() {
             disabled={busy}
             onPress={submit}
             style={({ pressed }) => [styles.submit, pressed && styles.pressed]}>
-            <Text style={styles.submitLabel}>{busy ? 'Cambiando...' : 'Cambiar contraseña'}</Text>
+            <AppText style={styles.submitLabel}>{busy ? 'Cambiando...' : 'Cambiar contraseña'}</AppText>
           </Pressable>
         </View>
       </ScrollView>

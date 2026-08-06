@@ -1,14 +1,15 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 
 export function HistoryHeader({ onSeeAll }: { onSeeAll?: () => void }) {
   return (
     <View style={styles.historyHeader}>
-      <Text style={styles.historyTitle}>Historial</Text>
+      <AppText style={styles.historyTitle}>Historial</AppText>
       <Pressable accessibilityRole="button" onPress={onSeeAll}>
-        <Text style={styles.seeAllText}>Ver todos</Text>
+        <AppText style={styles.seeAllText}>Ver todos</AppText>
       </Pressable>
     </View>
   );

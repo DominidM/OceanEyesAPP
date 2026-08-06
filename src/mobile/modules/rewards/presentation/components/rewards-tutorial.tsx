@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, DimensionValue, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import {Animated, DimensionValue, Modal, Pressable, StyleSheet, useWindowDimensions, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
@@ -88,7 +89,7 @@ export function RewardsTutorial({ visible, onClose }: RewardsTutorialProps) {
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
               <AppSymbol name={{ ios: 'sparkles', android: 'auto-awesome', web: 'auto-awesome' }} color="#FFFFFF" size={18} />
-              <Text style={styles.headerTitle}>Cómo funciona</Text>
+              <AppText style={styles.headerTitle}>Cómo funciona</AppText>
             </View>
             <Pressable
               accessibilityRole="button"
@@ -101,9 +102,9 @@ export function RewardsTutorial({ visible, onClose }: RewardsTutorialProps) {
           </View>
 
           <View style={styles.progressHeader}>
-            <Text style={styles.stepLabel}>
+            <AppText style={styles.stepLabel}>
               Paso {step + 1} de {total}
-            </Text>
+            </AppText>
             <View style={styles.dots}>
               {TUTORIAL_STEPS.map((item, index) => (
                 <View key={item.id} style={[styles.dot, index === step && styles.dotActive]} />
@@ -118,8 +119,8 @@ export function RewardsTutorial({ visible, onClose }: RewardsTutorialProps) {
             <View style={styles.iconCircle}>
               <AppSymbol name={current.icon} color={RewardsColors.accent} size={40} />
             </View>
-            <Text style={styles.stepTitle}>{current.title}</Text>
-            <Text style={styles.stepBody}>{current.body}</Text>
+            <AppText style={styles.stepTitle}>{current.title}</AppText>
+            <AppText style={styles.stepBody}>{current.body}</AppText>
           </Animated.View>
 
           <View style={styles.footer}>
@@ -128,13 +129,13 @@ export function RewardsTutorial({ visible, onClose }: RewardsTutorialProps) {
               disabled={step === 0}
               onPress={goPrev}
               style={({ pressed }) => [styles.prevButton, step === 0 && styles.prevDisabled, pressed && styles.pressed]}>
-              <Text style={[styles.prevLabel, step === 0 && styles.prevLabelDisabled]}>Anterior</Text>
+              <AppText style={[styles.prevLabel, step === 0 && styles.prevLabelDisabled]}>Anterior</AppText>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               onPress={goNext}
               style={({ pressed }) => [styles.nextButton, pressed && styles.pressed]}>
-              <Text style={styles.nextLabel}>{step === total - 1 ? 'Entendido' : 'Siguiente'}</Text>
+              <AppText style={styles.nextLabel}>{step === total - 1 ? 'Entendido' : 'Siguiente'}</AppText>
             </Pressable>
           </View>
         </Animated.View>

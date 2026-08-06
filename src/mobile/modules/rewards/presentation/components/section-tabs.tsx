@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { RewardsColors } from '../theme';
 import { shadow } from '@/shared/utils/shadows';
@@ -28,7 +29,7 @@ export function SectionTabs({ active, onChange }: SectionTabsProps) {
             accessibilityRole="button"
             onPress={() => onChange(tab.key)}
             style={[styles.tab, isActive ? styles.tabActive : styles.tabInactive]}>
-            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
+            <AppText style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</AppText>
           </Pressable>
         );
       })}

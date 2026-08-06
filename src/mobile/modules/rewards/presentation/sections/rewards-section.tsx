@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
@@ -47,7 +48,7 @@ export function RewardsSection() {
               color={BrandColors.primary}
               size={16}
             />
-            <Text style={styles.tutorialLabel}>¿Cómo funciona?</Text>
+            <AppText style={styles.tutorialLabel}>¿Cómo funciona?</AppText>
           </Pressable>
         </View>
       </SectionHeader>
@@ -78,25 +79,25 @@ export function RewardsSection() {
                 color={RewardsColors.textMuted}
                 size={28}
               />
-              <Text style={styles.emptyTitle}>Sin canjes todavía</Text>
-              <Text style={styles.emptyText}>
+              <AppText style={styles.emptyTitle}>Sin canjes todavía</AppText>
+              <AppText style={styles.emptyText}>
                 {guest
                   ? 'Inicia sesión para ver y canjear tus recompensas.'
                   : 'Cuando canjees una recompensa, aparecerá aquí.'}
-              </Text>
+              </AppText>
               {guest ? (
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => router.push('/mobile/login')}
                   style={({ pressed }) => [styles.emptyButton, pressed && styles.pressed]}>
-                  <Text style={styles.emptyButtonLabel}>Iniciar sesión</Text>
+                  <AppText style={styles.emptyButtonLabel}>Iniciar sesión</AppText>
                 </Pressable>
               ) : null}
             </View>
           ) : (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>Sin recompensas disponibles</Text>
-              <Text style={styles.emptyText}>Vuelve pronto; pronto habrá nuevas recompensas.</Text>
+              <AppText style={styles.emptyTitle}>Sin recompensas disponibles</AppText>
+              <AppText style={styles.emptyText}>Vuelve pronto; pronto habrá nuevas recompensas.</AppText>
             </View>
           )}
         </View>

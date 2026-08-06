@@ -7,17 +7,17 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
+import { AppText } from '@/shared/components/app-text';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { clearLocalData } from '@/shared/offline/clear-data';
 import { useSync } from '@/shared/offline/sync-context';
-import { usePreferences } from '@/shared/settings/preferences';
+import { usePreferences, type FontScaleOption } from '@/shared/settings/preferences';
 import { shadow } from '@/shared/utils/shadows';
 
 const backIcon: SymbolName = { ios: 'chevron.left', android: 'arrow-back', web: 'arrow-back' };
@@ -26,6 +26,7 @@ const editIcon: SymbolName = { ios: 'square.and.pencil', android: 'edit', web: '
 const lockIcon: SymbolName = { ios: 'lock.fill', android: 'lock', web: 'lock' };
 const bellIcon: SymbolName = { ios: 'bell.fill', android: 'notifications', web: 'notifications' };
 const textSizeIcon: SymbolName = { ios: 'textformat.size', android: 'format-size', web: 'format-size' };
+const fontIcon: SymbolName = { ios: 'textformat', android: 'font-download', web: 'font-download' };
 const motionIcon: SymbolName = { ios: 'slowmo', android: 'slow-motion-video', web: 'slow-motion-video' };
 const syncIcon: SymbolName = { ios: 'arrow.triangle.2.circlepath', android: 'sync', web: 'sync' };
 const trashIcon: SymbolName = { ios: 'trash.fill', android: 'delete', web: 'delete' };
@@ -47,12 +48,12 @@ function SettingRow({ icon, label, value, onPress, right }: SettingRowProps) {
       <View style={styles.iconCircle}>
         <AppSymbol name={icon} color={BrandColors.primary} size={16} />
       </View>
-      <Text style={styles.settingLabel} numberOfLines={1}>
+      <AppText style={styles.settingLabel} numberOfLines={1}>
         {label}
-      </Text>
+      </AppText>
       <View style={styles.settingRight}>
         {right}
-        {value ? <Text style={styles.settingValue}>{value}</Text> : null}
+        {value ? <AppText style={styles.settingValue}>{value}</AppText> : null}
         {onPress && !right ? <AppSymbol name={chevronIcon} color={BrandColors.primary} size={16} /> : null}
       </View>
     </>
@@ -75,7 +76,49 @@ function SettingRow({ icon, label, value, onPress, right }: SettingRowProps) {
 function GroupLabel({ title }: { title: string }) {
   return (
     <View style={styles.groupLabel}>
-      <Text style={styles.groupLabelText}>{title}</Text>
+      <AppText style={styles.groupLabelText}>{title}</AppText>
+    </View>
+  );
+}
+
+type Option<T> = { value: T; label: string };
+
+function OptionGroup<T extends string | number>({
+  options,
+  selected,
+  onSelect,
+  accessibilityLabel,
+}: {
+  options: readonly Option<T>[];
+  selected: T;
+  onSelect: (value: T) => void;
+  accessibilityLabel: string;
+}) {
+  return (
+    <View
+      style={styles.optionRow}
+      accessibilityRole="radiogroup"
+      accessibilityLabel={accessibilityLabel}>
+      {options.map((option) => {
+        const active = option.value === selected;
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={option.label}
+            onPress={() => onSelect(option.value)}
+            style={({ pressed }) => [
+              styles.optionButton,
+              active && styles.optionButtonActive,
+              pressed && styles.pressed,
+            ]}>
+            <AppText style={[styles.optionLabel, active && styles.optionLabelActive]}>
+              {option.label}
+            </AppText>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -87,11 +130,30 @@ function gateToLogin(onDone: () => void) {
   ]);
 }
 
+const FONT_SCALE_OPTIONS: readonly Option<FontScaleOption>[] = [
+  { value: 1, label: 'Normal' },
+  { value: 1.15, label: 'Grande' },
+  { value: 1.3, label: 'Muy grande' },
+];
+
+const FONT_FAMILY_OPTIONS: readonly { value: string; label: string }[] = [
+  { value: 'system', label: 'Sistema' },
+  { value: 'serif', label: 'Serif' },
+  { value: 'mono', label: 'Mono' },
+];
+
 export function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
-  const { notifyNear, notifyStatus, reduceMotion, largeText, setPreference } = usePreferences();
+  const {
+    notifyNear,
+    notifyStatus,
+    reduceMotion,
+    fontScale,
+    fontFamily,
+    setPreference,
+  } = usePreferences();
   const { syncing, pendingCount, lastError, requestSync } = useSync();
   const [clearing, setClearing] = useState(false);
 
@@ -141,14 +203,14 @@ export function SettingsScreen() {
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
           <AppSymbol name={backIcon} color={BrandColors.primary} size={22} />
         </Pressable>
-        <Text style={styles.topBarTitle}>Configuración</Text>
+        <AppText style={styles.topBarTitle}>Configuración</AppText>
         <View style={styles.topBarSpacer} />
       </View>
 
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
+        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.card}>
           <GroupLabel title="Cuenta" />
           <SettingRow icon={editIcon} label="Editar perfil" onPress={handleEditProfile} />
@@ -183,13 +245,25 @@ export function SettingsScreen() {
           <GroupLabel title="Accesibilidad" />
           <SettingRow
             icon={textSizeIcon}
-            label="Texto grande"
+            label="Tamaño de letra"
             right={
-              <Switch
-                accessibilityLabel="Texto grande"
-                value={largeText}
-                onValueChange={(value) => void setPreference('largeText', value)}
-                {...switchTone}
+              <OptionGroup
+                accessibilityLabel="Tamaño de letra"
+                options={FONT_SCALE_OPTIONS}
+                selected={fontScale}
+                onSelect={(value) => void setPreference('fontScale', value)}
+              />
+            }
+          />
+          <SettingRow
+            icon={fontIcon}
+            label="Fuente de letra"
+            right={
+              <OptionGroup
+                accessibilityLabel="Fuente de letra"
+                options={FONT_FAMILY_OPTIONS}
+                selected={fontFamily}
+                onSelect={(value) => void setPreference('fontFamily', value as 'system' | 'serif' | 'mono')}
               />
             }
           />
@@ -214,7 +288,7 @@ export function SettingsScreen() {
             right={syncing ? <ActivityIndicator size="small" color={BrandColors.primary} /> : null}
             onPress={requestSync}
           />
-          {lastError ? <Text style={styles.syncError}>{lastError}</Text> : null}
+          {lastError ? <AppText style={styles.syncError}>{lastError}</AppText> : null}
           <SettingRow
             icon={trashIcon}
             label="Borrar datos locales"
@@ -227,6 +301,10 @@ export function SettingsScreen() {
           <SettingRow icon={shieldIcon} label="Política de privacidad" onPress={() => router.push('/mobile/legal?page=privacy')} />
           <SettingRow icon={infoIcon} label="Versión" value="1.0.0" />
         </View>
+
+        <AppText style={styles.disclaimer}>
+          OceanEyes es una plataforma comunitaria. Los reportes los realizan usuarios voluntarios y no sustituyen el aviso a las autoridades competentes.
+        </AppText>
       </ScrollView>
     </View>
   );
@@ -332,12 +410,53 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     includeFontPadding: false,
   },
+  optionRow: {
+    flexDirection: 'row',
+    gap: 4,
+    backgroundColor: 'rgba(19, 78, 94, 0.08)',
+    borderRadius: 999,
+    padding: 3,
+  },
+  optionButton: {
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  optionButtonActive: {
+    backgroundColor: '#FFFFFF',
+    ...shadow('subtle'),
+  },
+  optionLabel: {
+    color: 'rgba(44, 44, 44, 0.7)',
+    fontFamily: Fonts.label,
+    fontSize: 12,
+    fontWeight: '600',
+    includeFontPadding: false,
+  },
+  optionLabelActive: {
+    color: BrandColors.primary,
+  },
   syncError: {
     color: '#B42318',
     fontFamily: Fonts.body,
     fontSize: 12,
     fontWeight: '500',
     paddingBottom: 8,
+    includeFontPadding: false,
+  },
+  disclaimer: {
+    width: '100%',
+    maxWidth: 358,
+    alignSelf: 'center',
+    marginTop: 16,
+    color: 'rgba(44, 44, 44, 0.5)',
+    fontFamily: Fonts.body,
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 18,
+    textAlign: 'center',
+    paddingHorizontal: 8,
     includeFontPadding: false,
   },
   pressed: {

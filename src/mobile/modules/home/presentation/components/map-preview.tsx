@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 
@@ -22,7 +23,7 @@ export function MapPreview({ reports, onExpand }: MapPreviewProps) {
           onPress={onExpand}
           style={({ pressed }) => [styles.mapButton, pressed && styles.pressed]}>
           <AppSymbol name={{ ios: 'map.fill', android: 'map', web: 'map' }} color={BrandColors.primary} size={20} />
-          <Text style={styles.mapButtonText}>Ver Mapa en Tiempo Real</Text>
+          <AppText style={styles.mapButtonText}>Ver Mapa en Tiempo Real</AppText>
         </Pressable>
       </View>
     </View>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import {ActivityIndicator, Pressable, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import MapView from 'react-native-maps';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
@@ -118,14 +119,14 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
             color={BrandColors.primary}
             size={28}
           />
-          <Text style={styles.permissionTitle}>Activa tu ubicación</Text>
-          <Text style={styles.permissionBody}>El mapa mostrará tu posición en tiempo real.</Text>
+          <AppText style={styles.permissionTitle}>Activa tu ubicación</AppText>
+          <AppText style={styles.permissionBody}>El mapa mostrará tu posición en tiempo real.</AppText>
           {permission.canAskAgain ? (
             <Pressable
               accessibilityRole="button"
               onPress={requestPermission}
               style={({ pressed }) => [styles.permissionButton, pressed && styles.pressed]}>
-              <Text style={styles.permissionButtonLabel}>Permitir acceso</Text>
+              <AppText style={styles.permissionButtonLabel}>Permitir acceso</AppText>
             </Pressable>
           ) : null}
         </View>

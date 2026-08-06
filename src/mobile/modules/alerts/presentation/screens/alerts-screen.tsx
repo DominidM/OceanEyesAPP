@@ -1,7 +1,8 @@
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {ActivityIndicator, Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
@@ -36,7 +37,7 @@ export function AlertsScreen() {
             size={20}
           />
         </Pressable>
-        <Text style={styles.headerTitle}>Alertas en mi zona</Text>
+        <AppText style={styles.headerTitle}>Alertas en mi zona</AppText>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -47,7 +48,7 @@ export function AlertsScreen() {
         {locating ? (
           <StateBox>
             <ActivityIndicator color={BrandColors.primary} size="large" />
-            <Text style={styles.stateTitle}>Ubicando reportes cerca de ti...</Text>
+            <AppText style={styles.stateTitle}>Ubicando reportes cerca de ti...</AppText>
           </StateBox>
         ) : permission && !permission.granted ? (
           <StateBox>
@@ -56,14 +57,14 @@ export function AlertsScreen() {
               color={BrandColors.primary}
               size={28}
             />
-            <Text style={styles.stateTitle}>Activa tu ubicación</Text>
-            <Text style={styles.stateText}>Las alertas se ordenan según tu distancia.</Text>
+            <AppText style={styles.stateTitle}>Activa tu ubicación</AppText>
+            <AppText style={styles.stateText}>Las alertas se ordenan según tu distancia.</AppText>
             {permission.canAskAgain ? (
               <Pressable
                 accessibilityRole="button"
                 onPress={requestPermission}
                 style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-                <Text style={styles.actionButtonLabel}>Permitir acceso</Text>
+                <AppText style={styles.actionButtonLabel}>Permitir acceso</AppText>
               </Pressable>
             ) : null}
           </StateBox>
@@ -74,12 +75,12 @@ export function AlertsScreen() {
               color={BrandColors.primary}
               size={28}
             />
-            <Text style={styles.stateTitle}>No pudimos obtener tu ubicación</Text>
+            <AppText style={styles.stateTitle}>No pudimos obtener tu ubicación</AppText>
             <Pressable
               accessibilityRole="button"
               onPress={() => void fetchPosition()}
               style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-              <Text style={styles.actionButtonLabel}>Reintentar</Text>
+              <AppText style={styles.actionButtonLabel}>Reintentar</AppText>
             </Pressable>
           </StateBox>
         ) : alerts.length === 0 ? (
@@ -89,8 +90,8 @@ export function AlertsScreen() {
               color={BrandColors.primary}
               size={28}
             />
-            <Text style={styles.stateTitle}>Sin alertas por ahora</Text>
-            <Text style={styles.stateText}>Los reportes verificados cerca de ti aparecerán aquí.</Text>
+            <AppText style={styles.stateTitle}>Sin alertas por ahora</AppText>
+            <AppText style={styles.stateText}>Los reportes verificados cerca de ti aparecerán aquí.</AppText>
           </StateBox>
         ) : (
           <View style={styles.list}>

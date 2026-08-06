@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { shadow } from '@/shared/utils/shadows';
 
@@ -46,22 +47,21 @@ export function LegalScreen() {
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
           <AppSymbol name={backIcon} color={BrandColors.primary} size={22} />
         </Pressable>
-        <Text style={styles.topBarTitle}>{content.title}</Text>
+        <AppText style={styles.topBarTitle}>{content.title}</AppText>
         <View style={styles.topBarSpacer} />
       </View>
 
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
+        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.card}>
-          <Text style={styles.title}>{content.title}</Text>
           {content.body.map((paragraph, index) => (
-            <Text key={index} style={styles.paragraph}>
+            <AppText key={index} style={styles.paragraph}>
               {paragraph}
-            </Text>
+            </AppText>
           ))}
-          <Text style={styles.updated}>Última actualización: 2026</Text>
+          <AppText style={styles.updated}>Última actualización: 2026</AppText>
         </View>
       </ScrollView>
     </View>
@@ -110,8 +110,6 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    maxWidth: 358,
-    alignSelf: 'center',
     borderRadius: 24,
     borderWidth: 1,
     borderColor: '#D9CFC5',
@@ -119,21 +117,13 @@ const styles = StyleSheet.create({
     padding: 16,
     ...shadow('subtle'),
   },
-  title: {
-    color: BrandColors.neutral,
-    fontFamily: Fonts.headline,
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 8,
-    includeFontPadding: false,
-  },
   paragraph: {
     color: 'rgba(44, 44, 44, 0.8)',
     fontFamily: Fonts.body,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '400',
-    lineHeight: 21,
-    marginBottom: 10,
+    lineHeight: 23,
+    marginBottom: 12,
     includeFontPadding: false,
   },
   updated: {

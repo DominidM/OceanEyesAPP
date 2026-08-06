@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
@@ -33,7 +34,7 @@ export function MapScreen() {
               size={20}
             />
           </Pressable>
-          <Text style={styles.headerTitle}>Mapa en Tiempo Real</Text>
+          <AppText style={styles.headerTitle}>Mapa en Tiempo Real</AppText>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -51,7 +52,7 @@ function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <View style={styles.legendItem}>
       <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={styles.legendLabel}>{label}</Text>
+      <AppText style={styles.legendLabel}>{label}</AppText>
     </View>
   );
 }

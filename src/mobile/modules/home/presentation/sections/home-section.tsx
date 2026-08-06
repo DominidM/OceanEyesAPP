@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {ScrollView, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -66,9 +67,9 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onPendi
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
         <View style={styles.headlineRow}>
-          <Text style={styles.headline}>
+          <AppText style={styles.headline}>
             {profile?.displayName ? `Hola, ${profile.displayName}` : 'Hola, Guardián del Mar'}
-          </Text>
+          </AppText>
           <AppSymbol
             name={{ ios: 'sailboat.fill', android: 'directions-boat', web: 'directions-boat' }}
             color={BrandColors.primary}
@@ -101,7 +102,7 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onPendi
           />
         </View>
 
-        <Text style={styles.sectionTitle}>Tu Actividad</Text>
+        <AppText style={styles.sectionTitle}>Tu Actividad</AppText>
         <ActivityCard stats={activityStats} />
         <MapPreview reports={reports} onExpand={onExpandMap} />
       </ScrollView>

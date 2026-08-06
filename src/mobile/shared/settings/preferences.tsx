@@ -1,18 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import type { FontFamilyOption } from '@/shared/accessibility/use-scaled-typography';
+
+export type FontScaleOption = 1 | 1.15 | 1.3;
+
 export type AppPreferences = {
   notifyNear: boolean;
   notifyStatus: boolean;
   reduceMotion: boolean;
-  largeText: boolean;
+  fontScale: FontScaleOption;
+  fontFamily: FontFamilyOption;
 };
 
 const DEFAULTS: AppPreferences = {
   notifyNear: true,
   notifyStatus: true,
   reduceMotion: false,
-  largeText: false,
+  fontScale: 1,
+  fontFamily: 'system',
 };
 
 const STORAGE_KEY = '@oceaneyes/settings/v1';

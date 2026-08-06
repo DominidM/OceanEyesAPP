@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { Timestamp } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
@@ -115,7 +116,7 @@ function truncateMiddle(value: string, head = 6, tail = 4): string {
 /* ── Piezas de UI ── */
 
 function SectionLabel({ title }: { title: string }) {
-  return <Text style={styles.sectionLabel}>{title}</Text>;
+  return <AppText style={styles.sectionLabel}>{title}</AppText>;
 }
 
 function InitialsAvatar({ name, size }: { name: string; size: number }) {
@@ -128,7 +129,7 @@ function InitialsAvatar({ name, size }: { name: string; size: number }) {
       .join('') || 'U';
   return (
     <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[styles.avatarText, { fontSize: size * 0.38 }]}>{initials}</Text>
+      <AppText style={[styles.avatarText, { fontSize: size * 0.38 }]}>{initials}</AppText>
     </View>
   );
 }
@@ -153,28 +154,28 @@ function HeroCard({
       <View style={styles.heroTopRow}>
         <InitialsAvatar name={name} size={64} />
         <View style={styles.heroNameWrap}>
-          <Text style={styles.heroName} numberOfLines={1}>
+          <AppText style={styles.heroName} numberOfLines={1}>
             {name}
-          </Text>
-          {typeLabel ? <Text style={styles.heroType}>{typeLabel}</Text> : null}
+          </AppText>
+          {typeLabel ? <AppText style={styles.heroType}>{typeLabel}</AppText> : null}
         </View>
       </View>
 
       <View style={styles.levelPill}>
         <View style={styles.levelDot} />
-        <Text style={styles.levelText}>{level.label}</Text>
+        <AppText style={styles.levelText}>{level.label}</AppText>
       </View>
 
       <View style={styles.heroDivider} />
 
-      <Text style={styles.balanceLabel}>Saldo de puntos</Text>
-      <Text style={styles.balanceValue}>{balance.toLocaleString('es-PE')}</Text>
+      <AppText style={styles.balanceLabel}>Saldo de puntos</AppText>
+      <AppText style={styles.balanceValue}>{balance.toLocaleString('es-PE')}</AppText>
 
       {level.next ? (
         <>
           <View style={styles.statsRow}>
-            <Text style={styles.statText}>Progreso al siguiente nivel</Text>
-            <Text style={styles.statText}>{level.progressText}</Text>
+            <AppText style={styles.statText}>Progreso al siguiente nivel</AppText>
+            <AppText style={styles.statText}>{level.progressText}</AppText>
           </View>
           <View style={styles.track}>
             <View style={[styles.fill, { width: `${level.fill * 100}%` }]} />
@@ -182,7 +183,7 @@ function HeroCard({
         </>
       ) : null}
 
-      {memberSinceText ? <Text style={styles.memberSince}>{memberSinceText}</Text> : null}
+      {memberSinceText ? <AppText style={styles.memberSince}>{memberSinceText}</AppText> : null}
     </View>
   );
 }
@@ -191,8 +192,8 @@ function StatTile({ icon, value, label }: { icon: SymbolName; value: string; lab
   return (
     <View style={styles.statTile}>
       <AppSymbol name={icon} color={BrandColors.primary} size={16} />
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <AppText style={styles.statValue}>{value}</AppText>
+      <AppText style={styles.statLabel}>{label}</AppText>
     </View>
   );
 }
@@ -204,8 +205,8 @@ function InfoRow({ icon, label, value }: { icon: SymbolName; label: string; valu
         <AppSymbol name={icon} color={BrandColors.primary} size={16} />
       </View>
       <View style={styles.infoTextWrap}>
-        <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={styles.infoValue}>{value}</Text>
+        <AppText style={styles.infoLabel}>{label}</AppText>
+        <AppText style={styles.infoValue}>{value}</AppText>
       </View>
     </View>
   );
@@ -219,14 +220,14 @@ function ActivityRow({ item }: { item: ActivityItem }) {
         <AppSymbol name={item.icon} color={BrandColors.primary} size={16} />
       </View>
       <View style={styles.activityTextWrap}>
-        <Text style={styles.activityTitle} numberOfLines={1}>
+        <AppText style={styles.activityTitle} numberOfLines={1}>
           {item.title}
-        </Text>
-        <Text style={styles.activityDate}>{item.date}</Text>
+        </AppText>
+        <AppText style={styles.activityDate}>{item.date}</AppText>
       </View>
-      {item.points > 0 ? <Text style={styles.activityPoints}>+{item.points}</Text> : null}
+      {item.points > 0 ? <AppText style={styles.activityPoints}>+{item.points}</AppText> : null}
       <View style={[styles.statusPill, { backgroundColor: status.bg }]}>
-        <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+        <AppText style={[styles.statusText, { color: status.color }]}>{status.label}</AppText>
       </View>
     </View>
   );
@@ -302,7 +303,7 @@ function LoggedInCard({ profile, fallbackName, activity = [], extraStats, onLogo
         accessibilityRole="button"
         onPress={onLogout}
         style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
-        <Text style={styles.logoutButtonLabel}>Cerrar sesión</Text>
+        <AppText style={styles.logoutButtonLabel}>Cerrar sesión</AppText>
       </Pressable>
     </View>
   );
@@ -353,15 +354,15 @@ export function ProfileSection() {
             <>
               <View style={styles.placeholderCard}>
                 <AppSymbol name={{ ios: 'person.crop.circle.badge.questionmark.fill', android: 'person', web: 'person' }} color={BrandColors.primary} size={34} />
-                <Text style={styles.placeholderTitle}>Inicia sesión</Text>
-                <Text style={styles.placeholderText}>
+                <AppText style={styles.placeholderTitle}>Inicia sesión</AppText>
+                <AppText style={styles.placeholderText}>
                   Para ver tu perfil, puntos y recompensas, inicia sesión con tu cuenta.
-                </Text>
+                </AppText>
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => router.push('/mobile/login')}
                   style={({ pressed }) => [styles.loginButton, pressed && styles.pressed]}>
-                  <Text style={styles.loginButtonLabel}>Iniciar sesión</Text>
+                  <AppText style={styles.loginButtonLabel}>Iniciar sesión</AppText>
                 </Pressable>
               </View>
               {__DEV__ && (
@@ -369,7 +370,7 @@ export function ProfileSection() {
                   accessibilityRole="button"
                   onPress={() => setShowDevPreview(true)}
                   style={({ pressed }) => [styles.previewButton, pressed && styles.pressed]}>
-                  <Text style={styles.previewButtonLabel}>Vista previa de perfil (dev)</Text>
+                  <AppText style={styles.previewButtonLabel}>Vista previa de perfil (dev)</AppText>
                 </Pressable>
               )}
             </>

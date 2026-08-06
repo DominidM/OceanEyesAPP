@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { Reward } from '../data/rewards';
@@ -24,12 +25,12 @@ export function RewardItem({ reward, claimed }: RewardItemProps) {
       </View>
 
       <View style={styles.copy}>
-        <Text style={styles.title}>{reward.title}</Text>
-        <Text style={styles.subtitle}>{reward.subtitle}</Text>
+        <AppText style={styles.title}>{reward.title}</AppText>
+        <AppText style={styles.subtitle}>{reward.subtitle}</AppText>
 
         <View style={styles.pointsRow}>
           <View style={[styles.pointsDot, { backgroundColor: iconColor }]} />
-          <Text style={[styles.pointsText, { color: iconColor }]}>{reward.points} pts</Text>
+          <AppText style={[styles.pointsText, { color: iconColor }]}>{reward.points} pts</AppText>
         </View>
       </View>
 
@@ -37,9 +38,9 @@ export function RewardItem({ reward, claimed }: RewardItemProps) {
         accessibilityRole="button"
         disabled={subdued}
         style={[styles.button, subdued && styles.buttonSubdued]}>
-        <Text style={[styles.buttonText, subdued && styles.buttonTextSubdued]}>
+        <AppText style={[styles.buttonText, subdued && styles.buttonTextSubdued]}>
           {buttonLabel}
-        </Text>
+        </AppText>
       </Pressable>
     </View>
   );

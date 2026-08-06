@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
@@ -72,14 +73,14 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
             size={20}
           />
         </Pressable>
-        <Text style={styles.headerTitle}>Resumen del Reporte</Text>
+        <AppText style={styles.headerTitle}>Resumen del Reporte</AppText>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.progressBlock}>
         <View style={styles.progressLabels}>
-          <Text style={styles.stepLabel}>Paso 5 de 5</Text>
-          <Text style={styles.percentLabel}>100%</Text>
+          <AppText style={styles.stepLabel}>Paso 5 de 5</AppText>
+          <AppText style={styles.percentLabel}>100%</AppText>
         </View>
         <View style={styles.track}>
           <View style={styles.fill} />
@@ -121,8 +122,8 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
 
           <View style={styles.cardBody}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Resumen del Reporte</Text>
-              <Text style={styles.cardSubtitle}>Revisa los detalles antes de enviar</Text>
+              <AppText style={styles.cardTitle}>Resumen del Reporte</AppText>
+              <AppText style={styles.cardSubtitle}>Revisa los detalles antes de enviar</AppText>
             </View>
 
             <View style={[styles.connectivityBadge, !online && styles.connectivityBadgeOffline]}>
@@ -135,11 +136,11 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
                 color={C.accent}
                 size={16}
               />
-              <Text style={styles.connectivityText}>
+              <AppText style={styles.connectivityText}>
                 {online
                   ? 'En línea — listo para enviar'
                   : 'Sin conexión — se guardará y se enviará al reconectar'}
-              </Text>
+              </AppText>
             </View>
 
             <View style={styles.items}>
@@ -182,28 +183,28 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
                 />
               ) : null}
             </View>
-            <Text style={styles.verifyLabel}>Confirmo que la información proporcionada es verídica</Text>
+            <AppText style={styles.verifyLabel}>Confirmo que la información proporcionada es verídica</AppText>
           </Pressable>
-          <Text style={styles.legalNote}>{LEGAL_NOTE}</Text>
+          <AppText style={styles.legalNote}>{LEGAL_NOTE}</AppText>
         </View>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        {!!sendError && <Text style={styles.sendError}>{sendError}</Text>}
+        {!!sendError && <AppText style={styles.sendError}>{sendError}</AppText>}
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: !verified }}
           disabled={!verified || sending}
           onPress={onSend}
           style={({ pressed }) => [styles.primaryButton, !verified && styles.primaryDisabled, pressed && styles.pressed]}>
-          <Text style={styles.primaryLabel}>{sending ? 'Enviando reporte...' : 'Enviar reporte'}</Text>
+          <AppText style={styles.primaryLabel}>{sending ? 'Enviando reporte...' : 'Enviar reporte'}</AppText>
         </Pressable>
 
         <Pressable
           accessibilityRole="button"
           onPress={onEdit}
           style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-          <Text style={styles.secondaryLabel}>Editar antes de enviar</Text>
+          <AppText style={styles.secondaryLabel}>Editar antes de enviar</AppText>
         </Pressable>
 
         <View style={styles.termsRow}>
@@ -212,7 +213,7 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
             color={C.termsText}
             size={9}
           />
-          <Text style={styles.termsText}>Al enviar aceptas nuestros términos y condiciones</Text>
+          <AppText style={styles.termsText}>Al enviar aceptas nuestros términos y condiciones</AppText>
         </View>
       </View>
     </View>
@@ -236,15 +237,15 @@ function SummaryItem({
         <AppSymbol name={icon} color={C.accent} size={20} />
       </View>
       {valueOnly ? (
-        <Text style={styles.itemValue} numberOfLines={2}>
+        <AppText style={styles.itemValue} numberOfLines={2}>
           {value}
-        </Text>
+        </AppText>
       ) : (
         <View style={styles.itemTexts}>
-          <Text style={styles.itemLabel}>{label}</Text>
-          <Text style={styles.itemValue} numberOfLines={2}>
+          <AppText style={styles.itemLabel}>{label}</AppText>
+          <AppText style={styles.itemValue} numberOfLines={2}>
             {value}
-          </Text>
+          </AppText>
         </View>
       )}
     </View>

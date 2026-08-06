@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import * as Google from 'expo-auth-session/providers/google';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Animated, Platform, Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import {Animated, Platform, Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { isAppleSignInAvailable, loginWithEmail, registerUser, signInAsGuest, signInWithApple, signInWithGoogleIdToken } from '@/shared/firebase/auth';
@@ -174,29 +175,29 @@ export default function MobileLoginScreen() {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.brand}>OceanEyes</Text>
-      <Text style={styles.subtitle}>{registering ? 'Únete a la comunidad' : 'Protege el océano con nosotros'}</Text>
+      <AppText style={styles.brand}>OceanEyes</AppText>
+      <AppText style={styles.subtitle}>{registering ? 'Únete a la comunidad' : 'Protege el océano con nosotros'}</AppText>
       <View style={styles.card}>
-        <Text style={styles.title}>{registering ? 'Crear cuenta' : 'Iniciar sesión'}</Text>
+        <AppText style={styles.title}>{registering ? 'Crear cuenta' : 'Iniciar sesión'}</AppText>
         {!registering && Platform.OS !== 'web' && (
           <>
             <ToneButton disabled={busy} onPress={submitWithGoogle} style={styles.googleButton} tone={['#FFFFFF', '#E9E5DF']}>
               <View style={styles.googleLogo}>
-                <Text style={styles.googleLogoText}>G</Text>
+                <AppText style={styles.googleLogoText}>G</AppText>
               </View>
-              <Text style={styles.googleLabel}>Continuar con Google</Text>
+              <AppText style={styles.googleLabel}>Continuar con Google</AppText>
             </ToneButton>
             {Platform.OS === 'ios' && (
               <ToneButton disabled={busy} onPress={submitWithApple} style={styles.appleButton} tone={['#111111', '#000000']}>
                 <View style={styles.appleLogo}>
-                  <Text style={styles.appleLogoText}></Text>
+                  <AppText style={styles.appleLogoText}></AppText>
                 </View>
-                <Text style={styles.appleLabel}>Iniciar sesión con Apple</Text>
+                <AppText style={styles.appleLabel}>Iniciar sesión con Apple</AppText>
               </ToneButton>
             )}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>o</Text>
+              <AppText style={styles.dividerText}>o</AppText>
               <View style={styles.dividerLine} />
             </View>
           </>
@@ -215,9 +216,9 @@ export default function MobileLoginScreen() {
                       ? (['#134E5E', '#0E3B47'] as const)
                       : (['rgba(19,78,94,0)', 'rgba(19,78,94,0.10)'] as const)
                   }>
-                  <Text style={[styles.typeLabel, profileType === type && styles.typeLabelActive]}>
+                  <AppText style={[styles.typeLabel, profileType === type && styles.typeLabelActive]}>
                     {type === 'citizen' ? 'Ciudadano' : 'Pescador'}
-                  </Text>
+                  </AppText>
                 </ToneButton>
               ))}
             </View>
@@ -226,26 +227,26 @@ export default function MobileLoginScreen() {
         )}
         <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="Correo electrónico" style={styles.input} />
         <TextInput value={password} onChangeText={setPassword} secureTextEntry placeholder="Contraseña" style={styles.input} />
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && <AppText style={styles.error}>{error}</AppText>}
         <ToneButton disabled={busy} onPress={submit} style={styles.submit} tone={['#134E5E', '#0E3B47']}>
-          <Text style={styles.submitLabel}>{busy ? 'Procesando...' : registering ? 'Crear cuenta' : 'Entrar'}</Text>
+          <AppText style={styles.submitLabel}>{busy ? 'Procesando...' : registering ? 'Crear cuenta' : 'Entrar'}</AppText>
         </ToneButton>
         <ToneButton onPress={() => setRegistering((value) => !value)} tone={[1, 0.55]} property="opacity">
-          <Text style={styles.switchLabel}>{registering ? 'Ya tengo una cuenta' : 'Crear una cuenta'}</Text>
+          <AppText style={styles.switchLabel}>{registering ? 'Ya tengo una cuenta' : 'Crear una cuenta'}</AppText>
         </ToneButton>
         <ToneButton
           disabled={busy}
           onPress={submitAsGuest}
           style={styles.guest}
           tone={['rgba(19,78,94,0)', 'rgba(19,78,94,0.12)']}>
-          <Text style={styles.guestLabel}>Continuar como invitado</Text>
+          <AppText style={styles.guestLabel}>Continuar como invitado</AppText>
         </ToneButton>
         <ToneButton
           disabled={busy}
           onPress={temporaryEnter}
           style={styles.temporary}
           tone={['rgba(180,35,24,0.06)', 'rgba(180,35,24,0.16)']}>
-          <Text style={styles.temporaryLabel}>Entrar al dashboard (temporal)</Text>
+          <AppText style={styles.temporaryLabel}>Entrar al dashboard (temporal)</AppText>
         </ToneButton>
       </View>
     </View>

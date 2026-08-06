@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { SurfaceColors } from '@/modules/reports/presentation/theme';
@@ -30,10 +31,10 @@ export function AlertCard({ alert }: { alert: Alert }) {
 
       <View style={styles.content}>
         <View style={styles.headerRow}>
-          <Text style={styles.title} numberOfLines={1}>
+          <AppText style={styles.title} numberOfLines={1}>
             {alert.title}
-          </Text>
-          <Text style={styles.distance}>{formatDistance(alert.distanceKm)}</Text>
+          </AppText>
+          <AppText style={styles.distance}>{formatDistance(alert.distanceKm)}</AppText>
         </View>
 
         <View style={styles.detailRow}>
@@ -42,9 +43,9 @@ export function AlertCard({ alert }: { alert: Alert }) {
             color={SurfaceColors.mutedText}
             size={12}
           />
-          <Text style={styles.detailText} numberOfLines={1}>
+          <AppText style={styles.detailText} numberOfLines={1}>
             {alert.address ?? incident?.label ?? 'Ubicación confirmada'}
-          </Text>
+          </AppText>
         </View>
 
         <View style={styles.detailRow}>
@@ -53,7 +54,7 @@ export function AlertCard({ alert }: { alert: Alert }) {
             color={SurfaceColors.mutedText}
             size={12}
           />
-          <Text style={styles.detailText}>{alert.date}</Text>
+          <AppText style={styles.detailText}>{alert.date}</AppText>
         </View>
       </View>
     </View>

@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { updateProfile } from 'firebase/auth';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
+import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { updateUserProfile } from '@/shared/firebase/auth';
 import { useAuth } from '@/shared/firebase/auth-context';
@@ -77,16 +78,16 @@ export function EditProfileScreen() {
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
           <AppSymbol name={backIcon} color={BrandColors.primary} size={22} />
         </Pressable>
-        <Text style={styles.topBarTitle}>Editar perfil</Text>
+        <AppText style={styles.topBarTitle}>Editar perfil</AppText>
         <View style={styles.topBarSpacer} />
       </View>
 
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
+        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.card}>
-          <Text style={styles.label}>Nombre o alias</Text>
+          <AppText style={styles.label}>Nombre o alias</AppText>
           <TextInput
             value={displayName}
             onChangeText={setDisplayName}
@@ -95,7 +96,7 @@ export function EditProfileScreen() {
             style={styles.input}
           />
 
-          <Text style={styles.label}>Teléfono</Text>
+          <AppText style={styles.label}>Teléfono</AppText>
           <TextInput
             value={phone}
             onChangeText={setPhone}
@@ -105,7 +106,7 @@ export function EditProfileScreen() {
             style={styles.input}
           />
 
-          <Text style={styles.label}>DNI</Text>
+          <AppText style={styles.label}>DNI</AppText>
           <TextInput
             value={dni}
             onChangeText={(value) => setDni(value.replace(/\D/g, '').slice(0, 8))}
@@ -116,7 +117,7 @@ export function EditProfileScreen() {
             style={styles.input}
           />
 
-          <Text style={styles.label}>Tipo de perfil</Text>
+          <AppText style={styles.label}>Tipo de perfil</AppText>
           <View style={styles.typeRow}>
             {(['citizen', 'fisher'] as ProfileType[]).map((type) => {
               const active = profileType === type;
@@ -131,15 +132,15 @@ export function EditProfileScreen() {
                     active && styles.typeButtonActive,
                     pressed && styles.pressed,
                   ]}>
-                  <Text style={[styles.typeLabel, active && styles.typeLabelActive]}>
+                  <AppText style={[styles.typeLabel, active && styles.typeLabelActive]}>
                     {type === 'citizen' ? 'Ciudadano' : 'Pescador'}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
           </View>
 
-          {!!error && <Text style={styles.error}>{error}</Text>}
+          {!!error && <AppText style={styles.error}>{error}</AppText>}
 
           <Pressable
             accessibilityRole="button"
@@ -147,7 +148,7 @@ export function EditProfileScreen() {
             disabled={busy}
             onPress={submit}
             style={({ pressed }) => [styles.submit, pressed && styles.pressed]}>
-            <Text style={styles.submitLabel}>{busy ? 'Guardando...' : 'Guardar cambios'}</Text>
+            <AppText style={styles.submitLabel}>{busy ? 'Guardando...' : 'Guardar cambios'}</AppText>
           </Pressable>
         </View>
       </ScrollView>

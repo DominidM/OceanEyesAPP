@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 // import { Redirect } from 'expo-router'; // TODO: reactivar cuando Firebase esté configurado y se requiera forzar login
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { useAuth } from '@/shared/firebase/auth-context';
@@ -111,21 +112,21 @@ export function ReportCreateScreen() {
             size={40}
           />
         </View>
-        <Text style={styles.successTitle}>
+        <AppText style={styles.successTitle}>
           {queued ? 'Reporte guardado' : 'Reporte enviado'}
-        </Text>
-        <Text style={styles.successBody}>
+        </AppText>
+        <AppText style={styles.successBody}>
           {queued
             ? !user
               ? 'Tu reporte quedó guardado en el dispositivo. Inicia sesión para poder enviarlo.'
               : 'Tu reporte se guardó en el dispositivo y se enviará automáticamente cuando sea posible.'
             : 'Gracias por colaborar con la vigilancia marítima. Tu reporte será revisado.'}
-        </Text>
+        </AppText>
         <Pressable
           accessibilityRole="button"
           onPress={handleCancel}
           style={({ pressed }) => [styles.successButton, pressed && styles.pressed]}>
-          <Text style={styles.successButtonLabel}>Volver al inicio</Text>
+          <AppText style={styles.successButtonLabel}>Volver al inicio</AppText>
         </Pressable>
       </View>
     );

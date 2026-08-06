@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { SectionHeader } from '@/shared/components/section-header';
 
@@ -32,12 +33,12 @@ export function ReportsHeader({ chips }: ReportsHeaderProps) {
             accessibilityRole="button"
             onPress={chip.onPress}
             style={[styles.chip, chip.active ? styles.chipActive : styles.chipInactive]}>
-            <Text style={[styles.chipText, chip.active ? styles.chipTextActive : styles.chipTextInactive]}>
+            <AppText style={[styles.chipText, chip.active ? styles.chipTextActive : styles.chipTextInactive]}>
               {chip.label}
-            </Text>
+            </AppText>
             {chip.count ? (
               <View style={styles.chipCount}>
-                <Text style={styles.chipCountText}>{chip.count}</Text>
+                <AppText style={styles.chipCountText}>{chip.count}</AppText>
               </View>
             ) : null}
           </Pressable>

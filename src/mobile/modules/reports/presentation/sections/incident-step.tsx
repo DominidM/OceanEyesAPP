@@ -1,6 +1,7 @@
 import * as Audio from 'expo-audio';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
@@ -97,12 +98,12 @@ export function IncidentStep({ initialIncidentId, onBack, onContinue }: Incident
               size={20}
             />
           </Pressable>
-          <Text style={styles.headerTitle}>Selecciona el incidente</Text>
+          <AppText style={styles.headerTitle}>Selecciona el incidente</AppText>
           <View style={styles.headerSpacer} />
         </View>
 
         <View style={styles.progressBlock}>
-          <Text style={styles.stepLabel}>Paso 4 de 5</Text>
+          <AppText style={styles.stepLabel}>Paso 4 de 5</AppText>
           <View style={styles.track}>
             <View style={styles.fill} />
           </View>
@@ -125,9 +126,9 @@ export function IncidentStep({ initialIncidentId, onBack, onContinue }: Incident
                 <View style={styles.cardIcon}>
                   <AppSymbol name={incident.icon} color={selected ? C.accent : C.textStrong} size={34} />
                 </View>
-                <Text style={[styles.cardLabel, selected && styles.cardLabelSelected]}>
+                <AppText style={[styles.cardLabel, selected && styles.cardLabelSelected]}>
                   {incident.label}
-                </Text>
+                </AppText>
                 {selected ? (
                   <View style={styles.badge}>
                     <AppSymbol
@@ -152,25 +153,25 @@ export function IncidentStep({ initialIncidentId, onBack, onContinue }: Incident
               />
             </View>
             <View style={styles.audioTexts}>
-              <Text style={styles.audioTitle}>Grabar audio</Text>
-              <Text style={styles.audioSubtitle}>Graba un audio describiendo el incidente</Text>
+              <AppText style={styles.audioTitle}>Grabar audio</AppText>
+              <AppText style={styles.audioSubtitle}>Graba un audio describiendo el incidente</AppText>
             </View>
           </View>
 
           <View style={styles.audioControls}>
-            <Text style={styles.timer}>{timerLabel}</Text>
+            <AppText style={styles.timer}>{timerLabel}</AppText>
             <Pressable
               accessibilityRole="button"
               onPress={handleRecordPress}
               style={({ pressed }) => [styles.recordButton, pressed && styles.pressed]}>
-              <Text style={styles.recordButtonLabel}>
+              <AppText style={styles.recordButtonLabel}>
                 {recorderState.isRecording ? 'Detener' : 'Grabar'}
-              </Text>
+              </AppText>
             </Pressable>
           </View>
 
           {micDenied ? (
-            <Text style={styles.micDenied}>Sin permiso de micrófono. Habilítalo en los ajustes.</Text>
+            <AppText style={styles.micDenied}>Sin permiso de micrófono. Habilítalo en los ajustes.</AppText>
           ) : null}
         </View>
       </ScrollView>
@@ -180,7 +181,7 @@ export function IncidentStep({ initialIncidentId, onBack, onContinue }: Incident
           accessibilityRole="button"
           onPress={handleContinue}
           style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
-          <Text style={styles.ctaLabel}>Continuar</Text>
+          <AppText style={styles.ctaLabel}>Continuar</AppText>
         </Pressable>
       </View>
     </View>

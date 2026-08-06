@@ -1,6 +1,7 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {ScrollView, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 
@@ -22,10 +23,10 @@ export function StatsStrip({ stats }: { stats: ReportStat[] }) {
       {stats.map((item) => (
         <View key={item.label} style={styles.statCard}>
           <View style={styles.statLabelRow}>
-            <Text style={styles.statLabel}>{item.label}</Text>
+            <AppText style={styles.statLabel}>{item.label}</AppText>
             {item.icon ? <AppSymbol name={item.icon} color={BrandColors.primary} size={11} /> : null}
           </View>
-          <Text style={styles.statValue}>{item.value}</Text>
+          <AppText style={styles.statValue}>{item.value}</AppText>
         </View>
       ))}
     </ScrollView>

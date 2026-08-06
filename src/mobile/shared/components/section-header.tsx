@@ -1,5 +1,6 @@
 import React, { PropsWithChildren } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
@@ -17,7 +18,7 @@ export function SectionHeader({ title, children, right }: SectionHeaderProps) {
     <View
       style={[styles.header, { paddingTop: insets.top, height: (hasChildren ? 113 : 72) + insets.top }]}>
       <View style={styles.headerTop}>
-        <Text style={styles.title}>{title}</Text>
+        <AppText style={styles.title}>{title}</AppText>
         {right}
       </View>
       {children}

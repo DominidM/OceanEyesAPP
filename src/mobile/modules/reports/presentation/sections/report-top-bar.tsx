@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { DimensionValue, Pressable, StyleSheet, Text, View } from 'react-native';
+import {DimensionValue, Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 
@@ -19,7 +20,7 @@ export function ReportTopBar({ step, totalSteps, progress }: ReportTopBarProps) 
   return (
     <View style={styles.header}>
       <View style={styles.row}>
-        <Text style={styles.title}>Nuevo Reporte</Text>
+        <AppText style={styles.title}>Nuevo Reporte</AppText>
         <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={8} style={styles.close}>
           <AppSymbol name={{ ios: 'xmark', android: 'close', web: 'close' }} color={C.headerText} size={14} />
         </Pressable>
@@ -27,8 +28,8 @@ export function ReportTopBar({ step, totalSteps, progress }: ReportTopBarProps) 
 
       <View style={styles.progressBlock}>
         <View style={styles.progressLabels}>
-          <Text style={styles.stepLabel}>{`Paso ${step} de ${totalSteps}`}</Text>
-          <Text style={styles.stepLabel}>{`${progress}%`}</Text>
+          <AppText style={styles.stepLabel}>{`Paso ${step} de ${totalSteps}`}</AppText>
+          <AppText style={styles.stepLabel}>{`${progress}%`}</AppText>
         </View>
         <View style={styles.track}>
           <View style={[styles.fill, { width: `${progress}%` as DimensionValue }]} />

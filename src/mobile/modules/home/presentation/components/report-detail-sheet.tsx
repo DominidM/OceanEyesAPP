@@ -1,5 +1,6 @@
 import React from 'react';
-import { Animated, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import {Animated, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
@@ -53,7 +54,7 @@ export function ReportDetailSheet({ report, onClose }: ReportDetailSheetProps) {
           <View style={styles.header}>
             <View style={styles.categoryRow}>
               <View style={[styles.categoryDot, { backgroundColor: CATEGORY_COLORS[report.category] }]} />
-              <Text style={styles.categoryLabel}>{categoryLabel}</Text>
+              <AppText style={styles.categoryLabel}>{categoryLabel}</AppText>
             </View>
             <Pressable
               accessibilityRole="button"
@@ -66,11 +67,11 @@ export function ReportDetailSheet({ report, onClose }: ReportDetailSheetProps) {
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-            <Text style={styles.title}>{report.title}</Text>
+            <AppText style={styles.title}>{report.title}</AppText>
 
             <View style={styles.metaRow}>
               <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
-                <Text style={[styles.statusText, { color: status.text }]}>{status.label}</Text>
+                <AppText style={[styles.statusText, { color: status.text }]}>{status.label}</AppText>
               </View>
               <View style={styles.dateRow}>
                 <AppSymbol
@@ -78,7 +79,7 @@ export function ReportDetailSheet({ report, onClose }: ReportDetailSheetProps) {
                   color="rgba(44, 44, 44, 0.6)"
                   size={15}
                 />
-                <Text style={styles.dateText}>{date}</Text>
+                <AppText style={styles.dateText}>{date}</AppText>
               </View>
             </View>
 
@@ -88,13 +89,13 @@ export function ReportDetailSheet({ report, onClose }: ReportDetailSheetProps) {
                 color={BrandColors.primary}
                 size={16}
               />
-              <Text style={styles.addressText}>{report.address ?? 'Ubicación confirmada'}</Text>
+              <AppText style={styles.addressText}>{report.address ?? 'Ubicación confirmada'}</AppText>
             </View>
 
             {report.description ? (
               <View style={styles.descriptionBlock}>
-                <Text style={styles.descriptionLabel}>Detalle</Text>
-                <Text style={styles.descriptionText}>{report.description}</Text>
+                <AppText style={styles.descriptionLabel}>Detalle</AppText>
+                <AppText style={styles.descriptionText}>{report.description}</AppText>
               </View>
             ) : null}
           </ScrollView>

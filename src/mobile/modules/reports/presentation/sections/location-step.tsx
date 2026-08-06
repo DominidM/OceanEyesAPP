@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import {ActivityIndicator, Pressable, StyleSheet, Switch, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
@@ -102,36 +103,36 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
       {showPermissionPanel ? (
         <View style={styles.permissionScreen}>
           <View style={styles.permissionCard}>
-            <Text style={styles.permissionTitle}>Permiso de ubicación</Text>
-            <Text style={styles.permissionBody}>
+            <AppText style={styles.permissionTitle}>Permiso de ubicación</AppText>
+            <AppText style={styles.permissionBody}>
               OceanEyes necesita acceso a tu ubicación para confirmar el lugar del reporte.
-            </Text>
+            </AppText>
             {permission.canAskAgain ? (
               <>
                 <Pressable
                   accessibilityRole="button"
                   onPress={requestPermission}
                   style={({ pressed }) => [styles.permissionPrimary, pressed && styles.pressed]}>
-                  <Text style={styles.permissionPrimaryLabel}>Permitir acceso</Text>
+                  <AppText style={styles.permissionPrimaryLabel}>Permitir acceso</AppText>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
                   onPress={onBack}
                   hitSlop={8}
                   style={styles.permissionSecondary}>
-                  <Text style={styles.permissionSecondaryLabel}>Cancelar</Text>
+                  <AppText style={styles.permissionSecondaryLabel}>Cancelar</AppText>
                 </Pressable>
               </>
             ) : (
               <>
-                <Text style={styles.permissionHint}>
+                <AppText style={styles.permissionHint}>
                   Habilita la ubicación en los ajustes del dispositivo para continuar.
-                </Text>
+                </AppText>
                 <Pressable
                   accessibilityRole="button"
                   onPress={onBack}
                   style={({ pressed }) => [styles.permissionPrimary, pressed && styles.pressed]}>
-                  <Text style={styles.permissionPrimaryLabel}>Volver</Text>
+                  <AppText style={styles.permissionPrimaryLabel}>Volver</AppText>
                 </Pressable>
               </>
             )}
@@ -165,7 +166,7 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
 
             <View pointerEvents="none" style={[styles.coordChipWrap, { top: insets.top + 80 }]}>
               <View style={styles.coordChip}>
-                <Text style={styles.coordText}>{coordLabel}</Text>
+                <AppText style={styles.coordText}>{coordLabel}</AppText>
               </View>
             </View>
 
@@ -180,7 +181,7 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
                     color={C.accent}
                     size={16}
                   />
-                  <Text style={styles.retryLabel}>Reintentar</Text>
+                  <AppText style={styles.retryLabel}>Reintentar</AppText>
                 </Pressable>
               </View>
             ) : null}
@@ -198,12 +199,12 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
                 size={20}
               />
             </Pressable>
-            <Text style={styles.headerTitle}>Confirmar ubicación</Text>
+            <AppText style={styles.headerTitle}>Confirmar ubicación</AppText>
             <View style={styles.headerSpacer} />
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>¿Es esta la ubicación correcta?</Text>
+            <AppText style={styles.cardTitle}>¿Es esta la ubicación correcta?</AppText>
 
             <View style={styles.detail}>
               <View style={styles.detailIcon}>
@@ -214,20 +215,20 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
                 />
               </View>
               <View style={styles.detailTexts}>
-                <Text style={styles.detailTitle}>{placeName ?? 'Ubicación actual'}</Text>
+                <AppText style={styles.detailTitle}>{placeName ?? 'Ubicación actual'}</AppText>
                 <View style={styles.detailRow}>
                   <AppSymbol
                     name={{ ios: 'location.fill', android: 'near-me', web: 'near-me' }}
                     color={C.accent}
                     size={10}
                   />
-                  <Text style={styles.detailSub}>{accuracyLabel}</Text>
+                  <AppText style={styles.detailSub}>{accuracyLabel}</AppText>
                 </View>
               </View>
             </View>
 
             <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>Ubicación manual</Text>
+              <AppText style={styles.toggleLabel}>Ubicación manual</AppText>
               <Switch
                 value={manual}
                 onValueChange={handleManualToggle}
@@ -246,14 +247,14 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
                 !mapRegion && styles.primaryDisabled,
                 pressed && styles.pressed,
               ]}>
-              <Text style={styles.primaryLabel}>Confirmar ubicación</Text>
+              <AppText style={styles.primaryLabel}>Confirmar ubicación</AppText>
             </Pressable>
 
             <Pressable
               accessibilityRole="button"
               onPress={() => handleManualToggle(true)}
               style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-              <Text style={styles.secondaryLabel}>Usar ubicación manual</Text>
+              <AppText style={styles.secondaryLabel}>Usar ubicación manual</AppText>
             </Pressable>
           </View>
 
@@ -263,9 +264,9 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
               color={C.offlineText}
               size={16}
             />
-            <Text style={styles.offlineText}>
+            <AppText style={styles.offlineText}>
               Estás en modo sin conexión. Tu reporte se guardará y se enviará cuando haya conexión.
-            </Text>
+            </AppText>
           </View>
         </>
       )}

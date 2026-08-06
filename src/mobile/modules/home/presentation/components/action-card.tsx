@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { shadow } from '@/shared/utils/shadows';
@@ -35,8 +36,8 @@ export function ActionCard({
       ]}>
       <View style={styles.actionCopy}>
         <View>
-          <Text style={styles.actionTitle}>{title}</Text>
-          <Text style={styles.actionSubtitle}>{subtitle}</Text>
+          <AppText style={styles.actionTitle}>{title}</AppText>
+          <AppText style={styles.actionSubtitle}>{subtitle}</AppText>
         </View>
 
         <View style={styles.actionIconRow}>

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 
@@ -24,7 +25,7 @@ export function ConsentCheckbox({ checked, onToggle, label }: ConsentCheckboxPro
           <AppSymbol name={{ ios: 'checkmark', android: 'check', web: 'check' }} color="#FFFFFF" size={14} />
         ) : null}
       </View>
-      <Text style={styles.label}>{label}</Text>
+      <AppText style={styles.label}>{label}</AppText>
     </Pressable>
   );
 }

@@ -2,7 +2,8 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { DimensionValue, Pressable, StyleSheet, Text, View } from 'react-native';
+import {DimensionValue, Pressable, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
@@ -108,18 +109,18 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
     return (
       <View style={styles.permissionScreen}>
         <View style={styles.permissionCard}>
-          <Text style={styles.permissionTitle}>Permiso de cámara</Text>
-          <Text style={styles.permissionBody}>
+          <AppText style={styles.permissionTitle}>Permiso de cámara</AppText>
+          <AppText style={styles.permissionBody}>
             OceanEyes necesita acceso a la cámara para tomar la foto del reporte.
-          </Text>
+          </AppText>
           <Pressable
             accessibilityRole="button"
             onPress={requestPermission}
             style={({ pressed }) => [styles.permissionPrimary, pressed && styles.pressed]}>
-            <Text style={styles.permissionPrimaryLabel}>Permitir acceso</Text>
+            <AppText style={styles.permissionPrimaryLabel}>Permitir acceso</AppText>
           </Pressable>
           <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={styles.permissionSecondary}>
-            <Text style={styles.permissionSecondaryLabel}>Cancelar</Text>
+            <AppText style={styles.permissionSecondaryLabel}>Cancelar</AppText>
           </Pressable>
         </View>
       </View>
@@ -185,13 +186,13 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
           <View style={styles.timer}>
             <View style={styles.timerRow}>
               <View style={styles.timerBox}>
-                <Text style={styles.timerValue}>{timerLabel(Math.floor(seconds / 60))}</Text>
+                <AppText style={styles.timerValue}>{timerLabel(Math.floor(seconds / 60))}</AppText>
               </View>
               <View style={styles.timerColon}>
-                <Text style={styles.timerColonText}>:</Text>
+                <AppText style={styles.timerColonText}>:</AppText>
               </View>
               <View style={styles.timerBox}>
-                <Text style={styles.timerValue}>{timerLabel(seconds % 60)}</Text>
+                <AppText style={styles.timerValue}>{timerLabel(seconds % 60)}</AppText>
               </View>
             </View>
             <View style={styles.timerTrack}>
@@ -208,14 +209,14 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
             accessibilityState={{ selected: mode === 'picture' }}
             onPress={() => handleModeChange('picture')}
             style={[styles.modeButton, mode === 'picture' && styles.modeButtonActive]}>
-            <Text style={[styles.modeLabel, mode === 'picture' && styles.modeLabelActive]}>Foto</Text>
+            <AppText style={[styles.modeLabel, mode === 'picture' && styles.modeLabelActive]}>Foto</AppText>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ selected: mode === 'video' }}
             onPress={() => handleModeChange('video')}
             style={[styles.modeButton, mode === 'video' && styles.modeButtonActive]}>
-            <Text style={[styles.modeLabel, mode === 'video' && styles.modeLabelActive]}>Video</Text>
+            <AppText style={[styles.modeLabel, mode === 'video' && styles.modeLabelActive]}>Video</AppText>
           </Pressable>
         </View>
 

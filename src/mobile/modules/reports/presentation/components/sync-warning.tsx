@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
+import { AppText } from '@/shared/components/app-text';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { useSync } from '@/shared/offline/sync-context';
@@ -30,15 +31,15 @@ export function SyncWarning({ onSync }: { onSync?: () => void }) {
           />
         </View>
         <View style={styles.syncCopy}>
-          <Text style={styles.syncTitle}>
+          <AppText style={styles.syncTitle}>
             {syncing ? 'Sincronizando reportes...' : `${countLabel} sin sincronizar`}
-          </Text>
-          <Text style={styles.syncDescription}>
+          </AppText>
+          <AppText style={styles.syncDescription}>
             {lastError ??
               (pendingCount > 0
                 ? `${pendingCount === 1 ? 'Espera' : 'Esperan'} conexión para enviarse`
                 : '')}
-          </Text>
+          </AppText>
         </View>
       </View>
 
@@ -53,7 +54,7 @@ export function SyncWarning({ onSync }: { onSync?: () => void }) {
           color="#FFFFFF"
           size={13}
         />
-        <Text style={styles.syncButtonText}>{syncing ? 'Sincronizando...' : 'Sincronizar ahora'}</Text>
+        <AppText style={styles.syncButtonText}>{syncing ? 'Sincronizando...' : 'Sincronizar ahora'}</AppText>
       </Pressable>
     </View>
   );

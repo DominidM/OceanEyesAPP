@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {ScrollView, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors } from '@/constants/theme';
@@ -117,8 +118,8 @@ export function ReportsSection() {
           ))}
           {listEmpty ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateTitle}>Sin reportes</Text>
-              <Text style={styles.emptyStateText}>No hay reportes en este filtro.</Text>
+              <AppText style={styles.emptyStateTitle}>Sin reportes</AppText>
+              <AppText style={styles.emptyStateText}>No hay reportes en este filtro.</AppText>
             </View>
           ) : null}
         </View>

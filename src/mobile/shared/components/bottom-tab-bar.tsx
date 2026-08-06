@@ -1,5 +1,6 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import {Platform, Pressable, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandColors, AppFonts as Fonts } from '@/constants/theme';
@@ -64,13 +65,13 @@ function BottomTabButton({ label, icon, active, onPress }: BottomTabItem) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.navItem}>
       <AppSymbol name={icon} color={color} size={25} />
-      <Text
+      <AppText
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.9}
         style={[styles.navLabel, { color }, active && styles.navLabelActive]}>
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }

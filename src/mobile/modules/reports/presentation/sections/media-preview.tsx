@@ -2,7 +2,8 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
+import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
@@ -64,7 +65,7 @@ export function MediaPreview({ media, onRetake, onContinue, onClose }: MediaPrev
           accessibilityRole="button"
           onPress={onContinue}
           style={({ pressed }) => [styles.continueButton, pressed && styles.pressed]}>
-          <Text style={styles.continueLabel}>Continuar</Text>
+          <AppText style={styles.continueLabel}>Continuar</AppText>
         </Pressable>
       </View>
     </View>
