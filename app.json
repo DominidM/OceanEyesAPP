@@ -67,6 +67,20 @@
         {
           "defaultChannel": "oceaneyes"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "OceanEyes necesita acceso a tus fotos para adjuntarlas al reporte."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "OceanEyes necesita acceso a tu galería para mostrarte la última foto.",
+          "savePhotosPermission": "OceanEyes necesita acceso para guardar fotos del reporte.",
+          "isAccessMediaLocationEnabled": false
+        }
       ]
     ],
     "experiments": {

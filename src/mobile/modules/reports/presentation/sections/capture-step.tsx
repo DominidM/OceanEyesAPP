@@ -1,5 +1,8 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as MediaLibrary from 'expo-media-library';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import {DimensionValue, Pressable, StyleSheet, View} from 'react-native';
@@ -32,6 +35,32 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
   const [media, setMedia] = useState<CaptureMedia | null>(null);
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [galleryThumb, setGalleryThumb] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const current = await MediaLibrary.getPermissionsAsync();
+        let granted = current.granted;
+        if (current.status === 'undetermined') {
+          const requested = await MediaLibrary.requestPermissionsAsync();
+          granted = requested.granted;
+        }
+        if (!granted || !active) return;
+        const { assets } = await MediaLibrary.getAssetsAsync({
+          first: 1,
+          sortBy: [[MediaLibrary.SortBy.creationTime, false]],
+        });
+        if (active && assets[0]?.uri) setGalleryThumb(assets[0].uri);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!recording) return;
@@ -93,6 +122,23 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
       cameraRef.current?.stopRecording();
     }
     setMode(next);
+  };
+
+  const pickFromGallery = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets[0]?.uri) return;
+      const picked: CaptureMedia = { type: 'photo', uri: result.assets[0].uri };
+      setGalleryThumb(picked.uri);
+      setMedia(picked);
+      onMedia(picked);
+    } catch {
+      /* ignore */
+    }
   };
 
   if (media != null && !recording) {
@@ -221,13 +267,22 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
         </View>
 
         <View style={styles.captureRow}>
-          <View style={styles.gallery}>
-            <AppSymbol
-              name={{ ios: 'photo.on.rectangle', android: 'collections', web: 'collections' }}
-              color={C.whiteDim}
-              size={22}
-            />
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Abrir galería"
+            disabled={recording}
+            onPress={() => void pickFromGallery()}
+            style={({ pressed }) => [styles.gallery, pressed && styles.pressed]}>
+            {galleryThumb ? (
+              <Image source={{ uri: galleryThumb }} style={styles.galleryThumb} contentFit="cover" />
+            ) : (
+              <AppSymbol
+                name={{ ios: 'photo.on.rectangle', android: 'collections', web: 'collections' }}
+                color={C.whiteDim}
+                size={22}
+              />
+            )}
+          </Pressable>
 
           <Pressable
             accessibilityRole="button"
@@ -522,6 +577,10 @@ const styles = StyleSheet.create({
     borderColor: C.galleryBorder,
     borderRadius: 48,
     overflow: 'hidden',
+  },
+  galleryThumb: {
+    width: '100%',
+    height: '100%',
   },
   shutter: {
     width: 96,
