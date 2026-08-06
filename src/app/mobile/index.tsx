@@ -11,8 +11,8 @@ export default function MobileIndex() {
 
   if (loading) return null;
 
-  // Acceso restringido: solo usuarios autenticados entran al home.
-  if (guest) return <Redirect href="/mobile/login" />;
+  // TEMPORAL: en desarrollo se permite entrar sin sesión (botón "Entrar al dashboard (temporal)").
+  if (guest && !__DEV__) return <Redirect href="/mobile/login" />;
 
   return <HomeScreen />;
 }

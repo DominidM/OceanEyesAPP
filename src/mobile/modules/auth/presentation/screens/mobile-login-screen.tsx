@@ -122,6 +122,9 @@ export default function MobileLoginScreen() {
     router.replace('/mobile');
   };
 
+  // TEMPORAL: acceso directo al dashboard sin autenticación (solo dev).
+  const temporaryEnter = () => router.replace('/mobile');
+
   const submitWithGoogle = async () => {
     setError('');
     if (!isFirebaseConfigured()) {
@@ -237,6 +240,13 @@ export default function MobileLoginScreen() {
           tone={['rgba(19,78,94,0)', 'rgba(19,78,94,0.12)']}>
           <Text style={styles.guestLabel}>Continuar como invitado</Text>
         </ToneButton>
+        <ToneButton
+          disabled={busy}
+          onPress={temporaryEnter}
+          style={styles.temporary}
+          tone={['rgba(180,35,24,0.06)', 'rgba(180,35,24,0.16)']}>
+          <Text style={styles.temporaryLabel}>Entrar al dashboard (temporal)</Text>
+        </ToneButton>
       </View>
     </View>
   );
@@ -271,4 +281,6 @@ const styles = StyleSheet.create({
   dividerText: { color: 'rgba(44, 44, 44, 0.5)', fontFamily: Fonts.body, fontSize: 12 },
   guest: { alignItems: 'center', borderWidth: 1, borderColor: 'rgba(19, 78, 94, 0.3)', borderRadius: 999, paddingVertical: Spacing.three },
   guestLabel: { color: BrandColors.primary, fontFamily: Fonts.label, fontWeight: '700' },
+  temporary: { alignItems: 'center', borderWidth: 1, borderColor: '#B42318', borderStyle: 'dashed', borderRadius: 999, paddingVertical: Spacing.three },
+  temporaryLabel: { color: '#B42318', fontFamily: Fonts.label, fontWeight: '700' },
 });
