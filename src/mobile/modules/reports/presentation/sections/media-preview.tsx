@@ -27,7 +27,7 @@ export function MediaPreview({ media, onRetake, onContinue, onClose }: MediaPrev
     <View style={styles.screen}>
       <View style={styles.mediaArea}>
         {media.type === 'photo' ? (
-          <Image source={{ uri: media.uri }} style={styles.media} contentFit="cover" />
+          <Image source={{ uri: media.uri }} style={styles.media} contentFit="contain" />
         ) : (
           <VideoPreview uri={media.uri} />
         )}

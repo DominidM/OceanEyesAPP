@@ -41,18 +41,26 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
     let active = true;
     (async () => {
       try {
-        const current = await MediaLibrary.getPermissionsAsync();
-        let granted = current.granted;
-        if (current.status === 'undetermined') {
-          const requested = await MediaLibrary.requestPermissionsAsync();
-          granted = requested.granted;
+        let permission = await MediaLibrary.getPermissionsAsync();
+        const canRead = permission.granted || permission.accessPrivileges === 'limited';
+        if (!canRead) {
+          permission = await MediaLibrary.requestPermissionsAsync();
         }
-        if (!granted || !active) return;
+        if (!active) return;
+        if (!permission.granted && permission.accessPrivileges !== 'limited') return;
         const { assets } = await MediaLibrary.getAssetsAsync({
           first: 1,
           sortBy: [[MediaLibrary.SortBy.creationTime, false]],
         });
-        if (active && assets[0]?.uri) setGalleryThumb(assets[0].uri);
+        if (!active || !assets[0]) return;
+        let thumbUri = assets[0].uri;
+        try {
+          const info = await MediaLibrary.getAssetInfoAsync(assets[0].id);
+          if (info.localUri) thumbUri = info.localUri;
+        } catch {
+          /* keep uri */
+        }
+        if (active) setGalleryThumb(thumbUri);
       } catch {
         /* ignore */
       }
