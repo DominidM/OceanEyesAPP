@@ -16,6 +16,7 @@ export type UserProfile = {
   totalPointsEarned: number;
   verifiedReportsCount: number;
   status: AccountStatus;
+  bannedUntil?: Timestamp | null;
   deviceHash?: string;
   banReason?: string;
   bannedBy?: string;

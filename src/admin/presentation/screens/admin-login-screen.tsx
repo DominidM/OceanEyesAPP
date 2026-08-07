@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
-import { loginWithEmail, rememberAdminSession } from '@/shared/firebase/auth';
+import { getUserProfile, loginWithEmail, logout, rememberAdminSession } from '@/shared/firebase/auth';
 
 const logoImg = require('../../../../assets/images/OCEAN-EYES-LOGO.png');
 
@@ -19,7 +19,13 @@ export function AdminLoginScreen() {
     setError('');
     setBusy(true);
     try {
-      await loginWithEmail(email.trim(), password);
+      const user = await loginWithEmail(email.trim(), password);
+      const profile = await getUserProfile(user.uid);
+      if (!profile || profile.role !== 'admin') {
+        await logout();
+        setError('Acceso denegado. Esta cuenta no tiene permisos de administrador.');
+        return;
+      }
       rememberAdminSession(email.trim(), password);
       router.replace('/admin');
     } catch (e: any) {

@@ -9,6 +9,7 @@ import { setUserStatus } from '@/shared/firebase/auth';
 import type { UserProfile } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
 import { Badge, Card, Button, PaginationFooter, EmptyState, SectionHeader, LoadingState } from '@admin/presentation/components/ui';
+import { BanModal } from './ban-modal';
 
 type UserRow = UserProfile & { id: string };
 
@@ -22,6 +23,7 @@ export function UsersList() {
   const [pageCursors, setPageCursors] = useState<any[]>([]);
   const [totalDocs, setTotalDocs] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [banning, setBanning] = useState<UserRow | null>(null);
   const currentPageRef = useRef(currentPage);
 
   useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
@@ -73,16 +75,31 @@ export function UsersList() {
   }, []);
 
   const toggleStatus = async (u: UserRow) => {
-    const next = u.status === 'suspended' ? 'active' : 'suspended';
-    await setUserStatus(u.id, next, {
-      reason: next === 'suspended' ? 'Suspendido por el administrador.' : undefined,
-      adminUid: firebaseAuth?.currentUser?.uid,
-    });
-    setUsers((prev) => prev.map((row) => (row.id === u.id ? { ...row, status: next } : row)));
+    await setUserStatus(u.id, 'active');
+    setUsers((prev) => prev.map((row) => (row.id === u.id ? { ...row, status: 'active' } : row)));
     await loadPage(currentPageRef.current);
   };
 
-  const roleConfig = (role: string) => {
+  const confirmBan = async (endsAt: Date | null) => {
+    if (!banning) return;
+    const u = banning;
+    setBanning(null);
+    await setUserStatus(u.id, 'suspended', {
+      reason: endLabel(endsAt),
+      adminUid: firebaseAuth?.currentUser?.uid,
+      endsAt,
+    });
+    setUsers((prev) => prev.map((row) => (row.id === u.id ? { ...row, status: 'suspended' } : row)));
+    await loadPage(currentPageRef.current);
+  };
+
+  const endLabel = (endsAt: Date | null) => {
+  if (!endsAt) return 'Baneo permanente por el administrador.';
+  const date = endsAt.toLocaleString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return `Baneo hasta el ${date} por el administrador.`;
+};
+
+const roleConfig = (role: string) => {
     switch (role) {
       case 'admin': return { label: 'Admin', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' };
       case 'fisher': return { label: 'Pescador', color: '#10B981', bg: 'rgba(16,185,129,0.12)' };
@@ -96,7 +113,7 @@ export function UsersList() {
     <View style={styles.content}>
       <SectionHeader
         title="Administración de usuarios"
-        subtitle="Gestiona roles, puntos y suspende cuentas de la plataforma."
+        subtitle="Gestiona roles, puntos y banea cuentas de la plataforma."
         actions={[
           <Button key="add" label="Agregar" onPress={() => router.push('/admin/users/new')} />,
         ]}
@@ -146,16 +163,16 @@ export function UsersList() {
                   </View>
                   <View style={styles.cellRole}>
                     <Badge label={rc.label} color={rc.color} bg={rc.bg} />
-                    {suspended && <Badge label="Suspendido" color={colors.danger} bg={colors.dangerBg} />}
+                    {suspended && <Badge label="Baneado" color={colors.danger} bg={colors.dangerBg} />}
                   </View>
                   <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.pointsBalance ?? 0}</Text>
                   <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.verifiedReportsCount ?? 0}</Text>
                   <View style={styles.cellActions}>
                     {u.role !== 'admin' ? (
                       <Button
-                        label={suspended ? 'Activar' : 'Suspender'}
+                        label={suspended ? 'Desbanear' : 'Banear'}
                         variant={suspended ? 'primary' : 'danger'}
-                        onPress={() => toggleStatus(u)}
+                        onPress={() => (suspended ? toggleStatus(u) : setBanning(u))}
                       />
                     ) : (
                       <Button
@@ -182,6 +199,14 @@ export function UsersList() {
           />
         </Card>
       )}
+
+      {banning ? (
+        <BanModal
+          userName={banning.displayName ?? banning.email ?? banning.id}
+          onCancel={() => setBanning(null)}
+          onConfirm={confirmBan}
+        />
+      ) : null}
     </View>
   );
 }
