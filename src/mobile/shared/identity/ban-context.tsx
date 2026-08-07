@@ -24,8 +24,14 @@ export function BanProvider({ children }: React.PropsWithChildren) {
 
     const run = async () => {
       if (profile?.status === 'suspended') {
-        setVerdict('account_suspended');
-        setReason(profile.banReason ?? 'Tu cuenta ha sido suspendida.');
+        const until = profile.bannedUntil?.toDate?.();
+        if (until && until.getTime() <= Date.now()) {
+          setVerdict('ok');
+          setReason(null);
+        } else {
+          setVerdict('account_suspended');
+          setReason(profile.banReason ?? until ? `Tu cuenta estará baneada hasta el ${until?.toLocaleString('es-PE')}.` : 'Tu cuenta ha sido suspendida.');
+        }
         return;
       }
 

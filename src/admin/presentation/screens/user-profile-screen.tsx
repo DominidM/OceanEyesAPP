@@ -44,7 +44,15 @@ export function UserProfileScreen() {
         { label: 'Puntos', value: String(profile.pointsBalance ?? 0) },
         { label: 'Puntos ganados', value: String(profile.totalPointsEarned ?? 0) },
         { label: 'Reportes verificados', value: String(profile.verifiedReportsCount ?? 0) },
-        { label: 'Estado', value: suspended ? 'Suspendido' : 'Activo' },
+        { label: 'Estado', value: suspended ? 'Baneado' : 'Activo' },
+        {
+          label: 'Fin del baneo',
+          value: suspended
+            ? profile.bannedUntil?.toDate
+              ? profile.bannedUntil.toDate().toLocaleString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+              : 'Permanente'
+            : '—',
+        },
         {
           label: 'Registro',
           value: profile.createdAt?.toDate?.()
@@ -83,7 +91,7 @@ export function UserProfileScreen() {
 
               <View style={styles.headingRow}>
                 {rc && <Badge label={rc.label} color={rc.color} bg={rc.bg} />}
-                {suspended && <Badge label="Suspendido" color={colors.danger} bg={colors.dangerBg} />}
+                {suspended && <Badge label="Baneado" color={colors.danger} bg={colors.dangerBg} />}
               </View>
 
               <ReportDataList rows={rows} />
@@ -91,9 +99,9 @@ export function UserProfileScreen() {
 
             {profile.banReason ? (
               <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
-                <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Suspensión</Text>
+                <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Baneo</Text>
                 <View style={[styles.innerSubBlock, { borderColor: colors.cardBorder }]}>
-                  <Text style={[styles.subBlockHint, { color: colors.contentTextMuted }]}>Motivo de suspensión</Text>
+                  <Text style={[styles.subBlockHint, { color: colors.contentTextMuted }]}>Motivo de baneo</Text>
                   <Text style={[styles.banText, { color: colors.contentText }]}>{profile.banReason}</Text>
                 </View>
               </View>

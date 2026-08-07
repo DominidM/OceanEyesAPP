@@ -6,7 +6,7 @@ import { AdminShell } from '@admin/layout/admin-shell';
 import { Button, Card, SectionHeader } from '@admin/presentation/components/ui';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { createUserByAdmin } from '@/shared/firebase/auth';
-import type { ProfileType } from '@/shared/firebase/types';
+import type { UserRole } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
 
 export function UsersNewScreen() {
@@ -15,9 +15,11 @@ export function UsersNewScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [dni, setDni] = useState('');
-  const [profileType, setProfileType] = useState<ProfileType>('citizen');
+  const [role, setRole] = useState<UserRole>('citizen');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const isAdmin = role === 'admin';
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async () => {
@@ -33,7 +35,8 @@ export function UsersNewScreen() {
         email: email.trim(),
         password,
         displayName: displayName.trim(),
-        profileType,
+        profileType: isAdmin ? 'citizen' : role,
+        role,
         dni: dni.trim() || undefined,
       });
       setSuccess(`Usuario ${displayName.trim()} creado correctamente.`);
@@ -41,6 +44,7 @@ export function UsersNewScreen() {
       setEmail('');
       setPassword('');
       setDni('');
+      setRole('citizen');
     } catch (e: any) {
       const raw = e?.code || e?.message || String(e);
       setError(raw === 'auth/email-already-in-use' ? 'Ese correo ya está registrado.' : raw);
@@ -54,12 +58,12 @@ export function UsersNewScreen() {
     { borderColor: colors.inputBorder, color: colors.inputText, backgroundColor: colors.inputBg },
   ];
 
-  const typeOption = (value: ProfileType, label: string) => {
-    const selected = profileType === value;
+  const roleOption = (value: UserRole, label: string) => {
+    const selected = role === value;
     return (
       <Pressable
         key={value}
-        onPress={() => setProfileType(value)}
+        onPress={() => setRole(value)}
         style={[
           styles.typeBtn,
           { borderColor: selected ? colors.primary : colors.inputBorder },
@@ -77,7 +81,7 @@ export function UsersNewScreen() {
     <AdminShell title="Nuevo usuario" breadcrumb={[{ label: 'Usuarios', href: '/admin/users' }, { label: 'Nuevo' }]}>
       <SectionHeader
         title="Crear usuario"
-        subtitle="Registra una cuenta para un pescador o ciudadano."
+        subtitle="Registra una cuenta y asígnale un rol (usuario o admin) y un tipo de perfil."
       />
 
       <Card style={styles.card}>
@@ -139,10 +143,11 @@ export function UsersNewScreen() {
             </View>
 
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.contentTextMuted }]}>Tipo de perfil</Text>
+              <Text style={[styles.label, { color: colors.contentTextMuted }]}>Tipo de cuenta</Text>
               <View style={styles.typeRow}>
-                {typeOption('citizen', 'Ciudadano')}
-                {typeOption('fisher', 'Pescador')}
+                {roleOption('citizen', 'Ciudadano')}
+                {roleOption('fisher', 'Pescador')}
+                {roleOption('admin', 'Admin')}
               </View>
             </View>
           </View>

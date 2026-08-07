@@ -21,7 +21,8 @@ import {
 import { NativeModules, Platform, TurboModuleRegistry } from 'react-native';
 
 import { firebaseAuth, firestore } from './app';
-import type { ProfileType, UserProfile } from './types';
+import { banUser, unbanUser } from './bans';
+import type { ProfileType, UserProfile, UserRole } from './types';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
@@ -123,13 +124,14 @@ export async function createUserByAdmin(input: {
   password: string;
   displayName: string;
   profileType: ProfileType;
+  role?: UserRole;
   dni?: string;
 }) {
   const credential = await createUserWithEmailAndPassword(requireAuth(), input.email, input.password);
   await updateProfile(credential.user, { displayName: input.displayName });
 
   await setDoc(doc(firestore, 'users', credential.user.uid), {
-    role: 'user',
+    role: input.role ?? 'user',
     profileType: input.profileType,
     displayName: input.displayName,
     email: input.email,
@@ -298,13 +300,24 @@ export async function changePassword(currentPassword: string, newPassword: strin
 export async function setUserStatus(
   uid: string,
   status: UserProfile['status'],
-  options?: { reason?: string; adminUid?: string },
+  options?: { reason?: string; adminUid?: string; endsAt?: Date | null },
 ): Promise<void> {
   await updateDoc(doc(firestore, 'users', uid), {
     status,
     banReason: status === 'suspended' ? options?.reason ?? null : null,
     bannedBy: status === 'suspended' ? options?.adminUid ?? null : null,
     bannedAt: status === 'suspended' ? serverTimestamp() : null,
+    bannedUntil: status === 'suspended' ? (options?.endsAt ?? null) : null,
     updatedAt: serverTimestamp(),
   });
+
+  if (status === 'suspended') {
+    await banUser(uid, {
+      reason: options?.reason ?? undefined,
+      bannedBy: options?.adminUid,
+      endsAt: options?.endsAt ?? null,
+    });
+  } else {
+    await unbanUser(uid);
+  }
 }

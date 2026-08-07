@@ -11,7 +11,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { key: 'dashboard', label: 'Dashboard', icon: 'tachometer-alt', href: '/admin' },
   { key: 'reports', label: 'Reportes', icon: 'clipboard-list', href: '/admin/reports' },
   { key: 'users', label: 'Usuarios', icon: 'users', href: '/admin/users' },
-  { key: 'bans', label: 'Dispositivos baneados', icon: 'ban', href: '/admin/bans' },
+  { key: 'bans', label: 'Baneos', icon: 'ban', href: '/admin/bans' },
   { key: 'rewards', label: 'Recompensas', icon: 'award', href: '/admin/rewards' },
   { key: 'redemptions', label: 'Canjes', icon: 'exchange-alt', href: '/admin/redemptions' },
 ];

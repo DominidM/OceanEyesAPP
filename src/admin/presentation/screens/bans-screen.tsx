@@ -1,23 +1,60 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
-import { banDevice, listBannedDevices, unbanDevice, type BannedDevice } from '@/shared/firebase/bans';
+import { listBannedUsers, unbanUser } from '@/shared/firebase/bans';
+import { getUserProfile, setUserStatus } from '@/shared/firebase/auth';
+import type { UserProfile } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
 import { AdminShell } from '@admin/layout/admin-shell';
 import { Badge, Button, Card, SectionHeader, LoadingState, EmptyState } from '@admin/presentation/components/ui';
 
+type BannedUser = Omit<UserProfile, 'uid'> & {
+  uid: string;
+  endsAt?: { toDate?: () => Date } | null;
+};
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('');
+}
+
+function formatDate(d?: { toDate?: () => Date } | null) {
+  if (!d?.toDate) return null;
+  try {
+    return d.toDate().toLocaleString('es-PE', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return null;
+  }
+}
+
 export function BansScreen() {
   const { colors } = useAdminTheme();
-  const [devices, setDevices] = useState<BannedDevice[]>([]);
+  const [bannedUsers, setBannedUsers] = useState<BannedUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hash, setHash] = useState('');
-  const [message, setMessage] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setDevices(await listBannedDevices());
+      const bans = await listBannedUsers();
+      const profiles = await Promise.all(
+        bans.map(async (b) => {
+          const profile = await getUserProfile(b.id);
+          return profile ? ({ ...profile, uid: b.id, banReason: b.reason, endsAt: b.endsAt } as BannedUser) : null;
+        }),
+      );
+      setBannedUsers(profiles.filter((p): p is BannedUser => p != null));
     } finally {
       setLoading(false);
     }
@@ -27,73 +64,81 @@ export function BansScreen() {
     void load();
   }, [load]);
 
-  const handleBan = async () => {
-    const trimmed = hash.trim();
-    if (!trimmed) return;
-    await banDevice(trimmed, { reason: 'Ban manual desde el panel' });
-    setHash('');
-    setMessage('Dispositivo baneado.');
-    await load();
-  };
-
-  const handleUnban = async (deviceHash: string) => {
-    await unbanDevice(deviceHash);
+  const handleUnbanUser = async (userId: string) => {
+    await unbanUser(userId);
+    await setUserStatus(userId, 'active');
     await load();
   };
 
   return (
-    <AdminShell title="Dispositivos baneados">
+    <AdminShell title="Baneos">
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <SectionHeader
-          title="Dispositivos baneados"
-          subtitle="Administra los dispositivos bloqueados por reportes falsos."
+          title="Usuarios baneados"
+          subtitle="Cuentas suspendidas de la plataforma."
         />
-        <Card style={styles.formCard}>
-          <Text style={[styles.formLabel, { color: colors.contentText }]}>Banear dispositivo manualmente</Text>
-          <Text style={[styles.formHint, { color: colors.contentTextMuted }]}>
-            Ingresa el hash de dispositivo (o banea desde un reporte descartado).
-          </Text>
-          <View style={styles.formRow}>
-            <TextInput
-              value={hash}
-              onChangeText={setHash}
-              placeholder="deviceHash..."
-              placeholderTextColor={colors.contentTextMuted}
-              style={[styles.input, { color: colors.contentText, borderColor: colors.cardBorder }]}
-            />
-            <Button label="Banear" variant="danger" onPress={handleBan} />
-          </View>
-          {message ? <Text style={[styles.message, { color: colors.success }]}>{message}</Text> : null}
-        </Card>
-
-        {loading && devices.length === 0 && (
-          <LoadingState label="Cargando dispositivos..." />
+        {loading && bannedUsers.length === 0 && (
+          <LoadingState label="Cargando baneos..." />
         )}
-        {!loading && devices.length === 0 && (
+        {!loading && bannedUsers.length === 0 && (
           <EmptyState
-            icon="shield-check-outline"
-            title="Sin dispositivos baneados"
-            description="No hay dispositivos bloqueados. Puedes banear manualmente o desde un reporte descartado."
+            icon="account-cancel-outline"
+            title="Sin usuarios baneados"
+            description="No hay cuentas baneadas. Puedes banear desde la lista de usuarios."
           />
         )}
 
         <View style={styles.list}>
-          {devices.map((device) => (
-            <Card key={device.id} style={styles.row}>
-              <View style={styles.rowBody}>
-                <Text style={[styles.hash, { color: colors.cardText }]} numberOfLines={1}>
-                  {device.id}
-                </Text>
-                <View style={styles.rowMeta}>
-                  <Badge label="Baneado" color={colors.danger} bg={colors.dangerBg} />
-                  <Text style={[styles.reason, { color: colors.contentTextMuted }]}>
-                    {device.reason ?? 'Sin motivo'}
-                  </Text>
+          {bannedUsers.map((user) => {
+            const name = user.displayName ?? user.email ?? 'Usuario';
+            const endsAt = formatDate(user.endsAt);
+            return (
+              <Card key={user.uid} style={styles.row}>
+                <View style={styles.rowHeader}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{initials(name)}</Text>
+                  </View>
+                  <View style={styles.userInfo}>
+                    <View style={styles.nameRow}>
+                      <Text style={[styles.name, { color: colors.cardText }]} numberOfLines={1}>
+                        {name}
+                      </Text>
+                      <Badge label="Baneado" color={colors.danger} bg={colors.dangerBg} />
+                    </View>
+                    {user.email ? (
+                      <Text style={[styles.email, { color: colors.contentTextMuted }]} numberOfLines={1}>
+                        {user.email}
+                      </Text>
+                    ) : null}
+                  </View>
                 </View>
-              </View>
-              <Button label="Desbanear" variant="secondary" onPress={() => handleUnban(device.id)} />
-            </Card>
-          ))}
+
+                <View style={[styles.banBlock, { borderColor: colors.dangerBg, backgroundColor: colors.dangerBg }]}>
+                  <View style={styles.banBlockIcon}>
+                    <MaterialCommunityIcons name="cancel" size={16} color={colors.danger} />
+                  </View>
+                  <View style={styles.banBlockText}>
+                    <Text style={[styles.banReason, { color: colors.contentText }]}>
+                      {user.banReason ?? 'Sin motivo especificado'}
+                    </Text>
+                    <Text style={[styles.banDate, { color: colors.contentTextMuted }]}>
+                      {endsAt ? `Baneado hasta el ${endsAt}` : 'Baneo permanente'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.rowFooter}>
+                  <View style={styles.roleMeta}>
+                    <MaterialCommunityIcons name="account" size={14} color={colors.contentTextMuted} />
+                    <Text style={[styles.roleText, { color: colors.contentTextMuted }]}>
+                      {user.profileType === 'fisher' ? 'Pescador' : 'Ciudadano'}
+                    </Text>
+                  </View>
+                  <Button label="Desbanear" variant="secondary" onPress={() => handleUnbanUser(user.uid)} />
+                </View>
+              </Card>
+            );
+          })}
         </View>
       </ScrollView>
     </AdminShell>
@@ -104,26 +149,78 @@ export default BansScreen;
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { gap: Spacing.four },
-  formCard: { gap: Spacing.two },
-  formLabel: { fontFamily: Fonts.label, fontSize: 16, fontWeight: '700' },
-  formHint: { fontFamily: Fonts.body, fontSize: 13 },
-  formRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+  content: { gap: Spacing.four, paddingBottom: Spacing.six },
+  list: { gap: Spacing.three },
+  row: { gap: Spacing.three },
+  rowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(185,28,28,0.10)',
+  },
+  avatarText: {
+    fontFamily: Fonts.headline,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#B91C1C',
+  },
+  userInfo: { flex: 1, gap: Spacing.one - 2 },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  name: {
+    fontFamily: Fonts.headline,
+    fontSize: 16,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  email: {
     fontFamily: Fonts.body,
     fontSize: 13,
   },
-  message: { fontFamily: Fonts.body, fontSize: 13 },
-  empty: { fontFamily: Fonts.body, fontSize: 14 },
-  list: { gap: Spacing.two },
-  row: { gap: Spacing.three },
-  rowBody: { gap: Spacing.one },
-  hash: { fontFamily: Fonts.label, fontSize: 13, fontWeight: '600' },
-  rowMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  reason: { fontFamily: Fonts.body, fontSize: 13, flexShrink: 1 },
+  banBlock: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: Spacing.three,
+  },
+  banBlockIcon: {
+    marginTop: 2,
+  },
+  banBlockText: { flex: 1, gap: 2 },
+  banReason: {
+    fontFamily: Fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  banDate: {
+    fontFamily: Fonts.body,
+    fontSize: 12,
+  },
+  rowFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  roleMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  roleText: {
+    fontFamily: Fonts.body,
+    fontSize: 13,
+  },
 });
