@@ -11,7 +11,7 @@ import { NotificationsWatcher } from '@/shared/notifications/report-notification
 export default function MobileLayout() {
   const { loaded } = useAppFonts();
 
-  if (Platform.OS === 'web') return <Redirect href="/admin" />;
+  if (Platform.OS === 'web') return <Redirect href="/" />;
   if (!loaded) return null;
 
   return (
