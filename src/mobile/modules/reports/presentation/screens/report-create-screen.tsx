@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 // import { Redirect } from 'expo-router'; // TODO: reactivar cuando Firebase esté configurado y se requiera forzar login
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
@@ -8,104 +8,46 @@ import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { useGuestStatus } from '@/shared/hooks/use-guest-status';
+import { useBan } from '@/shared/identity/ban-context';
+import { useConnectivity } from '@/shared/offline/connectivity-context';
+import { useDb } from '@/shared/hooks/use-db';
+import { useViewModel } from '@/shared/viewmodels/use-view-model';
 import { shadow } from '@/shared/utils/shadows';
 
-import { useReportSubmission } from '../hooks/use-report-submission';
+import { ReportCreateViewModel, TOTAL_STEPS } from '../viewmodels/report-create.viewmodel';
 import { DniStep } from '../sections/dni-step';
 import { CaptureStep } from '../sections/capture-step';
-import { IncidentStep, type IncidentSelection, type ReportAudio } from '../sections/incident-step';
-import { LocationStep, type ReportLocation } from '../sections/location-step';
-import type { CaptureMedia } from '../sections/media-preview';
+import { IncidentStep } from '../sections/incident-step';
+import { LocationStep } from '../sections/location-step';
 import { ReportTopBar } from '../sections/report-top-bar';
 import { SummaryStep } from '../sections/summary-step';
 import { ReportFlowColors as C, SummaryColors as SC } from '../theme';
-
-const TOTAL_STEPS = 5;
-const STEP_PROGRESS = 20;
 
 export function ReportCreateScreen() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
   const isGuest = useGuestStatus();
-  const { submit, sending, sendError, queued, submitted } = useReportSubmission();
-  const [step, setStep] = useState(1);
-  const [dni, setDni] = useState('');
-  const [consent, setConsent] = useState(false);
-  const [anonymous, setAnonymous] = useState(true);
-  const [media, setMedia] = useState<CaptureMedia | null>(null);
-  const [location, setLocation] = useState<ReportLocation | null>(null);
-  const [incident, setIncident] = useState<IncidentSelection['incident'] | null>(null);
-  const [audio, setAudio] = useState<ReportAudio | null>(null);
-  const [createdAt] = useState(() => new Date());
+  const { verdict } = useBan();
+  const { online } = useConnectivity();
+  const db = useDb('reports');
 
-  const profileDni = profile?.dni && /^\d{8}$/.test(profile.dni) ? profile.dni : '';
-  const hasDni = Boolean(profileDni);
-
-  useEffect(() => {
-    if (hasDni && dni !== profileDni) setDni(profileDni);
-  }, [hasDni, profileDni, dni]);
-
-  useEffect(() => {
-    if (isGuest && !anonymous) setAnonymous(true);
-  }, [isGuest, anonymous]);
-
-  const handleDniChange = (value: string) => {
-    setDni(value.replace(/\D/g, ''));
-  };
-
-  const handleConsentToggle = () => setConsent((current) => !current);
-
-  const canContinue = consent && (anonymous || dni.length === 8);
-
-  const handleContinue = () => {
-    setStep((current) => Math.min(current + 1, TOTAL_STEPS));
-  };
-
-  const handleCancel = () => router.back();
-
-  const handleMedia = (next: CaptureMedia) => {
-    setMedia(next);
-  };
-
-  const handleConfirmLocation = (next: ReportLocation) => {
-    setLocation(next);
-    setStep(4);
-  };
-
-  const handleIncidentContinue = (selection: IncidentSelection) => {
-    setIncident(selection.incident);
-    setAudio(selection.audio);
-    setStep(5);
-  };
-
-  const handleSend = () => {
-    if (!incident || sending) return;
-    void submit(
-      {
-        category: incident.id,
-        title: incident.label,
-        isAnonymous: anonymous,
-        location:
-          location?.latitude != null && location.longitude != null
-            ? { latitude: location.latitude, longitude: location.longitude, address: location.placeName ?? undefined }
-            : undefined,
-        customIcon: incident.iconKey,
-      },
-      media ? [{ uri: media.uri, kind: media.type }] : [],
-    );
-  };
+  const vm = useViewModel(
+    () => new ReportCreateViewModel({ db, online, verdict, profile, user, isGuest, onExit: () => router.back() }),
+    { db, online, verdict, profile, user, isGuest, onExit: () => router.back() },
+  );
+  const state = vm.getState();
 
   if (loading) return null;
   // if (!user) return <Redirect href="/mobile/login" />;
   // TODO: reactivar el guard cuando Firebase Auth esté configurado y se quiera forzar login.
 
-  if (submitted) {
+  if (state.submitted) {
     return (
       <View style={styles.successScreen}>
         <View style={styles.successCircle}>
           <AppSymbol
             name={
-              queued
+              state.queued
                 ? { ios: 'cloud.fill', android: 'cloud', web: 'cloud' }
                 : { ios: 'checkmark', android: 'check', web: 'check' }
             }
@@ -114,10 +56,10 @@ export function ReportCreateScreen() {
           />
         </View>
         <AppText style={styles.successTitle}>
-          {queued ? 'Reporte guardado' : 'Reporte enviado'}
+          {state.queued ? 'Reporte guardado' : 'Reporte enviado'}
         </AppText>
         <AppText style={styles.successBody}>
-          {queued
+          {state.queued
             ? !user
               ? 'Tu reporte quedó guardado en el dispositivo. Inicia sesión para poder enviarlo.'
               : 'Tu reporte se guardó en el dispositivo y se enviará automáticamente cuando sea posible.'
@@ -125,7 +67,7 @@ export function ReportCreateScreen() {
         </AppText>
         <Pressable
           accessibilityRole="button"
-          onPress={handleCancel}
+          onPress={vm.exit}
           style={({ pressed }) => [styles.successButton, pressed && styles.pressed]}>
           <AppText style={styles.successButtonLabel}>Volver al inicio</AppText>
         </Pressable>
@@ -135,49 +77,49 @@ export function ReportCreateScreen() {
 
   return (
     <View style={styles.screen}>
-      {step === 2 ? (
-        <CaptureStep onClose={handleCancel} onContinue={handleContinue} onMedia={handleMedia} />
-      ) : step === 3 ? (
-        <LocationStep onBack={() => setStep(2)} onConfirm={handleConfirmLocation} />
-      ) : step === 4 ? (
+      {state.step === 2 ? (
+        <CaptureStep onClose={vm.exit} onContinue={vm.next} onMedia={vm.setMedia} />
+      ) : state.step === 3 ? (
+        <LocationStep onBack={vm.back} onConfirm={vm.confirmLocation} />
+      ) : state.step === 4 ? (
         <IncidentStep
-          initial={incident}
-          onBack={() => setStep(3)}
-          onContinue={handleIncidentContinue}
+          initial={state.incident}
+          onBack={vm.back}
+          onContinue={vm.continueIncident}
         />
-      ) : step === 5 ? (
+      ) : state.step === 5 ? (
         <SummaryStep
-          photo={media}
-          location={location}
-          incident={incident}
-          audio={audio}
-          createdAt={createdAt}
-          onBack={() => setStep(4)}
-          onEdit={() => setStep(4)}
-          onSend={handleSend}
-          sending={sending}
-          sendError={sendError}
+          photo={state.media}
+          location={state.location}
+          incident={state.incident}
+          audio={state.audio}
+          createdAt={state.createdAt}
+          onBack={vm.back}
+          onEdit={vm.back}
+          onSend={() => void vm.send()}
+          sending={state.sending}
+          sendError={state.sendError}
         />
       ) : (
         <View style={styles.frame}>
-          <ReportTopBar step={step} totalSteps={TOTAL_STEPS} progress={step * STEP_PROGRESS} />
+          <ReportTopBar step={state.step} totalSteps={TOTAL_STEPS} progress={vm.progress} />
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             <DniStep
-              dni={dni}
-              onDniChange={handleDniChange}
-              hasDni={hasDni}
+              dni={state.dni}
+              onDniChange={vm.setDni}
+              hasDni={vm.hasDni}
               guest={isGuest}
-              consent={consent}
-              onConsentToggle={handleConsentToggle}
-              anonymous={anonymous}
-              onAnonymousToggle={() => setAnonymous((value) => !value)}
-              canContinue={canContinue}
-              onContinue={handleContinue}
-              onCancel={handleCancel}
+              consent={state.consent}
+              onConsentToggle={vm.toggleConsent}
+              anonymous={state.anonymous}
+              onAnonymousToggle={vm.toggleAnonymous}
+              canContinue={vm.canContinue}
+              onContinue={vm.next}
+              onCancel={vm.exit}
             />
           </ScrollView>
         </View>

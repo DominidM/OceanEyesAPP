@@ -8,13 +8,16 @@ import type { ReportStatus } from '@/shared/firebase/types';
 import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
 import type { PendingReport } from '@/shared/offline/outbox';
 import { requestSync } from '@/shared/offline/sync-engine';
+import { useAuth } from '@/shared/firebase/auth-context';
+import { useDb } from '@/shared/hooks/use-db';
+import { useViewModel } from '@/shared/viewmodels/use-view-model';
 
 import { ReportCard, Report } from '../components/report-card';
 import { ReportsHeader, ReportChip } from '../components/reports-header';
 import { StatsStrip, ReportStat } from '../components/stats-strip';
 import { SyncWarning } from '../components/sync-warning';
 import { HistoryHeader } from '../components/history-header';
-import { useMyReportsWithCache } from '../hooks/use-my-reports-with-cache';
+import { ReportsListViewModel } from '../viewmodels/reports-list.viewmodel';
 import { SurfaceColors } from '../theme';
 
 const REPORTS_CACHE_KEY = '@oceaneyes/cache/reports-mine';
@@ -24,10 +27,25 @@ type FilterKey = 'todos' | 'pendiente' | 'verificado' | 'en_revision' | 'descart
 export function ReportsSection() {
   const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState<FilterKey>('todos');
-  const { reports, queued } = useMyReportsWithCache<Report>(
-    REPORTS_CACHE_KEY,
-    (items) => items.map(toCardReport),
+  const { user } = useAuth();
+  const db = useDb('reports');
+
+  const vm = useViewModel(
+    () =>
+      new ReportsListViewModel<Report>({
+        db,
+        getUser: () => user,
+        cacheKey: REPORTS_CACHE_KEY,
+        transform: (items: ReportDto[]) => items.map(toCardReport),
+      }),
+    {
+      db,
+      getUser: () => user,
+      cacheKey: REPORTS_CACHE_KEY,
+      transform: (items: ReportDto[]) => items.map(toCardReport),
+    },
   );
+  const { reports, queued } = vm.getState();
 
   const counts = useMemo(() => {
     let pendiente = 0;
