@@ -136,7 +136,6 @@ const styles = StyleSheet.create({
     gap: Spacing.five,
   },
   card: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderTopWidth: 4,
@@ -181,7 +180,6 @@ const styles = StyleSheet.create({
     opacity: 0.78,
     lineHeight: 26,
     fontFamily: Fonts.body,
-    flex: 1,
   },
   tags: {
     flexDirection: 'row',
@@ -204,15 +202,17 @@ const styles = StyleSheet.create({
     flex: 2,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: 420,
   },
   phoneColumnMobile: {
     flex: 0,
     width: '100%',
     height: 300,
+    minHeight: 0,
   },
   placeholder: {
     width: '100%',
-    height: '100%',
+    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderWidth: 2,

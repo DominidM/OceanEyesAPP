@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
   },
   gridMobile: {
     flexDirection: 'column',
+    flexWrap: 'nowrap',
     gap: Spacing.four,
   },
   item: {
@@ -112,7 +113,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   itemMobile: {
-    flexBasis: '100%',
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
+    width: '100%',
   },
   imageWrap: {
     width: '100%',
