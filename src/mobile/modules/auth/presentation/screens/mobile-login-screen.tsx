@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
 import React, { useCallback, useMemo, useRef } from 'react';
-import {Animated, Platform, Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
+import {Animated, Keyboard, Platform, Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { isGoogleSignInAvailable, loginWithEmail, registerUser, signInAsGuest, signInWithGoogle } from '@/shared/firebase/auth';
+import { canLinkAccount, isGoogleSignInAvailable, linkAccountWithEmail, linkAccountWithGoogle, loginWithEmail, registerUser, signInAsGuest, signInWithGoogle } from '@/shared/firebase/auth';
 import { useViewModel } from '@/shared/viewmodels/use-view-model';
 import { LoginViewModel } from '../viewmodels/login.viewmodel';
 
@@ -66,13 +66,16 @@ function ToneButton({ children, onPress, disabled, style, tone, property = 'back
 }
 
 export default function MobileLoginScreen() {
-  const vm = useViewModel(
+  const [vm, state] = useViewModel(
     () =>
       new LoginViewModel({
         isFirebaseConfigured,
         isGoogleSignInAvailable,
+        canLinkAccount,
         loginWithEmail,
         registerUser,
+        linkAccountWithEmail,
+        linkAccountWithGoogle,
         signInAsGuest,
         signInWithGoogle,
         onAuthenticated: () => router.replace('/mobile'),
@@ -80,28 +83,33 @@ export default function MobileLoginScreen() {
     {
       isFirebaseConfigured,
       isGoogleSignInAvailable,
+      canLinkAccount,
       loginWithEmail,
       registerUser,
+      linkAccountWithEmail,
+      linkAccountWithGoogle,
       signInAsGuest,
       signInWithGoogle,
       onAuthenticated: () => router.replace('/mobile'),
     },
   );
-  const state = vm.getState();
 
   return (
     <View style={styles.screen}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} accessibilityRole="none" />
       <AppText style={styles.brand}>OceanEyes</AppText>
-      <AppText style={styles.subtitle}>{state.registering ? 'Únete a la comunidad' : 'Protege el océano con nosotros'}</AppText>
+      <AppText style={styles.subtitle}>
+        {state.linking ? 'Conserva tu progreso como invitado' : state.registering ? 'Únete a la comunidad' : 'Protege el océano con nosotros'}
+      </AppText>
       <View style={styles.card}>
-        <AppText style={styles.title}>{state.registering ? 'Crear cuenta' : 'Iniciar sesión'}</AppText>
-        {!state.registering && Platform.OS !== 'web' && (
+        <AppText style={styles.title}>{state.linking ? 'Vincular cuenta' : state.registering ? 'Crear cuenta' : 'Iniciar sesión'}</AppText>
+        {state.linking && Platform.OS !== 'web' && (
           <>
-            <ToneButton disabled={state.busy} onPress={() => void vm.submitWithGoogle()} style={styles.googleButton} tone={['#FFFFFF', '#E9E5DF']}>
+            <ToneButton disabled={state.busy} onPress={() => void vm.submitWithGoogleLink()} style={styles.googleButton} tone={['#FFFFFF', '#E9E5DF']}>
               <View style={styles.googleLogo}>
                 <AppText style={styles.googleLogoText}>G</AppText>
               </View>
-              <AppText style={styles.googleLabel}>Continuar con Google</AppText>
+              <AppText style={styles.googleLabel}>Vincular con Google</AppText>
             </ToneButton>
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
@@ -110,7 +118,26 @@ export default function MobileLoginScreen() {
             </View>
           </>
         )}
-        {state.registering && (
+        {!state.linking && !state.registering && Platform.OS !== 'web' && (
+          <>
+            <ToneButton
+              disabled={state.busy}
+              onPress={() => void (canLinkAccount() ? vm.submitWithGoogleLink() : vm.submitWithGoogle())}
+              style={styles.googleButton}
+              tone={['#FFFFFF', '#E9E5DF']}>
+              <View style={styles.googleLogo}>
+                <AppText style={styles.googleLogoText}>G</AppText>
+              </View>
+              <AppText style={styles.googleLabel}>{canLinkAccount() ? 'Vincular con Google' : 'Continuar con Google'}</AppText>
+            </ToneButton>
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <AppText style={styles.dividerText}>o</AppText>
+              <View style={styles.dividerLine} />
+            </View>
+          </>
+        )}
+        {(state.registering || state.linking) && (
           <>
             <TextInput value={state.displayName} onChangeText={vm.setDisplayName} placeholder="Nombre o alias" style={styles.input} />
             <View style={styles.typeRow}>
@@ -136,26 +163,42 @@ export default function MobileLoginScreen() {
         <TextInput value={state.email} onChangeText={vm.setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="Correo electrónico" style={styles.input} />
         <TextInput value={state.password} onChangeText={vm.setPassword} secureTextEntry placeholder="Contraseña" style={styles.input} />
         {!!state.error && <AppText style={styles.error}>{state.error}</AppText>}
-        <ToneButton disabled={state.busy} onPress={() => void vm.submit()} style={styles.submit} tone={['#134E5E', '#0E3B47']}>
-          <AppText style={styles.submitLabel}>{state.busy ? 'Procesando...' : state.registering ? 'Crear cuenta' : 'Entrar'}</AppText>
-        </ToneButton>
-        <ToneButton onPress={vm.toggleRegistering} tone={[1, 0.55]} property="opacity">
-          <AppText style={styles.switchLabel}>{state.registering ? 'Ya tengo una cuenta' : 'Crear una cuenta'}</AppText>
-        </ToneButton>
         <ToneButton
           disabled={state.busy}
-          onPress={() => void vm.submitAsGuest()}
-          style={styles.guest}
-          tone={['rgba(19,78,94,0)', 'rgba(19,78,94,0.12)']}>
-          <AppText style={styles.guestLabel}>Continuar como invitado</AppText>
+          onPress={() => void (state.linking ? vm.submitLink() : vm.submit())}
+          style={styles.submit}
+          tone={['#134E5E', '#0E3B47']}>
+          <AppText style={styles.submitLabel}>
+            {state.busy ? 'Procesando...' : state.linking ? 'Vincular cuenta' : state.registering ? 'Crear cuenta' : 'Entrar'}
+          </AppText>
         </ToneButton>
-        <ToneButton
-          disabled={state.busy}
-          onPress={vm.temporaryEnter}
-          style={styles.temporary}
-          tone={['rgba(180,35,24,0.06)', 'rgba(180,35,24,0.16)']}>
-          <AppText style={styles.temporaryLabel}>Entrar al dashboard (temporal)</AppText>
-        </ToneButton>
+        {state.linking ? (
+          <ToneButton onPress={vm.cancelLinking} tone={[1, 0.55]} property="opacity">
+            <AppText style={styles.switchLabel}>Volver</AppText>
+          </ToneButton>
+        ) : (
+          <ToneButton onPress={vm.toggleRegistering} tone={[1, 0.55]} property="opacity">
+            <AppText style={styles.switchLabel}>{state.registering ? 'Ya tengo una cuenta' : 'Crear una cuenta'}</AppText>
+          </ToneButton>
+        )}
+        {!state.linking && (
+          <ToneButton
+            disabled={state.busy}
+            onPress={() => void vm.submitAsGuest()}
+            style={styles.guest}
+            tone={['rgba(19,78,94,0)', 'rgba(19,78,94,0.12)']}>
+            <AppText style={styles.guestLabel}>Continuar como invitado</AppText>
+          </ToneButton>
+        )}
+        {canLinkAccount() && !state.linking && !state.registering && (
+          <ToneButton
+            disabled={state.busy}
+            onPress={vm.startLinking}
+            style={styles.guest}
+            tone={['rgba(19,78,94,0)', 'rgba(19,78,94,0.12)']}>
+            <AppText style={styles.guestLabel}>Vincular cuenta para conservar tus puntos</AppText>
+          </ToneButton>
+        )}
       </View>
     </View>
   );
@@ -186,6 +229,4 @@ const styles = StyleSheet.create({
   dividerText: { color: 'rgba(44, 44, 44, 0.5)', fontFamily: Fonts.body, fontSize: 12 },
   guest: { alignItems: 'center', borderWidth: 1, borderColor: 'rgba(19, 78, 94, 0.3)', borderRadius: 999, paddingVertical: Spacing.three },
   guestLabel: { color: BrandColors.primary, fontFamily: Fonts.label, fontWeight: '700' },
-  temporary: { alignItems: 'center', borderWidth: 1, borderColor: '#B42318', borderStyle: 'dashed', borderRadius: 999, paddingVertical: Spacing.three },
-  temporaryLabel: { color: '#B42318', fontFamily: Fonts.label, fontWeight: '700' },
 });

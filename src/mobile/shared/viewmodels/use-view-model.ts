@@ -2,10 +2,13 @@ import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 import type { ViewModelState, ViewModel } from './view-model';
 
-export function useViewModel<TState extends ViewModelState, TDeps, TVM extends ViewModel<TState, TDeps>>(
-  create: (deps: TDeps) => TVM,
-  deps: TDeps,
-): TVM {
+type StateOf<TVM> = TVM extends ViewModel<infer S, any> ? S : never;
+type DepsOf<TVM> = TVM extends ViewModel<ViewModelState, infer D> ? D : never;
+
+export function useViewModel<TVM extends ViewModel<ViewModelState, any>>(
+  create: (deps: DepsOf<TVM>) => TVM,
+  deps: DepsOf<TVM>,
+): [TVM, StateOf<TVM>] {
   const vmRef = useRef<TVM | null>(null);
   if (vmRef.current === null) {
     vmRef.current = create(deps);
@@ -15,7 +18,11 @@ export function useViewModel<TState extends ViewModelState, TDeps, TVM extends V
   // Mantiene las deps al día en cada render (patrón "latest ref").
   vm.bind(deps);
 
-  useSyncExternalStore(vm.subscribe, vm.getState, vm.getState);
+  const state = useSyncExternalStore<StateOf<TVM>>(
+    vm.subscribe,
+    vm.getState as () => StateOf<TVM>,
+    vm.getState as () => StateOf<TVM>,
+  );
 
   useEffect(() => {
     vm.sync();
@@ -23,5 +30,5 @@ export function useViewModel<TState extends ViewModelState, TDeps, TVM extends V
 
   useEffect(() => () => vm.dispose(), [vm]);
 
-  return vm;
+  return [vm, state];
 }

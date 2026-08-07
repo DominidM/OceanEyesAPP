@@ -2,6 +2,7 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  linkWithCredential,
   reauthenticateWithCredential,
   signInAnonymously,
   signInWithCredential,
@@ -158,7 +159,70 @@ export async function loginWithEmail(email: string, password: string) {
 }
 
 export async function signInAsGuest() {
-  await signInAnonymously(requireAuth());
+  const { user } = await signInAnonymously(requireAuth());
+  await ensureUserProfile(user);
+}
+
+export function canLinkAccount() {
+  return firebaseAuth?.currentUser?.isAnonymous === true;
+}
+
+export async function linkAccountWithEmail(input: {
+  email: string;
+  password: string;
+  displayName: string;
+  profileType: ProfileType;
+  dni?: string;
+}) {
+  const auth = requireAuth();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Inicia sesión como invitado antes de vincular una cuenta.');
+
+  const credential = EmailAuthProvider.credential(input.email.trim(), input.password);
+  const { user: linkedUser } = await linkWithCredential(user, credential);
+  await updateProfile(linkedUser, { displayName: input.displayName });
+
+  await setDoc(
+    doc(firestore, 'users', linkedUser.uid),
+    {
+      role: 'user',
+      profileType: input.profileType,
+      displayName: input.displayName,
+      email: input.email.trim(),
+      dni: input.dni ?? null,
+      status: 'active',
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  return linkedUser;
+}
+
+export async function linkAccountWithGoogle() {
+  const auth = requireAuth();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Inicia sesión como invitado antes de vincular una cuenta.');
+  if (!isGoogleSignInAvailable()) {
+    throw new Error('Google Sign-In requiere una development build. Ejecuta npx expo run:ios o run:android.');
+  }
+
+  const GoogleSignin = await loadGoogleSignin();
+  configureGoogleSignin(GoogleSignin);
+  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+  const response = await GoogleSignin.signIn();
+  if (response.type === 'cancelled') return null;
+
+  const idToken = response.data.idToken;
+  if (!idToken) {
+    throw new Error('No se pudo obtener el token de Google. Revisa las claves EXPO_PUBLIC_GOOGLE_* en el archivo .env.');
+  }
+
+  const credential = GoogleAuthProvider.credential(idToken);
+  const { user: linkedUser } = await linkWithCredential(user, credential);
+  await ensureUserProfile(linkedUser);
+  return linkedUser;
 }
 
 export async function signInWithGoogle() {

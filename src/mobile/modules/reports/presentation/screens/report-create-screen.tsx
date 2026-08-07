@@ -31,11 +31,10 @@ export function ReportCreateScreen() {
   const { online } = useConnectivity();
   const db = useDb('reports');
 
-  const vm = useViewModel(
+  const [vm, state] = useViewModel(
     () => new ReportCreateViewModel({ db, online, verdict, profile, user, isGuest, onExit: () => router.back() }),
     { db, online, verdict, profile, user, isGuest, onExit: () => router.back() },
   );
-  const state = vm.getState();
 
   if (loading) return null;
   // if (!user) return <Redirect href="/mobile/login" />;

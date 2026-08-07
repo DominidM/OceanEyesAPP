@@ -30,7 +30,7 @@ export function ReportsSection() {
   const { user } = useAuth();
   const db = useDb('reports');
 
-  const vm = useViewModel(
+  const [, { reports, queued }] = useViewModel(
     () =>
       new ReportsListViewModel<Report>({
         db,
@@ -45,7 +45,6 @@ export function ReportsSection() {
       transform: (items: ReportDto[]) => items.map(toCardReport),
     },
   );
-  const { reports, queued } = vm.getState();
 
   const counts = useMemo(() => {
     let pendiente = 0;

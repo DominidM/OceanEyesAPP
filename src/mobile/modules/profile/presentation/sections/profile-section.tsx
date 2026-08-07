@@ -376,7 +376,26 @@ export function ProfileSection() {
             </>
           )
         ) : (
-          <LoggedInCard profile={profile} fallbackName={user?.displayName ?? undefined} onLogout={handleLogout} />
+          <>
+            {user?.isAnonymous ? (
+              <View style={styles.linkAccountCard}>
+                <AppSymbol name={{ ios: 'link.circle.fill', android: 'link', web: 'link' }} color={BrandColors.primary} size={26} />
+                <View style={styles.linkAccountTextWrap}>
+                  <AppText style={styles.linkAccountTitle}>Conserva tus puntos</AppText>
+                  <AppText style={styles.linkAccountText}>
+                    Vincula una cuenta con email o Google para no perder tus reportes y puntos.
+                  </AppText>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.push('/mobile/login')}
+                  style={({ pressed }) => [styles.linkAccountButton, pressed && styles.pressed]}>
+                  <AppText style={styles.linkAccountButtonLabel}>Vincular</AppText>
+                </Pressable>
+              </View>
+            ) : null}
+            <LoggedInCard profile={profile} fallbackName={user?.displayName ?? undefined} onLogout={handleLogout} />
+          </>
         )}
       </ScrollView>
     </>
@@ -746,5 +765,54 @@ const styles = StyleSheet.create({
     color: '#B91C1C',
     fontFamily: Fonts.label,
     fontWeight: '700',
+  },
+
+  /* Vincular cuenta */
+  linkAccountCard: {
+    width: '100%',
+    maxWidth: 358,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: BrandColors.primary,
+    backgroundColor: '#FFFFFF',
+    padding: 14,
+    ...shadow('subtle'),
+  },
+  linkAccountTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  linkAccountTitle: {
+    color: BrandColors.neutral,
+    fontFamily: Fonts.headline,
+    fontSize: 15,
+    fontWeight: '700',
+    includeFontPadding: false,
+  },
+  linkAccountText: {
+    color: 'rgba(44, 44, 44, 0.7)',
+    fontFamily: Fonts.body,
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 17,
+    includeFontPadding: false,
+  },
+  linkAccountButton: {
+    alignItems: 'center',
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    backgroundColor: BrandColors.primary,
+  },
+  linkAccountButtonLabel: {
+    color: BrandColors.tertiary,
+    fontFamily: Fonts.label,
+    fontSize: 12,
+    fontWeight: '700',
+    includeFontPadding: false,
   },
 });

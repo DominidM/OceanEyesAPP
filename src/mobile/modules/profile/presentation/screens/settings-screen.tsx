@@ -24,6 +24,7 @@ import { shadow } from '@/shared/utils/shadows';
 const backIcon: SymbolName = { ios: 'chevron.left', android: 'arrow-back', web: 'arrow-back' };
 const chevronIcon: SymbolName = { ios: 'chevron.right', android: 'chevron-right', web: 'chevron-right' };
 const editIcon: SymbolName = { ios: 'square.and.pencil', android: 'edit', web: 'edit' };
+const linkIcon: SymbolName = { ios: 'link.circle.fill', android: 'link', web: 'link' };
 const lockIcon: SymbolName = { ios: 'lock.fill', android: 'lock', web: 'lock' };
 const bellIcon: SymbolName = { ios: 'bell.fill', android: 'notifications', web: 'notifications' };
 const textSizeIcon: SymbolName = { ios: 'textformat.size', android: 'format-size', web: 'format-size' };
@@ -229,6 +230,14 @@ export function SettingsScreen() {
         <View style={styles.card}>
           <GroupLabel title="Cuenta" />
           <SettingRow icon={editIcon} label="Editar perfil" onPress={handleEditProfile} />
+          {user?.isAnonymous ? (
+            <SettingRow
+              icon={linkIcon}
+              label="Vincular cuenta"
+              value="Conservar mis puntos"
+              onPress={() => router.replace('/mobile/login')}
+            />
+          ) : null}
           <SettingRow icon={lockIcon} label="Cambiar contraseña" onPress={handleChangePassword} />
 
           <GroupLabel title="Notificaciones" />
