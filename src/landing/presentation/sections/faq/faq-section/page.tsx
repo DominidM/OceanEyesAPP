@@ -3,12 +3,14 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-function FAQItem({ question, answer, isOpen, onToggle }: {
+function FAQItem({ question, answer, isOpen, onToggle, compact }: {
   question: string;
   answer: string;
   isOpen: boolean;
   onToggle: () => void;
+  compact?: boolean;
 }) {
   const animation = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
 
@@ -37,9 +39,12 @@ function FAQItem({ question, answer, isOpen, onToggle }: {
   });
 
   return (
-    <Pressable style={[styles.faqItem, isOpen && styles.faqItemOpen]} onPress={toggle}>
+    <Pressable
+      style={[styles.faqItem, isOpen && styles.faqItemOpen, compact && styles.faqItemCompact]}
+      onPress={toggle}
+    >
       <View style={styles.faqHeader}>
-        <Text style={[styles.faqQuestion, isOpen && styles.faqQuestionOpen]}>
+        <Text style={[styles.faqQuestion, isOpen && styles.faqQuestionOpen, compact && styles.faqQuestionCompact]}>
           {question}
         </Text>
         <Animated.View style={{ transform: [{ rotate: rotateChevron }] }}>
@@ -101,10 +106,11 @@ const faqs = [
 ];
 
 export function FAQSection() {
+  const { isMobile } = useBreakpoints();
   const [openId, setOpenId] = useState<number | null>(null);
 
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, isMobile && styles.sectionMobile]}>
       <View style={styles.list}>
         {faqs.map((faq, index) => (
           <FAQItem
@@ -113,6 +119,7 @@ export function FAQSection() {
             answer={faq.answer}
             isOpen={openId === index}
             onToggle={() => setOpenId(openId === index ? null : index)}
+            compact={isMobile}
           />
         ))}
       </View>
@@ -127,6 +134,10 @@ const styles = StyleSheet.create({
     backgroundColor: BrandColors.tertiary,
     alignItems: 'center',
   },
+  sectionMobile: {
+    paddingVertical: Spacing.five,
+    paddingHorizontal: Spacing.three,
+  },
   list: {
     maxWidth: 900,
     width: '100%',
@@ -138,6 +149,9 @@ const styles = StyleSheet.create({
     padding: Spacing.five,
     borderLeftWidth: 4,
     borderLeftColor: BrandColors.secondary,
+  },
+  faqItemCompact: {
+    padding: Spacing.four,
   },
   faqItemOpen: {
     borderLeftColor: BrandColors.primary,
@@ -155,6 +169,9 @@ const styles = StyleSheet.create({
     color: BrandColors.neutral,
     fontWeight: '600',
     fontStyle: 'italic',
+  },
+  faqQuestionCompact: {
+    fontSize: 15,
   },
   faqQuestionOpen: {
     color: BrandColors.primary,

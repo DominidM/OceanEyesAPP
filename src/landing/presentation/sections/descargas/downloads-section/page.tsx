@@ -3,13 +3,18 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 export function DescargasSection() {
+  const { isMobile } = useBreakpoints();
+
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Elegí tu plataforma</Text>
-      <View style={styles.grid}>
-        <View style={styles.card}>
+    <View style={[styles.section, isMobile && styles.sectionMobile]}>
+      <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>
+        Elegí tu plataforma
+      </Text>
+      <View style={[styles.grid, isMobile && styles.gridMobile]}>
+        <View style={[styles.card, isMobile && styles.cardMobile]}>
           <FontAwesome5 name="android" size={48} color="#3DDC84" />
           <Text style={styles.cardTitle}>Android APK</Text>
           <Text style={styles.cardMeta}>v2.1.0 · 48 MB · Android 8+</Text>
@@ -33,6 +38,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: BrandColors.tertiary,
   },
+  sectionMobile: {
+    paddingVertical: Spacing.five,
+    paddingHorizontal: Spacing.three,
+  },
   sectionTitle: {
     fontFamily: Fonts.headline,
     fontSize: 36,
@@ -41,6 +50,10 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: Spacing.six,
   },
+  sectionTitleMobile: {
+    fontSize: 28,
+    textAlign: 'center',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -48,6 +61,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     maxWidth: 900,
     width: '100%',
+  },
+  gridMobile: {
+    gap: Spacing.four,
   },
   card: {
     flex: 1,
@@ -60,6 +76,11 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     borderTopWidth: 4,
     borderTopColor: BrandColors.secondary,
+  },
+  cardMobile: {
+    minWidth: 0,
+    width: '100%',
+    padding: Spacing.four,
   },
   cardTitle: {
     fontFamily: Fonts.headline,

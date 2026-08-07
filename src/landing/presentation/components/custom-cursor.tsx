@@ -17,6 +17,7 @@ export function CustomCursor() {
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches) return;
 
     const dot = dotRef.current as unknown as HTMLElement;
     const ring = ringRef.current as unknown as HTMLElement;
@@ -96,6 +97,9 @@ export function CustomCursor() {
   }, []);
 
   if (Platform.OS !== 'web') return null;
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches) {
+    return null;
+  }
 
   return (
     <View style={styles.container} pointerEvents="none" accessibilityElementsHidden>

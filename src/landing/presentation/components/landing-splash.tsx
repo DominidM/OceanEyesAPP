@@ -5,6 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Image } from 'expo-image';
 
 import { AppFonts as Fonts, BrandColors } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const logoImg = require('../../../../assets/images/logo-ocean-eyes-grande.png');
 
@@ -26,6 +27,7 @@ export type LandingSplashProps = {
 };
 
 export function LandingSplash({ duration = STATUS_MESSAGES.length * MSG_INTERVAL, onFinish }: LandingSplashProps) {
+  const { isMobile } = useBreakpoints();
   const emerge = useRef(new Animated.Value(0)).current;
   const exitProgress = useRef(new Animated.Value(0)).current;
   const statusFade = useRef(new Animated.Value(1)).current;
@@ -198,14 +200,14 @@ export function LandingSplash({ duration = STATUS_MESSAGES.length * MSG_INTERVAL
         </View>
 
         <View style={styles.logoContent}>
-          <View style={styles.logoBadge}>
-            <Image source={logoImg} style={styles.logo} contentFit="contain" />
+          <View style={[styles.logoBadge, isMobile && styles.logoBadgeMobile]}>
+            <Image source={logoImg} style={[styles.logo, isMobile && styles.logoMobile]} contentFit="contain" />
           </View>
-          <Text style={styles.title}>Ocean Eyes</Text>
+          <Text style={[styles.title, isMobile && styles.titleMobile]}>Ocean Eyes</Text>
           <Text style={styles.subtitle}>Vigilancia Marina</Text>
         </View>
 
-        <Animated.Text style={[styles.status, { opacity: statusFade }]}>
+        <Animated.Text style={[styles.status, isMobile && styles.statusMobile, { opacity: statusFade }]}>
           {STATUS_MESSAGES[messageIndex]}
         </Animated.Text>
       </Animated.View>
@@ -295,9 +297,19 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     elevation: 8,
   },
+  logoBadgeMobile: {
+    width: 80,
+    height: 80,
+    borderRadius: 14,
+    marginBottom: 16,
+  },
   logo: {
     width: 72,
     height: 72,
+  },
+  logoMobile: {
+    width: 60,
+    height: 60,
   },
   title: {
     fontFamily: Fonts.headline,
@@ -307,6 +319,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: -0.5,
     marginBottom: 10,
+  },
+  titleMobile: {
+    fontSize: 30,
   },
   subtitle: {
     fontFamily: Fonts.label,
@@ -324,6 +339,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#98B9B1',
     opacity: 0.7,
+  },
+  statusMobile: {
+    marginTop: 40,
   },
   footer: {
     position: 'absolute',

@@ -5,6 +5,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const logoImg = require('../../../../assets/images/logo-ocean-eyes-grande.png');
 
@@ -25,10 +26,12 @@ const socialLinks = [
 ];
 
 export function LandingSubfooter() {
+  const { isMobile } = useBreakpoints();
+
   return (
-    <View style={styles.subfooter}>
-      <View style={styles.inner}>
-        <View style={styles.brandCol}>
+    <View style={[styles.subfooter, isMobile && styles.subfooterMobile]}>
+      <View style={[styles.inner, isMobile && styles.innerMobile]}>
+        <View style={[styles.brandCol, isMobile && styles.brandColMobile]}>
           <Image source={logoImg} style={styles.logo} contentFit="contain" />
           <Text style={styles.brandName}>Ocean Eyes</Text>
           <Text style={styles.brandDesc}>
@@ -37,7 +40,7 @@ export function LandingSubfooter() {
           </Text>
         </View>
 
-        <View style={styles.navCol}>
+        <View style={[styles.navCol, isMobile && styles.colHalf]}>
           <Text style={styles.colTitle}>Navegación</Text>
           {navLinks.map((link) => (
             <Link key={link.label} href={link.href as any}>
@@ -46,7 +49,7 @@ export function LandingSubfooter() {
           ))}
         </View>
 
-        <View style={styles.rutasCol}>
+        <View style={[styles.rutasCol, isMobile && styles.colHalf]}>
           <Text style={styles.colTitle}>Rutas</Text>
           {rutasLinks.map((link) => (
             <Link key={link.label} href={link.href as any}>
@@ -55,14 +58,14 @@ export function LandingSubfooter() {
           ))}
         </View>
 
-        <View style={styles.contactCol}>
+        <View style={[styles.contactCol, isMobile && styles.colHalf]}>
           <Text style={styles.colTitle}>Contacto</Text>
           <Text style={styles.contactText}>contacto@oceaneyes.pe</Text>
           <Text style={styles.contactText}>+51 987 654 321</Text>
           <Text style={styles.contactText}>Lima, Perú</Text>
         </View>
 
-        <View style={styles.socialCol}>
+        <View style={[styles.socialCol, isMobile && styles.colHalf]}>
           <Text style={styles.colTitle}>Redes Sociales</Text>
           <View style={styles.socialRow}>
             {socialLinks.map((s) => (
@@ -89,6 +92,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(152,185,177,0.3)',
   },
+  subfooterMobile: {
+    paddingVertical: Spacing.four,
+    paddingHorizontal: Spacing.three,
+  },
   inner: {
     flexDirection: 'row',
     maxWidth: 1600,
@@ -97,10 +104,23 @@ const styles = StyleSheet.create({
     gap: Spacing.six,
     flexWrap: 'wrap',
   },
+  innerMobile: {
+    gap: Spacing.four,
+  },
   brandCol: {
     flex: 2.5,
     minWidth: 240,
     gap: Spacing.three,
+  },
+  brandColMobile: {
+    flex: 0,
+    flexBasis: '100%',
+    minWidth: 0,
+  },
+  colHalf: {
+    flex: 1,
+    flexBasis: '45%',
+    minWidth: 0,
   },
   logo: {
     width: 52,

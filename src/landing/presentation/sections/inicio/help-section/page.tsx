@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const barco1 = require('../../../../../../assets/images/help/barco-1.jpg');
 const barco2 = require('../../../../../../assets/images/help/barco-2.jpg');
@@ -18,21 +19,23 @@ const helpActions = [
 ];
 
 export function HelpSection() {
+  const { isMobile } = useBreakpoints();
+
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, isMobile && styles.sectionMobile]}>
       <View style={styles.header}>
-        <Text style={styles.title}>¿Cómo Puedes Ayudar?</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, isMobile && styles.titleMobile]}>¿Cómo Puedes Ayudar?</Text>
+        <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
           Cada acción cuenta. Aquí te mostramos cómo puedes hacer la diferencia.
         </Text>
       </View>
 
-      <View style={styles.grid}>
+      <View style={[styles.grid, isMobile && styles.gridMobile]}>
         {helpActions.map((action, index) => (
           <React.Fragment key={action.id}>
-            {index > 0 && <View style={styles.divider} />}
-            <View style={styles.item}>
-              <View style={styles.imageWrap}>
+            {index > 0 && !isMobile && <View style={styles.divider} />}
+            <View style={[styles.item, isMobile && styles.itemMobile]}>
+              <View style={[styles.imageWrap, isMobile && styles.imageWrapMobile]}>
                 <Image source={action.image} style={styles.image} contentFit="cover" />
                 <View style={styles.imageOverlay} />
               </View>
@@ -60,6 +63,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: 'rgba(152,185,177,0.3)',
   },
+  sectionMobile: {
+    paddingVertical: Spacing.five,
+    paddingHorizontal: Spacing.three,
+  },
   header: {
     maxWidth: 1600,
     alignSelf: 'center',
@@ -74,12 +81,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.three,
     fontStyle: 'italic',
   },
+  titleMobile: {
+    fontSize: 30,
+  },
   subtitle: {
     fontFamily: Fonts.headline,
     fontSize: 18,
     color: BrandColors.neutral,
     opacity: 0.72,
     fontStyle: 'italic',
+  },
+  subtitleMobile: {
+    fontSize: 16,
+    lineHeight: 24,
   },
   grid: {
     flexDirection: 'row',
@@ -88,16 +102,26 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
+  gridMobile: {
+    flexDirection: 'column',
+    gap: Spacing.four,
+  },
   item: {
     flexGrow: 1,
     flexBasis: 300,
     gap: Spacing.three,
+  },
+  itemMobile: {
+    flexBasis: '100%',
   },
   imageWrap: {
     width: '100%',
     height: 200,
     borderRadius: 10,
     overflow: 'hidden',
+  },
+  imageWrapMobile: {
+    height: 180,
   },
   image: {
     width: '100%',

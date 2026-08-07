@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 import { FeatureCard } from './feature-card';
 
 const anonimoIcon = require('../../../../../../assets/icons/anonimo-icon.png');
@@ -19,36 +20,48 @@ const features = [
 ];
 
 export function FeaturesSection() {
+  const { isMobile } = useBreakpoints();
+
   return (
     <View style={styles.section}>
-      <View style={styles.header}>
-        <Text style={styles.sectionTitle}>Funcionalidades Principales</Text>
-        <Text style={styles.sectionSubtitle}>
+      <View style={[styles.header, isMobile && styles.headerMobile]}>
+        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>
+          Funcionalidades Principales
+        </Text>
+        <Text style={[styles.sectionSubtitle, isMobile && styles.sectionSubtitleMobile]}>
           Una app diseñada para pescadores, fácil de usar y poderosa para proteger el océano.
         </Text>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.columnLeft}>
-          <FeatureCard {...features[0]} />
-          <View style={styles.gap} />
-          <FeatureCard {...features[2]} />
+      {isMobile ? (
+        <View style={styles.contentMobile}>
+          {features.map((feature) => (
+            <FeatureCard key={feature.title} {...feature} />
+          ))}
         </View>
+      ) : (
+        <View style={styles.content}>
+          <View style={styles.columnLeft}>
+            <FeatureCard {...features[0]} />
+            <View style={styles.gap} />
+            <FeatureCard {...features[2]} />
+          </View>
 
-        <View style={styles.columnCenter}>
-          <View style={styles.phone}>
-            <View style={styles.phoneBezel}>
-              <Image source={mobileOcean} style={styles.phoneImage} contentFit="cover" />
+          <View style={styles.columnCenter}>
+            <View style={styles.phone}>
+              <View style={styles.phoneBezel}>
+                <Image source={mobileOcean} style={styles.phoneImage} contentFit="cover" />
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.columnRight}>
-          <FeatureCard {...features[1]} />
-          <View style={styles.gap} />
-          <FeatureCard {...features[3]} />
+          <View style={styles.columnRight}>
+            <FeatureCard {...features[1]} />
+            <View style={styles.gap} />
+            <FeatureCard {...features[3]} />
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -63,6 +76,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.six,
     paddingHorizontal: Spacing.five,
   },
+  headerMobile: {
+    marginBottom: Spacing.five,
+    paddingHorizontal: Spacing.three,
+  },
   sectionTitle: {
     fontFamily: Fonts.headline,
     fontSize: 42,
@@ -71,6 +88,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.three,
     fontStyle: 'italic',
     letterSpacing: -0.5,
+  },
+  sectionTitleMobile: {
+    fontSize: 32,
+    textAlign: 'center',
   },
   sectionSubtitle: {
     fontFamily: Fonts.headline,
@@ -81,6 +102,10 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     lineHeight: 26,
   },
+  sectionSubtitleMobile: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
   content: {
     flexDirection: 'row',
     gap: Spacing.six,
@@ -88,6 +113,14 @@ const styles = StyleSheet.create({
     maxWidth: 1400,
     alignSelf: 'center',
     width: '100%',
+  },
+  contentMobile: {
+    flexDirection: 'column',
+    gap: Spacing.four,
+    paddingHorizontal: Spacing.three,
+    width: '100%',
+    alignSelf: 'center',
+    maxWidth: 480,
   },
   columnLeft: {
     flex: 1,

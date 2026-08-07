@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const entornoImg = require('../../../../../../assets/images/technology/entorno-sucio.png');
 const bajoMarImg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
@@ -30,20 +31,24 @@ const cards = [
 ];
 
 export function TechnologySection() {
+  const { isMobile } = useBreakpoints();
+
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, isMobile && styles.sectionMobile]}>
       <View style={styles.header}>
-        <Text style={styles.sectionTitle}>Tecnología e Innovación</Text>
-        <Text style={styles.sectionSubtitle}>
+        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>
+          Tecnología e Innovación
+        </Text>
+        <Text style={[styles.sectionSubtitle, isMobile && styles.sectionSubtitleMobile]}>
           Herramientas inteligentes para proteger el ecosistema marino desde la costa hasta el mar abierto.
         </Text>
       </View>
 
-      <View style={styles.content}>
+      <View style={[styles.content, isMobile && styles.contentMobile]}>
         <View style={styles.cardsColumn}>
           {cards.map((card) => (
-            <View key={card.id} style={styles.card}>
-              <View style={styles.cardImage}>
+            <View key={card.id} style={[styles.card, isMobile && styles.cardMobile]}>
+              <View style={[styles.cardImage, isMobile && styles.cardImageMobile]}>
                 <Image source={card.image} style={styles.cardImg} contentFit="cover" />
               </View>
               <View style={styles.cardHeader}>
@@ -62,7 +67,7 @@ export function TechnologySection() {
           ))}
         </View>
 
-        <View style={styles.phoneColumn}>
+        <View style={[styles.phoneColumn, isMobile && styles.phoneColumnMobile]}>
           <View style={styles.placeholder}>
             <FontAwesome5 name="mobile-alt" size={64} color={BrandColors.secondary} />
             <Text style={styles.placeholderTitle}>Próximamente</Text>
@@ -80,6 +85,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.five,
     backgroundColor: BrandColors.tertiary,
   },
+  sectionMobile: {
+    paddingVertical: Spacing.five,
+    paddingHorizontal: Spacing.three,
+  },
   header: {
     alignItems: 'center',
     marginBottom: Spacing.six,
@@ -93,6 +102,10 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     letterSpacing: -0.5,
   },
+  sectionTitleMobile: {
+    fontSize: 32,
+    textAlign: 'center',
+  },
   sectionSubtitle: {
     fontFamily: Fonts.headline,
     fontSize: 18,
@@ -102,6 +115,10 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     lineHeight: 26,
   },
+  sectionSubtitleMobile: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
   content: {
     flexDirection: 'row',
     gap: Spacing.five,
@@ -109,6 +126,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     alignItems: 'stretch',
+  },
+  contentMobile: {
+    flexDirection: 'column',
+    gap: Spacing.five,
   },
   cardsColumn: {
     flex: 3,
@@ -123,12 +144,19 @@ const styles = StyleSheet.create({
     padding: Spacing.five,
     flexDirection: 'column',
   },
+  cardMobile: {
+    padding: Spacing.four,
+  },
   cardImage: {
     width: '100%',
     height: 200,
     borderRadius: 14,
     overflow: 'hidden',
     marginBottom: Spacing.four,
+  },
+  cardImageMobile: {
+    height: 160,
+    marginBottom: Spacing.three,
   },
   cardImg: {
     width: '100%',
@@ -176,6 +204,11 @@ const styles = StyleSheet.create({
     flex: 2,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  phoneColumnMobile: {
+    flex: 0,
+    width: '100%',
+    height: 300,
   },
   placeholder: {
     width: '100%',

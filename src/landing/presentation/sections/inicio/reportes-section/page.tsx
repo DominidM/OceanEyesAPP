@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const mobileMockup = require('../../../../../../assets/images/MOBILE-OCEAN.jpeg');
 
@@ -32,32 +33,34 @@ const steps = [
 ];
 
 export function ReportesSection() {
+  const { isMobile } = useBreakpoints();
+
   return (
-    <View style={styles.section}>
-      <View style={styles.header}>
-        <Text style={styles.title}>¿Cómo Reportar?</Text>
-        <Text style={styles.subtitle}>
+    <View style={[styles.section, isMobile && styles.sectionMobile]}>
+      <View style={[styles.header, isMobile && styles.headerMobile]}>
+        <Text style={[styles.title, isMobile && styles.titleMobile]}>¿Cómo Reportar?</Text>
+        <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
           Tres pasos simples para enviar tu reporte y generar acción.
         </Text>
       </View>
 
       <View style={styles.phoneWrap}>
-        <View style={styles.phone}>
+        <View style={[styles.phone, isMobile && styles.phoneMobile]}>
           <View style={styles.phoneBezel}>
             <Image source={mobileMockup} style={styles.phoneImage} contentFit="cover" />
           </View>
         </View>
       </View>
 
-      <View style={styles.steps}>
+      <View style={[styles.steps, isMobile && styles.stepsMobile]}>
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
-            {index > 0 && <View style={styles.divider} />}
-            <View style={styles.step}>
-              <View style={styles.circle}>
-                <FontAwesome5 name={step.icon} size={28} color={BrandColors.primary} />
+            {index > 0 && !isMobile && <View style={styles.divider} />}
+            <View style={[styles.step, isMobile && styles.stepMobile]}>
+              <View style={[styles.circle, isMobile && styles.circleMobile]}>
+                <FontAwesome5 name={step.icon} size={isMobile ? 24 : 28} color={BrandColors.primary} />
               </View>
-              <Text style={styles.stepTitle}>{step.title}</Text>
+              <Text style={[styles.stepTitle, isMobile && styles.stepTitleMobile]}>{step.title}</Text>
               <Text style={styles.stepDescription}>{step.description}</Text>
             </View>
           </React.Fragment>
@@ -76,9 +79,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: 'rgba(152,185,177,0.3)',
   },
+  sectionMobile: {
+    paddingVertical: Spacing.five,
+    paddingHorizontal: Spacing.three,
+  },
   header: {
     alignItems: 'center',
     marginBottom: Spacing.six,
+  },
+  headerMobile: {
+    marginBottom: Spacing.five,
   },
   title: {
     fontFamily: Fonts.headline,
@@ -88,6 +98,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.three,
     fontStyle: 'italic',
   },
+  titleMobile: {
+    fontSize: 30,
+  },
   subtitle: {
     fontFamily: Fonts.headline,
     fontSize: 18,
@@ -95,6 +108,10 @@ const styles = StyleSheet.create({
     opacity: 0.72,
     fontStyle: 'italic',
     textAlign: 'center',
+  },
+  subtitleMobile: {
+    fontSize: 16,
+    lineHeight: 24,
   },
   phoneWrap: {
     alignItems: 'center',
@@ -108,6 +125,10 @@ const styles = StyleSheet.create({
     borderWidth: 8,
     borderColor: BrandColors.tertiary,
     padding: 0,
+  },
+  phoneMobile: {
+    width: 220,
+    height: 440,
   },
   phoneBezel: {
     flex: 1,
@@ -127,10 +148,17 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
+  stepsMobile: {
+    flexDirection: 'column',
+    gap: Spacing.five,
+  },
   step: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: Spacing.three,
+  },
+  stepMobile: {
+    paddingHorizontal: 0,
   },
   divider: {
     width: 1,
@@ -149,6 +177,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.four,
   },
+  circleMobile: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: Spacing.three,
+  },
   stepTitle: {
     fontFamily: Fonts.headline,
     fontSize: 22,
@@ -157,6 +191,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: Spacing.two,
     textAlign: 'center',
+  },
+  stepTitleMobile: {
+    fontSize: 20,
   },
   stepDescription: {
     fontSize: 15,

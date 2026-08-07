@@ -3,18 +3,23 @@ import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const heroBg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
 
 export function DescargasHero() {
+  const { isMobile } = useBreakpoints();
+
   return (
-    <View style={styles.hero}>
+    <View style={[styles.hero, isMobile && styles.heroMobile]}>
       <View style={styles.heroBg}>
         <Image source={heroBg} style={styles.heroImage} contentFit="cover" />
         <View style={styles.heroOverlay} />
       </View>
-      <View style={styles.heroContent}>
-        <Text style={styles.heroTitle}>Descargá Ocean Eyes</Text>
+      <View style={[styles.heroContent, isMobile && styles.heroContentMobile]}>
+        <Text style={[styles.heroTitle, isMobile && styles.heroTitleMobile]}>
+          Descargá Ocean Eyes
+        </Text>
         <Text style={styles.heroSubtitle}>
           Disponible para Android y iOS. Llevá la protección marina en tu bolsillo.
         </Text>
@@ -30,6 +35,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+  },
+  heroMobile: {
+    minHeight: 320,
   },
   heroBg: {
     position: 'absolute',
@@ -59,6 +67,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     maxWidth: 800,
   },
+  heroContentMobile: {
+    paddingHorizontal: Spacing.three,
+  },
   heroTitle: {
     fontFamily: Fonts.headline,
     fontSize: 48,
@@ -69,6 +80,9 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
+  },
+  heroTitleMobile: {
+    fontSize: 32,
   },
   heroSubtitle: {
     fontFamily: Fonts.headline,

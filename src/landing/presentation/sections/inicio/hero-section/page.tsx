@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const heroBg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
 
@@ -12,22 +13,26 @@ type HeroSectionProps = {
 };
 
 export function HeroSection({ onFeaturesPress }: HeroSectionProps) {
+  const { isMobile, isTablet } = useBreakpoints();
+
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, isMobile && styles.sectionMobile]}>
       <View style={styles.background}>
         <Image source={heroBg} style={styles.bgImage} contentFit="cover" />
         <View style={styles.overlay} />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.bottom}>
+      <View style={[styles.content, isMobile && styles.contentMobile, isTablet && styles.contentTablet]}>
+        <View style={[styles.bottom, (isMobile || isTablet) && styles.bottomStacked]}>
           <View style={styles.info}>
-            <Text style={styles.title}>
+            <Text style={[styles.title, isMobile && styles.titleMobile, isTablet && styles.titleTablet]}>
               <Text style={styles.titleOcean}>Ocean</Text>
               <Text style={styles.titleEye}>Eyes</Text>
             </Text>
-            <Text style={styles.subtitle}>App Móvil para Reportar Pesca ilegal en Tiempo Real</Text>
-            <Text style={styles.description}>
+            <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
+              App Móvil para Reportar Pesca ilegal en Tiempo Real
+            </Text>
+            <Text style={[styles.description, (isMobile || isTablet) && styles.descriptionFull]}>
               Empodera a pescadores y comunidades costeras para proteger los océanos. Reporta,
               monitorea y recibe recompensas por cuidar el mar. Únete a la red de vigilancia marina
               más grande del Perú y contribuye activamente a la conservación de nuestros recursos
@@ -35,11 +40,14 @@ export function HeroSection({ onFeaturesPress }: HeroSectionProps) {
             </Text>
           </View>
 
-          <View style={styles.actions}>
-            <Pressable style={styles.infoBtn} onPress={onFeaturesPress}>
+          <View style={[styles.actions, isMobile && styles.actionsMobile]}>
+            <Pressable style={[styles.infoBtn, isMobile && styles.btnMobile]} onPress={onFeaturesPress}>
               <Text style={styles.infoBtnText}>Ver más</Text>
             </Pressable>
-            <Pressable style={styles.downloadBtn} onPress={() => router.push('/descargas')}>
+            <Pressable
+              style={[styles.downloadBtn, isMobile && styles.btnMobile]}
+              onPress={() => router.push('/descargas')}
+            >
               <Text style={styles.downloadBtnText}>Descargar</Text>
             </Pressable>
           </View>
@@ -60,6 +68,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     overflow: 'hidden',
+  },
+  sectionMobile: {
+    minHeight: 680,
   },
   background: {
     position: 'absolute',
@@ -90,10 +101,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.six,
     paddingBottom: 120,
   },
+  contentMobile: {
+    paddingHorizontal: Spacing.three,
+    paddingBottom: 96,
+  },
+  contentTablet: {
+    paddingHorizontal: Spacing.four,
+  },
   bottom: {
     flexDirection: 'row',
     gap: Spacing.six,
     alignItems: 'flex-end',
+  },
+  bottomStacked: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: Spacing.four,
   },
   info: {
     flex: 1,
@@ -108,6 +131,14 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 20,
+  },
+  titleMobile: {
+    fontSize: 44,
+    lineHeight: 44,
+  },
+  titleTablet: {
+    fontSize: 60,
+    lineHeight: 60,
   },
   titleOcean: {
     fontWeight: '300',
@@ -125,6 +156,10 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
   },
+  subtitleMobile: {
+    fontSize: 17,
+    lineHeight: 24,
+  },
   description: {
     fontSize: 17,
     lineHeight: 27,
@@ -135,11 +170,26 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
+  descriptionFull: {
+    maxWidth: '100%',
+    width: '100%',
+  },
   actions: {
     flexDirection: 'row',
     gap: Spacing.three,
     alignItems: 'center',
     paddingTop: Spacing.five,
+  },
+  actionsMobile: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    alignSelf: 'stretch',
+    width: '100%',
+    paddingTop: Spacing.three,
+  },
+  btnMobile: {
+    width: '100%',
+    minWidth: 0,
   },
   infoBtn: {
     flexDirection: 'row',

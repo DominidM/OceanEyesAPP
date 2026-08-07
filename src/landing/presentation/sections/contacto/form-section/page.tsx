@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const contactImg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
 
@@ -16,6 +17,7 @@ const SUBJECT_OPTIONS = [
 ];
 
 export function ContactoForm() {
+  const { isMobile } = useBreakpoints();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -48,15 +50,15 @@ export function ContactoForm() {
   };
 
   return (
-    <View style={styles.section}>
-      <View style={styles.row}>
-        <View style={styles.imageCol}>
-          <Image source={contactImg} style={styles.image} contentFit="cover" />
+    <View style={[styles.section, isMobile && styles.sectionMobile]}>
+      <View style={[styles.row, isMobile && styles.rowMobile]}>
+        <View style={[styles.imageCol, isMobile && styles.imageColMobile]}>
+          <Image source={contactImg} style={[styles.image, isMobile && styles.imageMobile]} contentFit="cover" />
         </View>
 
-        <View style={styles.formWrapper}>
+        <View style={[styles.formWrapper, isMobile && styles.formWrapperMobile]}>
           {sent ? (
-            <View style={styles.successCard}>
+            <View style={[styles.successCard, isMobile && styles.successCardMobile]}>
               <FontAwesome5 name="check-circle" size={48} color="#4ADE80" />
               <Text style={styles.successTitle}>Mensaje enviado</Text>
               <Text style={styles.successText}>
@@ -77,8 +79,8 @@ export function ContactoForm() {
               </Pressable>
             </View>
           ) : (
-            <View style={styles.form}>
-              <View style={styles.inlineFields}>
+            <View style={[styles.form, isMobile && styles.formMobile]}>
+              <View style={[styles.inlineFields, isMobile && styles.inlineFieldsMobile]}>
                 <View style={[styles.field, styles.fieldHalf]}>
                   <Text style={styles.label}>Nombre</Text>
                   <TextInput
@@ -197,6 +199,10 @@ const styles = StyleSheet.create({
     backgroundColor: BrandColors.tertiary,
     alignItems: 'center',
   },
+  sectionMobile: {
+    paddingVertical: Spacing.five,
+    paddingHorizontal: Spacing.three,
+  },
   row: {
     flexDirection: 'row',
     gap: Spacing.six,
@@ -204,20 +210,38 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'flex-start',
   },
+  rowMobile: {
+    flexDirection: 'column',
+    gap: Spacing.five,
+  },
   formWrapper: {
     flex: 1,
     maxWidth: 700,
     minWidth: 400,
+  },
+  formWrapperMobile: {
+    minWidth: 0,
+    maxWidth: '100%',
+    width: '100%',
   },
   imageCol: {
     flex: 0.8,
     minWidth: 280,
     maxWidth: 400,
   },
+  imageColMobile: {
+    flex: 0,
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+  },
   image: {
     width: '100%',
     height: 500,
     borderRadius: 20,
+  },
+  imageMobile: {
+    height: 240,
   },
   form: {
     backgroundColor: '#FFFFFF',
@@ -226,6 +250,9 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
     borderTopWidth: 4,
     borderTopColor: BrandColors.secondary,
+  },
+  formMobile: {
+    padding: Spacing.four,
   },
   successCard: {
     backgroundColor: '#FFFFFF',
@@ -237,6 +264,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderTopWidth: 4,
     borderTopColor: '#4ADE80',
+  },
+  successCardMobile: {
+    padding: Spacing.four,
+    minHeight: 0,
   },
   successTitle: {
     fontFamily: Fonts.headline,
@@ -256,6 +287,9 @@ const styles = StyleSheet.create({
   inlineFields: {
     flexDirection: 'row',
     gap: Spacing.three,
+  },
+  inlineFieldsMobile: {
+    flexDirection: 'column',
   },
   field: {
     gap: Spacing.two,

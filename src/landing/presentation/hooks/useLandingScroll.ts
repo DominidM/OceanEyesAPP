@@ -4,20 +4,22 @@ import { useLocalSearchParams } from 'expo-router';
 
 import type { LandingSectionKey } from '@landing/config/landing-nav';
 
-const SECTION_OFFSETS: Record<LandingSectionKey, number> = {
-  reportes: 1200,
-  'how-it-works': 2000,
-  ayudar: 2800,
-};
-
-export function useLandingScroll() {
+export function useLandingScroll(positions: Partial<Record<LandingSectionKey, number>>) {
   const scrollRef = useRef<ScrollView>(null);
+  const positionsRef = useRef(positions);
+  positionsRef.current = positions;
   const params = useLocalSearchParams<{ section?: LandingSectionKey }>();
   const targetSection = params.section;
 
+  const scrollTo = (key: LandingSectionKey) => {
+    const offset = positionsRef.current[key];
+    if (offset === undefined) return;
+    scrollRef.current?.scrollTo({ y: offset, animated: true });
+  };
+
   useLayoutEffect(() => {
     if (!targetSection) return;
-    const offset = SECTION_OFFSETS[targetSection];
+    const offset = positionsRef.current[targetSection];
     if (offset === undefined) return;
 
     let raf2 = 0;
@@ -32,17 +34,9 @@ export function useLandingScroll() {
     };
   }, [targetSection]);
 
-  const toReportes = () => {
-    scrollRef.current?.scrollTo({ y: 1200, animated: true });
-  };
-
-  const toHowItWorks = () => {
-    scrollRef.current?.scrollTo({ y: 2000, animated: true });
-  };
-
-  const toHelp = () => {
-    scrollRef.current?.scrollTo({ y: 2800, animated: true });
-  };
+  const toReportes = () => scrollTo('reportes');
+  const toHowItWorks = () => scrollTo('how-it-works');
+  const toHelp = () => scrollTo('ayudar');
 
   return { scrollRef, toReportes, toHowItWorks, toHelp };
 }
