@@ -213,6 +213,26 @@ export type OnChainOutcome =
   | { kind: 'skipped_no_wallet' }
   | { kind: 'failed'; error: string };
 
+export type OnChainStatus = Report['onChainStatus'];
+
+export function onChainNoticeForReport(
+  status: OnChainStatus,
+  options: { installed?: boolean; error?: string } = {},
+): string | null {
+  switch (status) {
+    case 'skipped_no_signer':
+      return options.installed
+        ? 'Reporte verificado en BD. Sin transacción on-chain: conecta tu wallet en la parte superior.'
+        : 'Reporte verificado en BD. Sin transacción on-chain: MetaMask no está instalado.';
+    case 'skipped_no_wallet':
+      return 'Reporte verificado en BD. Sin transacción on-chain: el reportante no tiene wallet vinculada.';
+    case 'failed':
+      return `Reporte verificado en BD. La transacción on-chain falló: ${options.error ?? 'Error desconocido'}`;
+    default:
+      return null;
+  }
+}
+
 export async function verifyReport(
   reportId: string,
   adminUid: string,
@@ -273,8 +293,14 @@ export async function verifyReport(
     });
   });
 
-  if (!signer) return { kind: 'skipped_no_signer' };
-  if (!reporterWallet) return { kind: 'skipped_no_wallet' };
+  if (!signer) {
+    await updateDoc(reportRef, { onChainStatus: 'skipped_no_signer' });
+    return { kind: 'skipped_no_signer' };
+  }
+  if (!reporterWallet) {
+    await updateDoc(reportRef, { onChainStatus: 'skipped_no_wallet' });
+    return { kind: 'skipped_no_wallet' };
+  }
 
   try {
     const txHash = await awardPointsOnChain({
@@ -283,14 +309,16 @@ export async function verifyReport(
       reportId,
       category,
     });
-    await updateDoc(reportRef, { txHash });
+    await updateDoc(reportRef, { txHash, onChainStatus: 'awarded' });
     if (pointTxId) {
       await updateDoc(doc(firestore, 'pointTransactions', pointTxId), { txHash });
     }
     return { kind: 'awarded', txHash };
   } catch (error) {
     console.warn('No se pudieron registrar puntos on-chain para el reporte', reportId, error);
-    return { kind: 'failed', error: error instanceof Error ? error.message : 'Error desconocido' };
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    await updateDoc(reportRef, { onChainStatus: 'failed', onChainError: message });
+    return { kind: 'failed', error: message };
   }
 }
 

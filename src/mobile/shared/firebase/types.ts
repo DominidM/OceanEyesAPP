@@ -80,6 +80,8 @@ export type Report = {
   status: ReportStatus;
   pointsAwarded: number;
   txHash?: string;
+  onChainStatus?: 'awarded' | 'skipped_no_signer' | 'skipped_no_wallet' | 'failed';
+  onChainError?: string;
   createdAt: Timestamp;
   submittedAt: Timestamp;
   reviewedAt?: Timestamp;

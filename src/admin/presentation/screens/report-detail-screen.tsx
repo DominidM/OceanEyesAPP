@@ -15,7 +15,7 @@ import { useAdminTheme } from '@admin/theme/context';
 import { buildArbiscanTxUrl } from '@shared/blockchain/ledger';
 import { banDevice } from '@/shared/firebase/bans';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
-import { verifyReport } from '@/shared/firebase/reports';
+import { onChainNoticeForReport, verifyReport } from '@/shared/firebase/reports';
 import { REPORT_CATEGORIES, type Report, type ReportStatus } from '@/shared/firebase/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -131,6 +131,9 @@ export function ReportDetailScreen() {
   const canReview = report && (report.status === 'pendiente' || report.status === 'en_revision');
   const hasLocation = report?.location?.latitude != null && report.location.longitude != null;
   const hasPhotos = !!report?.photoURLs && report.photoURLs.length > 0;
+  const persistentNotice = report?.onChainStatus
+    ? onChainNoticeForReport(report.onChainStatus, { installed, error: report.onChainError })
+    : null;
 
   return (
     <AdminShell
@@ -214,18 +217,22 @@ export function ReportDetailScreen() {
           <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
             <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Moderación</Text>
 
+            {onChainNotice && (
+              <Text style={[styles.subBlockHint, { color: colors.warning }]}>{onChainNotice}</Text>
+            )}
+            {actionError && (
+              <Text style={[styles.actionError, { color: colors.danger }]}>{actionError}</Text>
+            )}
+            {persistentNotice && !onChainNotice && (
+              <Text style={[styles.subBlockHint, { color: colors.warning }]}>{persistentNotice}</Text>
+            )}
+
             {canReview ? (
               <>
                 {!signer && (
                   <Text style={[styles.subBlockHint, { color: colors.warning }]}>
                     Conecta tu wallet en la parte superior para registrar los puntos on-chain.
                   </Text>
-                )}
-                {onChainNotice && (
-                  <Text style={[styles.subBlockHint, { color: colors.warning }]}>{onChainNotice}</Text>
-                )}
-                {actionError && (
-                  <Text style={[styles.actionError, { color: colors.danger }]}>{actionError}</Text>
                 )}
                 <Text style={[styles.subBlockHint, { color: colors.contentTextMuted }]}>
                   Mueve el reporte a revisión, aprueba (otorga puntos) o recházalo.
