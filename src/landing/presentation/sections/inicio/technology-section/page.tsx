@@ -6,7 +6,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const entornoImg = require('../../../../../../assets/images/technology/entorno-sucio.png');
+const entornoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166245/entorno-sucio_qzywtp.png';
 const bajoMarImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166250/hero_m3t2al.jpg';
 
 const cards = [
