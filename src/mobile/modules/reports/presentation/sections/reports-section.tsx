@@ -13,6 +13,7 @@ import { ReportsHeader, ReportChip } from '../components/reports-header';
 import { StatsStrip, ReportStat } from '../components/stats-strip';
 import { SyncWarning } from '../components/sync-warning';
 import { HistoryHeader } from '../components/history-header';
+import { resolveIncidentIcon } from '../incident-types';
 import { SurfaceColors } from '../theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { subscribeMyReports } from '@/shared/firebase/reports';
@@ -171,12 +172,7 @@ function toQueuedCard(pending: PendingReport): Report {
     statusBg: SurfaceColors.pendingBg,
     statusText: SurfaceColors.pendingText,
     statusIcon: { ios: 'icloud.slash.fill', android: 'cloud-off', web: 'cloud-off' },
-    thumbnail:
-      pending.input.category === 'pesca_ilegal'
-        ? 'net'
-        : pending.input.category === 'basura_marina'
-          ? 'boat'
-          : 'pending',
+    thumbnail: resolveIncidentIcon(pending.input.category, pending.input.customIcon),
     statusKey: 'pendiente',
     pointsAwarded: 0,
   };
@@ -203,7 +199,7 @@ function toCardReport(report: FirestoreReport): Report {
     statusBg: status.bg,
     statusText: status.text,
     statusIcon,
-    thumbnail: report.category === 'pesca_ilegal' ? 'net' : report.category === 'basura_marina' ? 'boat' : 'pending',
+    thumbnail: resolveIncidentIcon(report.category, report.customIcon),
     statusKey: report.status,
     pointsAwarded: report.pointsAwarded ?? 0,
     txHash: report.txHash ?? undefined,

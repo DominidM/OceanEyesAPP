@@ -7,7 +7,7 @@ import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { buildArbiscanTxUrl } from '@shared/blockchain/ledger';
 
 import { SurfaceColors } from '../theme';
-import { ReportThumbnail, ThumbnailType } from './report-thumbnail';
+import { ReportThumbnail } from './report-thumbnail';
 import { shadow } from '@/shared/utils/shadows';
 import type { ReportStatus } from '@/shared/firebase/types';
 
@@ -21,7 +21,7 @@ export type Report = {
   statusBg: string;
   statusText: string;
   statusIcon: SymbolName;
-  thumbnail: ThumbnailType;
+  thumbnail: SymbolName;
   statusKey?: ReportStatus;
   pointsAwarded?: number;
   txHash?: string;
@@ -30,7 +30,7 @@ export type Report = {
 export function ReportCard({ report }: { report: Report }) {
   return (
     <View style={styles.reportCard}>
-      <ReportThumbnail type={report.thumbnail} />
+      <ReportThumbnail icon={report.thumbnail} />
       <View style={styles.reportContent}>
         <View style={styles.reportHeader}>
           <AppText style={styles.reportTitle} numberOfLines={1}>
