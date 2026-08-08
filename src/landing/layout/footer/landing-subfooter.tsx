@@ -35,7 +35,7 @@ export function LandingSubfooter() {
           <Image source={logoImg} style={styles.logo} contentFit="contain" />
           <Text style={styles.brandName}>Ocean Eyes</Text>
           <Text style={styles.brandDesc}>
-            Protegiendo los océanos del Perú desde 2024. Tecnología ciudadana al servicio de la
+            Protegiendo los océanos del Perú desde 2026. Tecnología ciudadana al servicio de la
             conservación marina.
           </Text>
         </View>
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   innerMobile: {
-    gap: Spacing.four,
+    gap: Spacing.five,
   },
   brandCol: {
     flex: 2.5,
