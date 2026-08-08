@@ -40,7 +40,7 @@ type RealTimeMapProps = {
 
 export function RealTimeMap({ reports }: RealTimeMapProps) {
   const { permission, requestPermission, position, loading } = useCurrentLocation();
-  const [region, setRegion] = useState<Region | null>(null);
+  const [region, setRegion] = useState<Region>(DEFAULT_REGION);
   const [selected, setSelected] = useState<MapReport | null>(null);
   const markerTapped = useRef(false);
   const mapRef = useRef<MapView>(null);
@@ -68,43 +68,40 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
   };
 
   useEffect(() => {
-    if (position) {
-      setRegion({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      });
-    } else if (!loading) {
-      setRegion(DEFAULT_REGION);
-    }
-  }, [position, loading]);
+    if (!position) return;
+    const next = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    };
+    setRegion(next);
+    mapRef.current?.animateToRegion(next, 600);
+  }, [position]);
 
   const showPermissionPrompt = permission != null && !permission.granted;
 
   return (
     <View style={styles.container}>
-      {region ? (
-        <MapView
-          ref={mapRef}
-          style={StyleSheet.absoluteFill}
-          initialRegion={region}
-          showsUserLocation={permission?.granted}
-          showsMyLocationButton
-          rotateEnabled={false}
-          pitchEnabled={false}
-          showsCompass={false}
-          onPress={handleMapPress}>
-          {reports.map((report) => (
-            <ReportMarker
-              key={report.id}
-              report={report}
-              selected={selected?.id === report.id}
-              onPress={() => handleMarkerPress(report)}
-            />
-          ))}
-        </MapView>
-      ) : null}
+      <MapView
+        ref={mapRef}
+        style={StyleSheet.absoluteFill}
+        initialRegion={region}
+        showsUserLocation={permission?.granted}
+        showsMyLocationButton
+        rotateEnabled={false}
+        pitchEnabled={false}
+        showsCompass={false}
+        onPress={handleMapPress}>
+        {reports.map((report) => (
+          <ReportMarker
+            key={report.id}
+            report={report}
+            selected={selected?.id === report.id}
+            onPress={() => handleMarkerPress(report)}
+          />
+        ))}
+      </MapView>
 
       {loading ? (
         <View style={styles.loading} pointerEvents="none">
@@ -147,7 +144,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5E7EB',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   permissionOverlay: {
     ...StyleSheet.absoluteFillObject,
