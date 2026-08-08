@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 52,
     height: 52,
-    transform: [{ scale: 2.75 }, { translateY: 3 }],
+    transform: [{ scale: 1.2 }, { translateY: 0.5 }],
   },
   brand: {
     color: BrandColors.tertiary,

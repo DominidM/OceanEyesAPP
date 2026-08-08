@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 40,
     height: 40,
-    transform: [{ scale: 3 }, { translateY: 2 }],
+    transform: [{ scale: 1.25 }],
   },
   brandText: {
     flex: 1,

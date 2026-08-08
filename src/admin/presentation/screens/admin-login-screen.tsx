@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 36,
     height: 36,
-    transform: [{ scale: 3.5 }, { translateY: 1 }],
+    transform: [{ scale: 2 }, { translateY: 1 }, { translateX: -3.5}],
   },
   brandText: {
     gap: Spacing.one,
