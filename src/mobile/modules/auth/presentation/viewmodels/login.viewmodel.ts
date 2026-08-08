@@ -183,16 +183,27 @@ export class LoginViewModel extends ViewModel<LoginState, LoginDeps> {
       const user = await this.deps.linkAccountWithGoogle();
       if (user) this.deps.onAuthenticated();
     } catch (e) {
-      this.setState({
-        error:
-          e instanceof Error && e.message
-            ? `Error: ${e.message}`
-            : 'No se pudo vincular con Google. Inténtalo nuevamente.',
-      });
+      this.setState({ error: this.describeGoogleError(e) });
     } finally {
       this.setState({ busy: false });
     }
   };
+
+  private describeGoogleError(e: unknown): string {
+    const fallback = 'No se pudo iniciar sesión con Google. Inténtalo nuevamente.';
+    if (!(e instanceof Error)) return fallback;
+    if (__DEV__) console.error('[google-signin]', e.name, (e as { code?: string }).code, e.message);
+    const code = (e as { code?: string }).code ?? '';
+    if (code.includes('DEVELOPER_ERROR')) {
+      return 'La conexión con Google falló por un problema de configuración. Inténtalo en unos minutos o vuelve a instalar la app.';
+    }
+    if (code.includes('SIGN_IN_CANCELLED')) {
+      return 'Inicio de sesión cancelado.';
+    }
+    if (code.includes('PLAY_SERVICES_NOT_AVAILABLE')) return 'Servicios de Google no están disponibles.';
+    if (e.message.includes('already in use')) return 'Ya existe una cuenta con ese correo.';
+    return e.message ? `Error: ${e.message}` : fallback;
+  }
 
   submitAsGuest = async () => {
     // Invitado: se crea una sesión anónima en Firebase (requiere habilitar el sign-in
@@ -222,12 +233,7 @@ export class LoginViewModel extends ViewModel<LoginState, LoginDeps> {
       const user = await this.deps.signInWithGoogle();
       if (user) this.deps.onAuthenticated();
     } catch (e) {
-      this.setState({
-        error:
-          e instanceof Error && e.message
-            ? `Error: ${e.message}`
-            : 'No se pudo iniciar sesión con Google. Inténtalo nuevamente.',
-      });
+      this.setState({ error: this.describeGoogleError(e) });
     } finally {
       this.setState({ busy: false });
     }
