@@ -8,7 +8,7 @@ import {
   subscribeReports,
 } from '@/shared/firebase/reports';
 import type { Report as FirestoreReport } from '@/shared/firebase/types';
-import { isNetworkError } from '@/shared/offline/sync-engine';
+import { isNetworkError } from '@/shared/offline/errors';
 
 import type { NewReport, Report, ReportId } from '@/modules/reports/domain/entities/report';
 import type { ReportMediaPort, SubmissionMedia } from '@/modules/reports/domain/ports/report-media';
@@ -35,8 +35,8 @@ export class FirestoreReportRepository implements ReportRepository {
     const online = options?.online ?? true;
     if (online) {
       try {
-        const reportId = await publishReportOnline(newReportToInput(newReport), media ?? []);
-        return { reportId, queued: false };
+        const result = await publishReportOnline(newReportToInput(newReport), media ?? []);
+        return { reportId: result.id, queued: false };
       } catch (error) {
         if (!isNetworkError(error)) throw error;
       }

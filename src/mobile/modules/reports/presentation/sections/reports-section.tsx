@@ -1,24 +1,24 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {ScrollView, StyleSheet, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BottomBarHeight, BrandColors } from '@/constants/theme';
-import type { ReportStatus } from '@/shared/firebase/types';
-import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
+import type { Report as FirestoreReport, ReportStatus } from '@/shared/firebase/types';
 import type { PendingReport } from '@/shared/offline/outbox';
 import { requestSync } from '@/shared/offline/sync-engine';
-import { useAuth } from '@/shared/firebase/auth-context';
-import { useDb } from '@/shared/hooks/use-db';
-import { useViewModel } from '@/shared/viewmodels/use-view-model';
 
 import { ReportCard, Report } from '../components/report-card';
 import { ReportsHeader, ReportChip } from '../components/reports-header';
 import { StatsStrip, ReportStat } from '../components/stats-strip';
 import { SyncWarning } from '../components/sync-warning';
 import { HistoryHeader } from '../components/history-header';
-import { ReportsListViewModel } from '../viewmodels/reports-list.viewmodel';
+import { resolveIncidentIcon } from '../incident-types';
 import { SurfaceColors } from '../theme';
+import { isFirebaseConfigured } from '@/shared/firebase/config';
+import { subscribeMyReports } from '@/shared/firebase/reports';
+import { getCached, setCached } from '@/shared/offline/read-cache';
+import { getPendingReports, subscribeOutbox } from '@/shared/offline/outbox';
 
 const REPORTS_CACHE_KEY = '@oceaneyes/cache/reports-mine';
 
@@ -27,24 +27,40 @@ type FilterKey = 'todos' | 'pendiente' | 'verificado' | 'en_revision' | 'descart
 export function ReportsSection() {
   const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState<FilterKey>('todos');
-  const { user } = useAuth();
-  const db = useDb('reports');
 
-  const [, { reports, queued }] = useViewModel(
-    () =>
-      new ReportsListViewModel<Report>({
-        db,
-        getUser: () => user,
-        cacheKey: REPORTS_CACHE_KEY,
-        transform: (items: ReportDto[]) => items.map(toCardReport),
-      }),
-    {
-      db,
-      getUser: () => user,
-      cacheKey: REPORTS_CACHE_KEY,
-      transform: (items: ReportDto[]) => items.map(toCardReport),
-    },
-  );
+  const [reports, setReports] = useState<Report[]>([]);
+  const [queued, setQueued] = useState<PendingReport[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const apply = (items: FirestoreReport[]) => {
+      const cards = items.map(toCardReport);
+      setReports(cards);
+      setCached(REPORTS_CACHE_KEY, cards).catch(() => undefined);
+    };
+
+    (async () => {
+      const cached = await getCached<Report[]>(REPORTS_CACHE_KEY);
+      if (active && cached?.length) setReports(cached);
+    })();
+
+    if (!isFirebaseConfigured()) return () => undefined;
+    const unsubscribe = subscribeMyReports((items) => {
+      if (active) apply(items);
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const loadQueued = () => {
+      getPendingReports().then(setQueued).catch(() => undefined);
+    };
+    loadQueued();
+    return subscribeOutbox(loadQueued);
+  }, []);
 
   const counts = useMemo(() => {
     let pendiente = 0;
@@ -131,7 +147,7 @@ export function ReportsSection() {
             <ReportCard key={pending.id} report={toQueuedCard(pending)} />
           ))}
           {filteredReports.map((report) => (
-            <ReportCard key={`${report.title}-${report.date}`} report={report} />
+            <ReportCard key={report.id} report={report} />
           ))}
           {listEmpty ? (
             <View style={styles.emptyState}>
@@ -147,6 +163,7 @@ export function ReportsSection() {
 
 function toQueuedCard(pending: PendingReport): Report {
   return {
+    id: pending.id,
     title: pending.input.title,
     time: 'Sin enviar',
     location: pending.input.location?.address ?? 'Pendiente de envío',
@@ -155,19 +172,14 @@ function toQueuedCard(pending: PendingReport): Report {
     statusBg: SurfaceColors.pendingBg,
     statusText: SurfaceColors.pendingText,
     statusIcon: { ios: 'icloud.slash.fill', android: 'cloud-off', web: 'cloud-off' },
-    thumbnail:
-      pending.input.category === 'pesca_ilegal'
-        ? 'net'
-        : pending.input.category === 'basura_marina'
-          ? 'boat'
-          : 'pending',
+    thumbnail: resolveIncidentIcon(pending.input.category, pending.input.customIcon),
     statusKey: 'pendiente',
     pointsAwarded: 0,
   };
 }
 
-function toCardReport(report: ReportDto): Report {
-  const date = new Date(report.createdAt);
+function toCardReport(report: FirestoreReport): Report {
+  const date = report.createdAt?.toDate ? report.createdAt.toDate() : new Date();
   const statusMap: Record<ReportStatus, { label: string; bg: string; text: string; icon: Report['statusIcon'] }> = {
     pendiente: { label: 'Pendiente', bg: SurfaceColors.pendingBg, text: SurfaceColors.pendingText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
     en_revision: { label: 'En revisión', bg: SurfaceColors.reviewBg, text: SurfaceColors.reviewText, icon: { ios: 'clock.fill', android: 'schedule', web: 'schedule' } },
@@ -178,6 +190,7 @@ function toCardReport(report: ReportDto): Report {
   const statusIcon = status.icon;
 
   return {
+    id: report.id,
     title: report.title,
     time: date.toLocaleDateString(),
     location: report.location?.address ?? 'Ubicación confirmada',
@@ -186,9 +199,10 @@ function toCardReport(report: ReportDto): Report {
     statusBg: status.bg,
     statusText: status.text,
     statusIcon,
-    thumbnail: report.category === 'pesca_ilegal' ? 'net' : report.category === 'basura_marina' ? 'boat' : 'pending',
+    thumbnail: resolveIncidentIcon(report.category, report.customIcon),
     statusKey: report.status,
-    pointsAwarded: report.pointsAwarded,
+    pointsAwarded: report.pointsAwarded ?? 0,
+    txHash: report.txHash ?? undefined,
   };
 }
 

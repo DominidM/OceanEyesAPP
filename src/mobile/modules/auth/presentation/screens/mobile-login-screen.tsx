@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
-import React, { useCallback, useMemo, useRef } from 'react';
-import {Animated, Keyboard, Platform, Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import {Animated, Keyboard, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
+import { AppSymbol, type SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { canLinkAccount, isGoogleSignInAvailable, linkAccountWithEmail, linkAccountWithGoogle, loginWithEmail, registerUser, signInAsGuest, signInWithGoogle } from '@/shared/firebase/auth';
@@ -10,6 +11,9 @@ import { useViewModel } from '@/shared/viewmodels/use-view-model';
 import { LoginViewModel } from '../viewmodels/login.viewmodel';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const eyeIcon: SymbolName = { ios: 'eye', android: 'visibility', web: 'visibility' };
+const eyeOffIcon: SymbolName = { ios: 'eye.slash', android: 'visibility-off', web: 'visibility-off' };
 
 type ToneButtonProps = {
   children: React.ReactNode;
@@ -66,6 +70,7 @@ function ToneButton({ children, onPress, disabled, style, tone, property = 'back
 }
 
 export default function MobileLoginScreen() {
+  const [showPassword, setShowPassword] = useState(false);
   const [vm, state] = useViewModel(
     () =>
       new LoginViewModel({
@@ -96,6 +101,11 @@ export default function MobileLoginScreen() {
 
   return (
     <View style={styles.screen}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
       <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} accessibilityRole="none" />
       <AppText style={styles.brand}>OceanEyes</AppText>
       <AppText style={styles.subtitle}>
@@ -161,7 +171,23 @@ export default function MobileLoginScreen() {
           </>
         )}
         <TextInput value={state.email} onChangeText={vm.setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="Correo electrónico" style={styles.input} />
-        <TextInput value={state.password} onChangeText={vm.setPassword} secureTextEntry placeholder="Contraseña" style={styles.input} />
+        <View style={styles.passwordWrap}>
+          <TextInput
+            value={state.password}
+            onChangeText={vm.setPassword}
+            secureTextEntry={!showPassword}
+            placeholder="Contraseña"
+            style={[styles.input, styles.inputPassword]}
+          />
+          <Pressable
+            onPress={() => setShowPassword((value) => !value)}
+            style={styles.passwordEye}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+            <AppSymbol name={showPassword ? eyeOffIcon : eyeIcon} color={BrandColors.primary} size={20} />
+          </Pressable>
+        </View>
         {!!state.error && <AppText style={styles.error}>{state.error}</AppText>}
         <ToneButton
           disabled={state.busy}
@@ -200,17 +226,23 @@ export default function MobileLoginScreen() {
           </ToneButton>
         )}
       </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: BrandColors.primary, padding: Spacing.five },
+  screen: { flex: 1, backgroundColor: BrandColors.primary, padding: Spacing.five },
+  scroll: { flex: 1, width: '100%' },
+  scrollContent: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
   brand: { color: BrandColors.tertiary, fontFamily: Fonts.headline, fontSize: 34, fontWeight: '700' },
   subtitle: { color: BrandColors.secondary, fontFamily: Fonts.body, fontSize: 15, marginTop: Spacing.one },
   card: { width: '100%', maxWidth: 420, gap: Spacing.three, backgroundColor: BrandColors.tertiary, borderRadius: 20, marginTop: Spacing.five, padding: Spacing.five },
   title: { color: BrandColors.primary, fontFamily: Fonts.headline, fontSize: 28, fontWeight: '700' },
   input: { borderWidth: 1, borderColor: 'rgba(19, 78, 94, 0.2)', borderRadius: 10, padding: Spacing.three, color: BrandColors.neutral, fontFamily: Fonts.body },
+  passwordWrap: { position: 'relative' },
+  inputPassword: { paddingRight: 40 },
+  passwordEye: { position: 'absolute', right: Spacing.two, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: Spacing.two },
   typeRow: { flexDirection: 'row', gap: Spacing.one },
   typeButton: { flex: 1, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(19, 78, 94, 0.2)', borderRadius: 8, paddingVertical: Spacing.two },
   typeButtonActive: { backgroundColor: BrandColors.primary },

@@ -279,20 +279,26 @@ seedRewards()  // Inserta 5 recompensas iniciales
 ### Pendiente en Admin
 - [ ] Sección Recompensas (CRUD del catálogo, nav muestra "Pronto")
 - [ ] Gestión de canjes (aprobar/entregar redemptions)
-- [ ] Botón "Conectar wallet" (MetaMask) en el AdminShell (blockchain)
 
 ---
 
-## 6. Pendiente para Blockchain
+## 6. Blockchain — Estado (Arbitrum Sepolia)
 
 > Plan detallado y pasos en `docs/ARBITRUM_PLAN.md`.
 
-- [ ] Smart contract `PointLedger.sol` deployado en **Arbitrum Sepolia** (testnet)
-- [ ] Instalar `ethers` (decisión: ethers v6, no wagmi/viem)
-- [ ] Conectar wallet del admin (MetaMask en web)
-- [ ] Guardar `walletAddress` en perfil de usuario
-- [ ] Llamar `awardPoints()` en `verifyReport()` y registrar `txHash` en `reports` + `pointTransactions`
-- [ ] Verificar contrato en Arbiscan
+- [x] Smart contract `PointLedger.sol` deployado en **Arbitrum Sepolia** (`0xbA7A9d6cB7581Ef28cD01c77813bA229Cb2B1509`)
+- [x] Instalar `ethers` (v6) — `ethers ^6.17.0`
+- [x] Verificar contrato en Arbiscan (Etherscan API V2)
+- [x] Conectar wallet del admin (MetaMask en web) — botón "Conectar wallet" en `src/admin/layout/header/admin-header.tsx` (hook `useWallet.tsx`)
+- [x] Guardar `walletAddress` en perfil de usuario — captura en Perfil (mobile), validada con `ethers.isAddress`
+- [x] Llamar `awardPoints()` en `verifyReport()` y registrar `txHash` en `reports` + `pointTransactions`
+- [x] KPI "On-chain" en el dashboard admin (nº de reportes verificados con `txHash`)
+
+**Fixes aplicados (validados):**
+
+- **Gas (`ledger.ts`)**: `awardPointsOnChain` pasa overrides EIP-1559 con `maxFeePerGas` = 2× el recomendado por la red. Cubre picos de `baseFee` en testnet (caso real: `maxFeePerGas < baseFee` rechazó la tx en MetaMask).
+- **Idempotencia (`reports.ts`)**: `verifyReport` rechaza reportes ya `verificado` (espeja `AlreadyProcessed` del contrato). Evita doble acreditación de puntos en Firestore.
+- **Plan Spark (sin Storage)**: Firebase Storage no está disponible en el plan gratuito → la foto del reporte no se sube, pero el reporte se guarda igual. `publishReportOnline` devuelve `{ id, mediaAttached }` y la pantalla de éxito lo informa. (Requiere plan Blaze para activar Storage.)
 
 ---
 

@@ -1,7 +1,7 @@
 require('@nomicfoundation/hardhat-toolbox');
 require('dotenv').config();
 
-const { ARBITRUM_SEPOLIA_RPC_URL, ARBISCAN_API_KEY, PRIVATE_KEY } = process.env;
+const { ARBITRUM_SEPOLIA_RPC_URL, ETHERSCAN_API_KEY, PRIVATE_KEY } = process.env;
 
 module.exports = {
   solidity: {
@@ -22,13 +22,13 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: ARBISCAN_API_KEY ? { arbitrumSepolia: ARBISCAN_API_KEY } : {},
+    apiKey: ETHERSCAN_API_KEY,
     customChains: [
       {
         network: 'arbitrumSepolia',
         chainId: 421614,
         urls: {
-          apiURL: 'https://api-sepolia.arbiscan.io/api',
+          apiURL: 'https://api.etherscan.io/v2/api',
           browserURL: 'https://sepolia.arbiscan.io',
         },
       },
