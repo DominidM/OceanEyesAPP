@@ -273,7 +273,7 @@ export async function getUserProfile(uid: string) {
   return snapshot.exists() ? (snapshot.data() as UserProfile) : null;
 }
 
-export async function updateUserProfile(uid: string, changes: Partial<Pick<UserProfile, 'displayName' | 'dni' | 'phone' | 'profileType'>>) {
+export async function updateUserProfile(uid: string, changes: Partial<Pick<UserProfile, 'displayName' | 'dni' | 'phone' | 'profileType' | 'walletAddress'>>) {
   await updateDoc(doc(firestore, 'users', uid), {
     ...changes,
     updatedAt: serverTimestamp(),

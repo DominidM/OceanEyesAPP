@@ -186,6 +186,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     includeFontPadding: false,
   },
+  mediaNote: {
+    color: SC.textBody,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    opacity: 0.8,
+    includeFontPadding: false,
+  },
   successButton: {
     width: '100%',
     height: 56,
