@@ -13,7 +13,7 @@ export function LandingFooter() {
         © {new Date().getFullYear()} OceanEyes. Todos los derechos reservados.
       </Text>
       <Pressable
-        onPress={() => Linking.openURL('https://sg-technology.solvegrades.workers.dev/')}
+        onPress={() => Linking.openURL('https://solvegrades.com/')}
       >
         <Text style={[styles.builtBy, isMobile && styles.builtByMobile]}>
           Designed & Built by <Text style={styles.builtByBrand}>SOLVEGRADES</Text>
