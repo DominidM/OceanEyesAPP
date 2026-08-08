@@ -207,11 +207,17 @@ export function subscribeReports(callback: (reports: Report[]) => void): () => v
   );
 }
 
+export type OnChainOutcome =
+  | { kind: 'awarded'; txHash: string }
+  | { kind: 'skipped_no_signer' }
+  | { kind: 'skipped_no_wallet' }
+  | { kind: 'failed'; error: string };
+
 export async function verifyReport(
   reportId: string,
   adminUid: string,
   signer?: Signer,
-): Promise<void> {
+): Promise<OnChainOutcome> {
   const reportRef = doc(firestore, 'reports', reportId);
   let pointTxId: string | undefined;
   let reporterWallet: string | undefined;
@@ -267,21 +273,24 @@ export async function verifyReport(
     });
   });
 
-  if (signer && reporterWallet) {
-    try {
-      const txHash = await awardPointsOnChain({
-        signer,
-        reporter: reporterWallet,
-        reportId,
-        category,
-      });
-      await updateDoc(reportRef, { txHash });
-      if (pointTxId) {
-        await updateDoc(doc(firestore, 'pointTransactions', pointTxId), { txHash });
-      }
-    } catch (error) {
-      console.warn('No se pudieron registrar puntos on-chain para el reporte', reportId, error);
+  if (!signer) return { kind: 'skipped_no_signer' };
+  if (!reporterWallet) return { kind: 'skipped_no_wallet' };
+
+  try {
+    const txHash = await awardPointsOnChain({
+      signer,
+      reporter: reporterWallet,
+      reportId,
+      category,
+    });
+    await updateDoc(reportRef, { txHash });
+    if (pointTxId) {
+      await updateDoc(doc(firestore, 'pointTransactions', pointTxId), { txHash });
     }
+    return { kind: 'awarded', txHash };
+  } catch (error) {
+    console.warn('No se pudieron registrar puntos on-chain para el reporte', reportId, error);
+    return { kind: 'failed', error: error instanceof Error ? error.message : 'Error desconocido' };
   }
 }
 
@@ -289,7 +298,7 @@ export async function updateReportStatus(
   reportId: string,
   status: 'en_revision' | 'verificado' | 'descartado',
   options?: { adminUid?: string; reason?: string; signer?: Signer },
-): Promise<void> {
+): Promise<OnChainOutcome | null> {
   const reportRef = doc(firestore, 'reports', reportId);
 
   if (status === 'verificado') {
@@ -302,4 +311,6 @@ export async function updateReportStatus(
     reviewedBy: options?.adminUid ?? null,
     rejectionReason: status === 'descartado' ? options?.reason ?? null : null,
   });
+
+  return null;
 }

@@ -32,12 +32,13 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function ReportDetailScreen() {
   const { colors } = useAdminTheme();
-  const { signer } = useWallet();
+  const { signer, connect, installed } = useWallet();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [banned, setBanned] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [onChainNotice, setOnChainNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -51,9 +52,25 @@ export function ReportDetailScreen() {
   const changeStatus = async (status: Extract<ReportStatus, 'en_revision' | 'verificado' | 'descartado'>) => {
     if (!report) return;
     setActionError(null);
+    setOnChainNotice(null);
     try {
       if (status === 'verificado') {
-        await verifyReport(report.id, firebaseAuth?.currentUser?.uid ?? 'admin', signer ?? undefined);
+        let currentSigner = signer;
+        if (!currentSigner && installed) {
+          currentSigner = await connect();
+        }
+        const outcome = await verifyReport(report.id, firebaseAuth?.currentUser?.uid ?? 'admin', currentSigner ?? undefined);
+        if (outcome.kind === 'skipped_no_signer') {
+          setOnChainNotice(
+            installed
+              ? 'Reporte verificado en BD. Sin transacción on-chain: conecta tu wallet en la parte superior.'
+              : 'Reporte verificado en BD. Sin transacción on-chain: MetaMask no está instalado.',
+          );
+        } else if (outcome.kind === 'skipped_no_wallet') {
+          setOnChainNotice('Reporte verificado en BD. Sin transacción on-chain: el reportante no tiene wallet vinculada.');
+        } else if (outcome.kind === 'failed') {
+          setOnChainNotice(`Reporte verificado en BD. La transacción on-chain falló: ${outcome.error}`);
+        }
       } else {
         await updateDoc(doc(firestore, 'reports', report.id), {
           status,
@@ -203,6 +220,9 @@ export function ReportDetailScreen() {
                   <Text style={[styles.subBlockHint, { color: colors.warning }]}>
                     Conecta tu wallet en la parte superior para registrar los puntos on-chain.
                   </Text>
+                )}
+                {onChainNotice && (
+                  <Text style={[styles.subBlockHint, { color: colors.warning }]}>{onChainNotice}</Text>
                 )}
                 {actionError && (
                   <Text style={[styles.actionError, { color: colors.danger }]}>{actionError}</Text>

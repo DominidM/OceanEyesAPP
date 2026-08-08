@@ -23,7 +23,7 @@ type WalletState = {
   error: string | null;
   installed: boolean;
   onArbitrumSepolia: boolean;
-  connect: () => Promise<void>;
+  connect: () => Promise<Signer | null>;
   disconnect: () => void;
   switchNetwork: () => Promise<void>;
 };
@@ -71,17 +71,20 @@ export function WalletProvider({ children }: PropsWithChildren) {
     }
   }, []);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (): Promise<Signer | null> => {
     setConnecting(true);
     setError(null);
     try {
       const address = await connectWallet();
+      const nextSigner = await getBrowserSigner();
       setAccount(address);
-      setSigner(await getBrowserSigner());
+      setSigner(nextSigner);
       persistAccount(address);
       await refreshChainId();
+      return nextSigner;
     } catch (e) {
       setError(e instanceof WalletError ? e.message : 'No se pudo conectar la wallet.');
+      return null;
     } finally {
       setConnecting(false);
     }
