@@ -258,7 +258,7 @@ export async function signInWithGoogleIdToken(idToken: string) {
 
 export async function logout() {
   await signOut(requireAuth());
-  if (Platform.OS !== 'web') {
+  if (Platform.OS !== 'web' && isGoogleSignInAvailable()) {
     try {
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
       await GoogleSignin.signOut();
