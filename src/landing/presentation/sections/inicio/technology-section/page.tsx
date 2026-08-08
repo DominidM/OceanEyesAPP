@@ -7,7 +7,7 @@ import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const entornoImg = require('../../../../../../assets/images/technology/entorno-sucio.png');
-const bajoMarImg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
+const bajoMarImg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR-opt.jpg');
 
 const cards = [
   {

@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const heroBg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
+const heroBg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR-opt.jpg');
 
 export function ContactoHero() {
   const { isMobile } = useBreakpoints();

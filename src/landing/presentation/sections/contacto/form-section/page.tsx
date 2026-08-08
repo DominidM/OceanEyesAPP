@@ -6,7 +6,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const contactImg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR.jpg');
+const contactImg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR-opt.jpg');
 
 const SUBJECT_OPTIONS = [
   'Consulta general',
@@ -55,6 +55,8 @@ export function ContactoForm() {
         <View style={[styles.imageCol, isMobile && styles.imageColMobile]}>
           <Image source={contactImg} style={[styles.image, isMobile && styles.imageMobile]} contentFit="cover" />
         </View>
+
+        {isMobile && <View style={{ height: 128 }} />}
 
         <View style={[styles.formWrapper, isMobile && styles.formWrapperMobile]}>
           {sent ? (
@@ -212,7 +214,7 @@ const styles = StyleSheet.create({
   },
   rowMobile: {
     flexDirection: 'column',
-    gap: Spacing.five,
+    gap: 0,
   },
   formWrapper: {
     flex: 1,
@@ -234,6 +236,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: '100%',
     minWidth: 0,
+    height: 240,
   },
   image: {
     width: '100%',
