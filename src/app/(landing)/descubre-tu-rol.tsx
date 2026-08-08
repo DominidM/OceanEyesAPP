@@ -6,16 +6,14 @@ import { LandingHeader } from '@landing/layout/header/landing-header';
 import { LandingFooter } from '@landing/layout/footer/landing-footer';
 import { LandingSubfooter } from '@landing/layout/footer/landing-subfooter';
 import { PageTransition } from '@landing/presentation/components/page-transition';
-import { ContactoHero } from '@landing/presentation/sections/contacto/hero-section/page';
-import { ContactoForm } from '@landing/presentation/sections/contacto/form-section/page';
+import { PerfilHero } from '@landing/presentation/sections/perfil';
 
-export default function ContactoScreen() {
+export default function DescubreTuRolScreen() {
   return (
     <PageTransition>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <LandingHeader scrolled={true} />
-        <ContactoHero />
-        <ContactoForm />
+        <PerfilHero />
         <LandingSubfooter />
         <LandingFooter />
       </ScrollView>

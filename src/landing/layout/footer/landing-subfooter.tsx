@@ -7,7 +7,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166247/logotipo_aasun4.png';
+const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786169052/logotipo_q2mkhv.png';
 
 const navLinks = [
   { label: 'Inicio', href: '/' },

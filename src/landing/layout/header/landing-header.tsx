@@ -5,43 +5,20 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts, Fonts, BrandColors, Spacing } from '@landing/config/theme';
-import { LANDING_NAV_LINKS, type LandingNavPressKey } from '@landing/config/landing-nav';
+import { LANDING_NAV_LINKS } from '@landing/config/landing-nav';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166247/logotipo_aasun4.png';
+const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786169052/logotipo_q2mkhv.png';
 
 export type LandingHeaderProps = {
   scrolled: boolean;
-  onHowItWorksPress: () => void;
-  onHelpPress: () => void;
-  onReportesPress: () => void;
 };
 
-export function LandingHeader({
-  onHowItWorksPress,
-  onHelpPress,
-  onReportesPress,
-  scrolled,
-}: LandingHeaderProps) {
+export function LandingHeader({ scrolled }: LandingHeaderProps) {
   const { isMobile } = useBreakpoints();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const actions: Record<LandingNavPressKey, () => void> = {
-    onHowItWorksPress,
-    onHelpPress,
-    onReportesPress,
-  };
-
   const isTransparent = !scrolled;
-
-  const handlePress = (link: (typeof LANDING_NAV_LINKS)[number]) => {
-    setMenuOpen(false);
-    if (link.href) {
-      router.push(link.href);
-    } else if (link.onPressKey) {
-      actions[link.onPressKey]();
-    }
-  };
 
   return (
     <View style={[styles.bar, (isTransparent && !menuOpen) && styles.barTransparent]}>
@@ -67,12 +44,28 @@ export function LandingHeader({
           <View style={styles.rightGroup}>
             <View style={styles.links}>
               {LANDING_NAV_LINKS.map((link) => (
-                <Pressable key={link.label} onPress={() => handlePress(link)} hitSlop={8}>
-                  <Text style={[styles.link, isTransparent && styles.linkLight]}>{link.label}</Text>
+                <Pressable
+                  key={link.label}
+                  onPress={() => router.push(link.href)}
+                  hitSlop={8}
+                >
+                  <Text style={[styles.link, isTransparent && styles.linkLight]}>
+                    {link.label}
+                  </Text>
                 </Pressable>
               ))}
             </View>
             <View style={styles.buttonGroup}>
+              <Pressable
+                style={[styles.cta, isTransparent && styles.ctaTransparent]}
+                onPress={() => router.push('/descargas')}
+                hitSlop={8}
+              >
+                <FontAwesome5 name="download" size={13} color={BrandColors.primary} />
+                <Text style={[styles.ctaLabel, isTransparent && styles.ctaLabelLight]}>
+                  Descargar
+                </Text>
+              </Pressable>
               <Pressable
                 style={[styles.adminLink, isTransparent && styles.adminLinkTransparent]}
                 onPress={() => router.push('/admin/login')}
@@ -87,16 +80,6 @@ export function LandingHeader({
                   Admin
                 </Text>
               </Pressable>
-              <Pressable
-                style={[styles.cta, isTransparent && styles.ctaTransparent]}
-                onPress={() => router.push('/descargas')}
-                hitSlop={8}
-              >
-                <FontAwesome5 name="download" size={13} color={BrandColors.primary} />
-                <Text style={[styles.ctaLabel, isTransparent && styles.ctaLabelLight]}>
-                  Descargar
-                </Text>
-              </Pressable>
             </View>
           </View>
         )}
@@ -105,22 +88,18 @@ export function LandingHeader({
       {isMobile && menuOpen && (
         <View style={styles.dropdown}>
           {LANDING_NAV_LINKS.map((link) => (
-            <Pressable key={link.label} onPress={() => handlePress(link)} hitSlop={4}>
+            <Pressable
+              key={link.label}
+              onPress={() => {
+                setMenuOpen(false);
+                router.push(link.href);
+              }}
+              hitSlop={4}
+            >
               <Text style={styles.dropdownLink}>{link.label}</Text>
             </Pressable>
           ))}
           <View style={styles.dropdownDivider} />
-          <Pressable
-            style={styles.dropdownAdmin}
-            onPress={() => {
-              setMenuOpen(false);
-              router.push('/admin/login');
-            }}
-            hitSlop={4}
-          >
-            <FontAwesome5 name="shield-alt" size={13} color={BrandColors.primary} />
-            <Text style={styles.dropdownAdminLabel}>Admin</Text>
-          </Pressable>
           <Pressable
             style={styles.dropdownCta}
             onPress={() => {
@@ -131,6 +110,17 @@ export function LandingHeader({
           >
             <FontAwesome5 name="download" size={14} color="#FFFFFF" />
             <Text style={styles.dropdownCtaLabel}>Descargar</Text>
+          </Pressable>
+          <Pressable
+            style={styles.dropdownAdmin}
+            onPress={() => {
+              setMenuOpen(false);
+              router.push('/admin/login');
+            }}
+            hitSlop={4}
+          >
+            <FontAwesome5 name="shield-alt" size={13} color={BrandColors.primary} />
+            <Text style={styles.dropdownAdminLabel}>Admin</Text>
           </Pressable>
         </View>
       )}
@@ -188,7 +178,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 52,
     height: 52,
-    transform: [{ scale: 1.5 }, { translateY: 2 }],
+    transform: [{ scale: 2.75 }, { translateY: 3 }],
   },
   brand: {
     color: BrandColors.tertiary,
@@ -234,6 +224,17 @@ const styles = StyleSheet.create({
   ctaTransparent: {
     backgroundColor: 'rgba(255,255,255,0.9)',
   },
+  ctaLabel: {
+    color: BrandColors.primary,
+    fontFamily: AppFonts.label,
+    fontSize: 14,
+    fontWeight: '700',
+    transitionProperty: 'color',
+    transitionDuration: '300ms',
+  },
+  ctaLabelLight: {
+    color: BrandColors.primary,
+  },
   adminLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -259,17 +260,6 @@ const styles = StyleSheet.create({
   },
   adminLabelLight: {
     color: 'rgba(255,255,255,0.85)',
-  },
-  ctaLabel: {
-    color: BrandColors.primary,
-    fontFamily: AppFonts.label,
-    fontSize: 14,
-    fontWeight: '700',
-    transitionProperty: 'color',
-    transitionDuration: '300ms',
-  },
-  ctaLabelLight: {
-    color: BrandColors.primary,
   },
   menuBtn: {
     width: 44,

@@ -18,7 +18,7 @@ import {
 
 export function LandingScreen() {
   const [positions, setPositions] = useState<Partial<Record<LandingSectionKey, number>>>({});
-  const { scrollRef, toReportes, toHowItWorks, toHelp } = useLandingScroll(positions);
+  const { scrollRef, toHowItWorks } = useLandingScroll(positions);
   const [scrolled, setScrolled] = useState(false);
 
   const handleScroll = (e: {
@@ -38,9 +38,6 @@ export function LandingScreen() {
         <LandingLayout
           scrolled={scrolled}
           scrollRef={scrollRef}
-          onHowItWorksPress={toHowItWorks}
-          onHelpPress={toHelp}
-          onReportesPress={toReportes}
         >
           <ScrollView
             ref={scrollRef}

@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { getUserProfile, loginWithEmail, logout, rememberAdminSession } from '@/shared/firebase/auth';
 
-const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166247/logotipo_aasun4.png';
+const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786169052/logotipo_q2mkhv.png';
 
 export function AdminLoginScreen() {
   const [email, setEmail] = useState('admin@oceaneyes.com');
