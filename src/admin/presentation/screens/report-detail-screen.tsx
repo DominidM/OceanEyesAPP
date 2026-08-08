@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
@@ -10,9 +10,12 @@ import { Badge, Button, Card, EmptyState, LoadingState, SectionHeader } from '@a
 import { ReportDataList } from '@admin/presentation/components/reports/report-data-list';
 import { ReportGallery } from '@admin/presentation/components/reports/report-gallery';
 import { ReportMap } from '@admin/presentation/components/reports/report-map';
+import { useWallet } from '@admin/presentation/hooks/useWallet';
 import { useAdminTheme } from '@admin/theme/context';
+import { buildArbiscanTxUrl } from '@shared/blockchain/ledger';
 import { banDevice } from '@/shared/firebase/bans';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
+import { verifyReport } from '@/shared/firebase/reports';
 import { REPORT_CATEGORIES, type Report, type ReportStatus } from '@/shared/firebase/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -29,10 +32,12 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function ReportDetailScreen() {
   const { colors } = useAdminTheme();
+  const { signer } = useWallet();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [banned, setBanned] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -45,19 +50,29 @@ export function ReportDetailScreen() {
 
   const changeStatus = async (status: Extract<ReportStatus, 'en_revision' | 'verificado' | 'descartado'>) => {
     if (!report) return;
-    await updateDoc(doc(firestore, 'reports', report.id), {
-      status,
-      reviewedBy: firebaseAuth?.currentUser?.uid,
-      reviewedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    await addDoc(collection(firestore, 'reports', report.id, 'statusHistory'), {
-      fromStatus: report.status,
-      toStatus: status,
-      changedBy: firebaseAuth?.currentUser?.uid,
-      createdAt: serverTimestamp(),
-    });
-    setReport({ ...report, status });
+    setActionError(null);
+    try {
+      if (status === 'verificado') {
+        await verifyReport(report.id, firebaseAuth?.currentUser?.uid ?? 'admin', signer ?? undefined);
+      } else {
+        await updateDoc(doc(firestore, 'reports', report.id), {
+          status,
+          reviewedBy: firebaseAuth?.currentUser?.uid,
+          reviewedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+      await addDoc(collection(firestore, 'reports', report.id, 'statusHistory'), {
+        fromStatus: report.status,
+        toStatus: status,
+        changedBy: firebaseAuth?.currentUser?.uid,
+        createdAt: serverTimestamp(),
+      });
+      const snap = await getDoc(doc(firestore, 'reports', report.id));
+      if (snap.exists()) setReport({ id: snap.id, ...snap.data() } as Report);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Error al cambiar el estado del reporte.');
+    }
   };
 
   const handleBanDevice = async () => {
@@ -159,6 +174,14 @@ export function ReportDetailScreen() {
 
             <View style={styles.headingRow}>
               <Badge label={statusChip(report.status).label} color={statusChip(report.status).color} bg={statusChip(report.status).bg} />
+              {report.status === 'verificado' && report.txHash && (
+                <Pressable
+                  onPress={() => Linking.openURL(buildArbiscanTxUrl(report.txHash!))}
+                  style={({ hovered }) => [styles.txLink, hovered && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.txLinkText, { color: colors.accent }]}>Ver tx en Arbiscan</Text>
+                </Pressable>
+              )}
             </View>
 
             {report.description ? (
@@ -176,6 +199,14 @@ export function ReportDetailScreen() {
 
             {canReview ? (
               <>
+                {!signer && (
+                  <Text style={[styles.subBlockHint, { color: colors.warning }]}>
+                    Conecta tu wallet en la parte superior para registrar los puntos on-chain.
+                  </Text>
+                )}
+                {actionError && (
+                  <Text style={[styles.actionError, { color: colors.danger }]}>{actionError}</Text>
+                )}
                 <Text style={[styles.subBlockHint, { color: colors.contentTextMuted }]}>
                   Mueve el reporte a revisión, aprueba (otorga puntos) o recházalo.
                 </Text>
@@ -256,8 +287,11 @@ const styles = StyleSheet.create({
   },
   emptyHint: { fontFamily: Fonts.body, fontSize: 13, fontStyle: 'italic' },
   headingRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: Spacing.two },
+  txLink: { cursor: 'pointer' },
+  txLinkText: { fontFamily: Fonts.label, fontSize: 12, fontWeight: '700' },
   descriptionBox: { gap: Spacing.one },
   descriptionLabel: { fontFamily: Fonts.label, fontSize: 13, fontWeight: '600' },
   description: { fontFamily: Fonts.body, fontSize: 14, lineHeight: 21 },
+  actionError: { fontFamily: Fonts.body, fontSize: 13 },
   actionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
 });

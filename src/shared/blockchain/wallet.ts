@@ -37,6 +37,13 @@ export async function connectWallet(): Promise<string> {
   }
 }
 
+export async function getAuthorizedAccounts(): Promise<string[]> {
+  const provider = getInjectedProvider();
+  if (!provider) throw new WalletError('NO_PROVIDER', 'MetaMask no está instalado.');
+  const accounts = (await provider.request({ method: 'eth_accounts' })) as string[] | undefined;
+  return Array.isArray(accounts) ? accounts : [];
+}
+
 export async function getChainId(): Promise<number> {
   const provider = getInjectedProvider();
   if (!provider) throw new WalletError('NO_PROVIDER', 'MetaMask no está instalado.');
@@ -77,6 +84,25 @@ export async function getBrowserSigner() {
   if (!provider) throw new WalletError('NO_PROVIDER', 'MetaMask no está instalado.');
   const browserProvider = new BrowserProvider(provider);
   return browserProvider.getSigner();
+}
+
+export type WalletEventName = 'accountsChanged' | 'chainChanged';
+
+type WalletProviderWithEvents = Eip1193Provider & {
+  on(event: WalletEventName, listener: (...args: unknown[]) => void): void;
+  removeListener(event: WalletEventName, listener: (...args: unknown[]) => void): void;
+};
+
+export function onWalletEvent(event: WalletEventName, listener: (...args: unknown[]) => void): void {
+  const provider = getInjectedProvider();
+  if (!provider) return;
+  (provider as WalletProviderWithEvents).on(event, listener);
+}
+
+export function offWalletEvent(event: WalletEventName, listener: (...args: unknown[]) => void): void {
+  const provider = getInjectedProvider();
+  if (!provider) return;
+  (provider as WalletProviderWithEvents).removeListener(event, listener);
 }
 
 function isUserRejected(error: unknown): boolean {
