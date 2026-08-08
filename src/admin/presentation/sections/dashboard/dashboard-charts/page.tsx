@@ -121,7 +121,7 @@ function buildRange(reports: any[], range: RangeKey) {
       }).length
     : 0;
 
-  return { buckets, inRange, prevCount };
+  return { buckets, inRange, prevCount, rangeStart, prevStart };
 }
 
 function pctChange(current: number, prev: number): string | null {
@@ -161,7 +161,7 @@ export function DashboardCharts() {
   }, []);
 
   const stats = useMemo(() => {
-    const { buckets, inRange, prevCount } = buildRange(reports, range);
+    const { buckets, inRange, prevCount, rangeStart, prevStart } = buildRange(reports, range);
 
     const catCount: Record<string, number> = { pesca_ilegal: 0, basura_marina: 0, variacion_mar: 0 };
     const statusCount: Record<string, number> = { pendiente: 0, en_revision: 0, verificado: 0, descartado: 0 };
@@ -171,12 +171,23 @@ export function DashboardCharts() {
       if (statusCount[r.status] !== undefined) statusCount[r.status]++;
     });
 
+    const isOnChain = (r: any) => r.status === 'verificado' && Boolean(r.txHash);
+    const onchain = inRange.filter(isOnChain).length;
+    const prevOnchain = prevStart && rangeStart
+      ? reports.filter((r) => {
+          const t = getTime(r.createdAt);
+          return isOnChain(r) && t && t >= prevStart && t < rangeStart;
+        }).length
+      : 0;
+
     return {
       buckets,
       prevCount,
       total: inRange.length,
       pendientes: statusCount.pendiente,
       verificados: statusCount.verificado,
+      onchain,
+      prevOnchain,
       trend: buckets.map((b) => ({
         label: b.label,
         value: reports.filter((r) => {
@@ -218,6 +229,14 @@ export function DashboardCharts() {
       icon: 'check-circle',
       color: '#10B981',
       bg: 'rgba(16,185,129,0.14)',
+    },
+    {
+      label: 'On-chain',
+      value: String(stats.onchain),
+      delta: pctChange(stats.onchain, stats.prevOnchain),
+      icon: 'ethereum',
+      color: '#28A0F0',
+      bg: 'rgba(40,160,240,0.14)',
     },
     {
       label: 'Pendientes',

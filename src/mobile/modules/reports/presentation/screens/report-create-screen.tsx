@@ -20,7 +20,7 @@ import { signInAsGuest } from '@/shared/firebase/auth';
 import { publishReportOnline, saveReportOfflineFirst } from '@/shared/firebase/reports';
 import { useBan } from '@/shared/identity/ban-context';
 import { useConnectivity } from '@/shared/offline/connectivity-context';
-import { isNetworkError } from '@/shared/offline/sync-engine';
+import { isNetworkError } from '@/shared/offline/errors';
 
 const TOTAL_STEPS = 5;
 const STEP_PROGRESS = 20;
@@ -43,6 +43,7 @@ export function ReportCreateScreen() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
   const [queued, setQueued] = useState(false);
+  const [mediaAttached, setMediaAttached] = useState(true);
 
   const profileDni = profile?.dni && /^\d{8}$/.test(profile.dni) ? profile.dni : '';
   const hasDni = Boolean(profileDni);
@@ -122,13 +123,15 @@ export function ReportCreateScreen() {
 
       if (online) {
         try {
-          await publishReportOnline(input, mediaList);
+          const result = await publishReportOnline(input, mediaList);
           setQueued(false);
+          setMediaAttached(mediaList.length === 0 || result.mediaAttached);
         } catch (error) {
           if (isNetworkError(error)) {
             await saveReportOfflineFirst(input, mediaList);
             setQueued(true);
           } else {
+            console.error('Error al enviar el reporte:', error);
             throw error;
           }
         }
@@ -137,7 +140,8 @@ export function ReportCreateScreen() {
         setQueued(true);
       }
       setSubmitted(true);
-    } catch {
+    } catch (e) {
+      console.error('No se pudo guardar el reporte:', e);
       setSendError('No se pudo guardar el reporte. Revisa tu conexión e inténtalo nuevamente.');
     } finally {
       setSending(false);
@@ -172,6 +176,12 @@ export function ReportCreateScreen() {
               : 'Tu reporte se guardó en el dispositivo y se enviará automáticamente cuando sea posible.'
             : 'Gracias por colaborar con la vigilancia marítima. Tu reporte será revisado.'}
         </Text>
+        {!queued && !mediaAttached && (
+          <Text style={styles.mediaNote}>
+            La foto no se pudo adjuntar. El reporte se guardó igual (Firebase Storage no está
+            disponible en el plan actual del proyecto).
+          </Text>
+        )}
         <Pressable
           accessibilityRole="button"
           onPress={handleCancel}
@@ -292,6 +302,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
+    includeFontPadding: false,
+  },
+  mediaNote: {
+    color: SC.textBody,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    opacity: 0.8,
     includeFontPadding: false,
   },
   successButton: {

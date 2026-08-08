@@ -12,13 +12,16 @@ import {
   doc,
 } from 'firebase/firestore';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
 import { banDevice } from '@/shared/firebase/bans';
+import { verifyReport } from '@/shared/firebase/reports';
+import { buildArbiscanTxUrl } from '@shared/blockchain/ledger';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
+import { useWallet } from '@admin/presentation/hooks/useWallet';
 import { Card, Badge, IconButton, SectionHeader, PaginationFooter, EmptyState } from '@admin/presentation/components/ui';
 
 type AdminReport = {
@@ -29,6 +32,7 @@ type AdminReport = {
   isAnonymous: boolean;
   userId: string;
   deviceHash?: string | null;
+  txHash?: string;
   createdAt?: { toDate?: () => Date };
 };
 
@@ -42,11 +46,14 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function ReportsList() {
   const { colors } = useAdminTheme();
+  const { signer } = useWallet();
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageCursors, setPageCursors] = useState<any[]>([]);
   const [totalDocs, setTotalDocs] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const currentPageRef = useRef(currentPage);
 
   useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
@@ -98,19 +105,32 @@ export function ReportsList() {
   }, []);
 
   const changeStatus = async (report: AdminReport, status: Extract<ReportStatus, 'en_revision' | 'verificado' | 'descartado'>) => {
-    await updateDoc(doc(firestore, 'reports', report.id), {
-      status,
-      reviewedBy: firebaseAuth?.currentUser?.uid,
-      reviewedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    await addDoc(collection(firestore, 'reports', report.id, 'statusHistory'), {
-      fromStatus: report.status,
-      toStatus: status,
-      changedBy: firebaseAuth?.currentUser?.uid,
-      createdAt: serverTimestamp(),
-    });
-    loadPage(currentPageRef.current);
+    if (verifyingId) return;
+    setActionError(null);
+    try {
+      if (status === 'verificado') {
+        setVerifyingId(report.id);
+        await verifyReport(report.id, firebaseAuth?.currentUser?.uid ?? 'admin', signer ?? undefined);
+      } else {
+        await updateDoc(doc(firestore, 'reports', report.id), {
+          status,
+          reviewedBy: firebaseAuth?.currentUser?.uid,
+          reviewedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+      await addDoc(collection(firestore, 'reports', report.id, 'statusHistory'), {
+        fromStatus: report.status,
+        toStatus: status,
+        changedBy: firebaseAuth?.currentUser?.uid,
+        createdAt: serverTimestamp(),
+      });
+      loadPage(currentPageRef.current);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Error al cambiar el estado del reporte.');
+    } finally {
+      setVerifyingId(null);
+    }
   };
 
   const handleBanDevice = async (report: AdminReport) => {
@@ -138,6 +158,15 @@ export function ReportsList() {
         title="Moderación de incidencias"
         subtitle="Revisa reportes de pesca, basura marina y variaciones del mar."
       />
+
+      {!signer && (
+        <Text style={[styles.walletHint, { color: colors.warning }]}>
+          Conecta tu wallet en la parte superior para registrar los puntos on-chain.
+        </Text>
+      )}
+      {actionError && (
+        <Text style={[styles.errorText, { color: colors.danger }]}>{actionError}</Text>
+      )}
 
       {loading && reports.length === 0 && (
         <Text style={[styles.empty, { color: colors.contentTextMuted }]}>Cargando reportes...</Text>
@@ -189,13 +218,26 @@ export function ReportsList() {
                   </Text>
                   <View style={styles.cellStatus}>
                     <Badge label={st.label} color={st.color} bg={st.bg} />
+                    {report.status === 'verificado' && report.txHash && (
+                      <Pressable
+                        onPress={() => Linking.openURL(buildArbiscanTxUrl(report.txHash!))}
+                        style={({ hovered }) => [styles.txLink, hovered && { opacity: 0.7 }]}>
+                        <Text style={[styles.txLinkText, { color: colors.accent }]}>Ver tx en Arbiscan</Text>
+                      </Pressable>
+                    )}
                   </View>
                   <View style={styles.cellActions}>
                     {report.status === 'pendiente' && (
                       <IconButton icon="eye-outline" label="Revisar" color={colors.contentTextMuted} onPress={() => changeStatus(report, 'en_revision')} />
                     )}
                     {(report.status === 'pendiente' || report.status === 'en_revision') && (
-                      <IconButton icon="check-circle-outline" label="Verificar" color={colors.success} onPress={() => changeStatus(report, 'verificado')} />
+                      <IconButton
+                        icon={verifyingId === report.id ? 'progress-clock' : 'check-circle-outline'}
+                        label={verifyingId === report.id ? 'Verificando...' : 'Verificar'}
+                        color={verifyingId === report.id ? colors.contentTextMuted : colors.success}
+                        onPress={verifyingId ? undefined : () => changeStatus(report, 'verificado')}
+                        style={verifyingId === report.id ? { opacity: 0.5 } : undefined}
+                      />
                     )}
                     {(report.status === 'pendiente' || report.status === 'en_revision') && (
                       <IconButton icon="close-circle-outline" label="Rechazar" color={colors.danger} onPress={() => changeStatus(report, 'descartado')} />
@@ -228,6 +270,8 @@ export function ReportsList() {
 const styles = StyleSheet.create({
   content: { gap: Spacing.four },
   empty: { fontFamily: Fonts.body, fontSize: 14 },
+  walletHint: { fontFamily: Fonts.body, fontSize: 13, fontWeight: '600' },
+  errorText: { fontFamily: Fonts.body, fontSize: 13 },
   tableCard: { gap: 0, padding: 0, overflow: 'hidden' },
   tableHead: {
     flexDirection: 'row',
@@ -258,5 +302,7 @@ const styles = StyleSheet.create({
   cellDate: { width: 76, fontFamily: Fonts.body, fontSize: 12 },
   cellCategory: { width: 128, fontFamily: Fonts.body, fontSize: 12, textTransform: 'capitalize' },
   cellStatus: { width: 108, alignItems: 'center' },
+  txLink: { marginTop: Spacing.one, cursor: 'pointer' },
+  txLinkText: { fontFamily: Fonts.label, fontSize: 11, fontWeight: '700' },
   cellActions: { width: 160, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: Spacing.one },
 });

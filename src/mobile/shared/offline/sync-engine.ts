@@ -3,6 +3,7 @@ import {
   publishPendingReport,
 } from '@/shared/firebase/reports';
 
+import { isNetworkError } from './errors';
 import { removeStagedMedia } from './media';
 import { getPendingReports, removePendingReport, updatePendingReport } from './outbox';
 
@@ -95,17 +96,6 @@ function scheduleRetry(): void {
     retryTimer = null;
     void requestSync('backoff-retry');
   }, delay);
-}
-
-export function isNetworkError(error: unknown): boolean {
-  const code = (error as { code?: string })?.code;
-  const message = (error as { message?: string })?.message ?? '';
-  return (
-    code === 'unavailable' ||
-    code === 'network-request-failed' ||
-    code === 'resource-exhausted' ||
-    /network|internet|fetch|offline|timeout|ECONNRESET|ENOTFOUND/i.test(message)
-  );
 }
 
 function errorMessage(error: unknown): string {

@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
+import { buildArbiscanTxUrl } from '@shared/blockchain/ledger';
 
 import { SurfaceColors } from '../theme';
 import { ReportThumbnail, ThumbnailType } from './report-thumbnail';
@@ -10,6 +11,7 @@ import { shadow } from '@/shared/utils/shadows';
 import type { ReportStatus } from '@/shared/firebase/types';
 
 export type Report = {
+  id: string;
   title: string;
   time: string;
   location: string;
@@ -21,6 +23,7 @@ export type Report = {
   thumbnail: ThumbnailType;
   statusKey?: ReportStatus;
   pointsAwarded?: number;
+  txHash?: string;
 };
 
 export function ReportCard({ report }: { report: Report }) {
@@ -52,6 +55,16 @@ export function ReportCard({ report }: { report: Report }) {
             color={report.statusText}
           />
         </View>
+
+        {report.statusKey === 'verificado' && report.txHash ? (
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => Linking.openURL(buildArbiscanTxUrl(report.txHash!))}
+            style={({ pressed }) => [styles.txLink, pressed && styles.txLinkPressed]}>
+            <AppSymbol name={{ ios: 'arrow.up.right.square.fill', android: 'open-in-new', web: 'open-in-new' }} color={SurfaceColors.successText} size={12} />
+            <Text style={styles.txLinkText}>Ver en Arbiscan</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -90,7 +103,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 358,
     alignSelf: 'center',
-    height: 130,
+    height: 152,
     padding: 16,
     gap: 16,
     flexDirection: 'row',
@@ -103,7 +116,7 @@ const styles = StyleSheet.create({
   },
   reportContent: {
     flex: 1,
-    height: 96,
+    height: 118,
     gap: 4,
   },
   reportHeader: {
@@ -163,6 +176,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 16,
+    includeFontPadding: false,
+  },
+  txLink: {
+    height: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+  },
+  txLinkPressed: {
+    opacity: 0.6,
+  },
+  txLinkText: {
+    color: SurfaceColors.successText,
+    fontFamily: Fonts.label,
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 18,
     includeFontPadding: false,
   },
 });

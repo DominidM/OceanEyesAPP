@@ -36,73 +36,78 @@ Cada vez que un admin verifica un reporte, los puntos se registran en un smart c
 
 ### 2.1 `PointLedger.sol` — Registro de puntos
 
+> ⚠️ **Versión real desplegada** (el código abajo es el del repo, no el borrador inicial).
+> Diferencias clave con el borrador: `onlyVerifier` (solo verificadores autorizados por el owner pueden otorgar), **idempotencia** por `reportId` (`processedReports` — no se puede otorgar dos veces el mismo reporte), `revokePoints` (corrección de reportes falsos conservando el historial), `Ownable` de OpenZeppelin y categorías en español (`pesca_ilegal`=100, `basura_marina`=50, `variacion_mar`=30).
+
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract PointLedger {
+import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
+
+contract PointLedger is Ownable {
     struct Transaction {
         address reporter;
         address verifier;
         uint256 points;
-        string reportCategory; // "pesca_ilegal", "basura_marina", "variacion_mar"
+        string category;
         string reportId;
         uint256 timestamp;
     }
 
-    Transaction[] public transactions;
-    mapping(address => uint256) public balances;
+    mapping(address => bool) public verifiers;
+    mapping(bytes32 => bool) private processedReports;
+    mapping(bytes32 => Award) private awards;
+    mapping(bytes32 => bool) public revokedReports;
+    mapping(address => uint256) private balances;
+    Transaction[] private transactions;
 
-    event PointsAwarded(
-        address indexed reporter,
-        address indexed verifier,
-        uint256 points,
-        string reportId,
-        uint256 timestamp
-    );
+    event PointsAwarded(address indexed reporter, address indexed verifier, uint256 points, string category, string reportId, uint256 timestamp);
 
-    function awardPoints(
-        address reporter,
-        string memory reportId,
-        string memory category
-    ) external {
-        uint256 points = getPointsForCategory(category);
-        require(points > 0, "Categoria invalida");
+    error ZeroReporter();
+    error EmptyReportId();
+    error UnknownCategory();
+    error AlreadyProcessed();
 
-        transactions.push(Transaction({
-            reporter: reporter,
-            verifier: msg.sender,
-            points: points,
-            reportCategory: category,
-            reportId: reportId,
-            timestamp: block.timestamp
-        }));
+    modifier onlyVerifier() {
+        require(verifiers[msg.sender], 'PointLedger: not an authorized verifier');
+        _;
+    }
 
+    function authorizeVerifier(address verifier) external onlyOwner { ... }
+    function revokeVerifier(address verifier) external onlyOwner { ... }
+
+    function awardPoints(address reporter, string calldata reportId, string calldata category) external onlyVerifier {
+        if (reporter == address(0)) revert ZeroReporter();
+        if (bytes(reportId).length == 0) revert EmptyReportId();
+        uint256 points = pointsForCategory(category);
+        if (points == 0) revert UnknownCategory();
+        bytes32 key = keccak256(bytes(reportId));
+        if (processedReports[key]) revert AlreadyProcessed();
+        processedReports[key] = true;
+        awards[key] = Award(reporter, points);
         balances[reporter] += points;
-
-        emit PointsAwarded(reporter, msg.sender, points, reportId, block.timestamp);
+        transactions.push(Transaction(reporter, msg.sender, points, category, reportId, block.timestamp));
+        emit PointsAwarded(reporter, msg.sender, points, category, reportId, block.timestamp);
     }
 
-    function getPointsForCategory(string memory category) internal pure returns (uint256) {
-        if (keccak256(bytes(category)) == keccak256(bytes("pesca_ilegal"))) return 100;
-        if (keccak256(bytes(category)) == keccak256(bytes("basura_marina"))) return 50;
-        if (keccak256(bytes(category)) == keccak256(bytes("variacion_mar"))) return 30;
+    function revokePoints(string calldata reportId) external onlyOwner { ... }
+
+    function getBalance(address user) external view returns (uint256) { return balances[user]; }
+    function isReportProcessed(string calldata reportId) external view returns (bool) { ... }
+    function getTransactionCount() external view returns (uint256) { return transactions.length; }
+    function getTransaction(uint256 index) external view returns (Transaction memory) { ... }
+
+    function pointsForCategory(string memory category) public pure returns (uint256) {
+        if (keccak256(bytes(category)) == keccak256(bytes('pesca_ilegal'))) return 100;
+        if (keccak256(bytes(category)) == keccak256(bytes('basura_marina'))) return 50;
+        if (keccak256(bytes(category)) == keccak256(bytes('variacion_mar'))) return 30;
         return 0;
-    }
-
-    function getBalance(address user) external view returns (uint256) {
-        return balances[user];
-    }
-
-    function getTransactionCount() external view returns (uint256) {
-        return transactions.length;
-    }
-
-    function getTransaction(uint256 index) external view returns (Transaction memory) {
-        return transactions[index];
     }
 }
 ```
+
+> El archivo fuente completo está en `contracts/contracts/PointLedger.sol` (año: la versión desplegada en el repo).
 
 ### 2.2 `RewardRedemption.sol` — Canje de recompensas (opcional, bonus)
 
@@ -268,16 +273,21 @@ Análisis de elegibilidad (requisitos obligatorios):
 - [ ] Rellenar sección 8.4 con dirección + enlace Arbiscan.
 
 ### Fase 2 — Integración ethers en `verifyReport()` (día 2-3)
-- [ ] `src/mobile/shared/blockchain/config.ts` (chain + RPC + explorer).
-- [ ] `src/mobile/shared/blockchain/ledger.ts`: `awardPointsOnChain()` + ABI.
-- [ ] En `verifyReport()` (reports.ts): tras la transacción atómica de Firestore, si `report.userId` tiene `walletAddress`, llamar al contrato y guardar `txHash` en el reporte y en `pointTransactions`.
-- [ ] **Fallback**: si no hay wallet/red, el reporte se verifica igual en Firestore pero se marca `txHash: null` (no debe romper el flujo).
-- [ ] Conectar wallet del admin (MetaMask en web) en el panel → `admin-shell` añade un botón "Conectar wallet".
+- [x] `src/mobile/shared/blockchain/config.ts` (chain + RPC + explorer).
+- [x] `src/mobile/shared/blockchain/ledger.ts`: `awardPointsOnChain()` + ABI.
+- [x] En `verifyReport()` (reports.ts): tras la transacción atómica de Firestore, si `report.userId` tiene `walletAddress`, llamar al contrato y guardar `txHash` en el reporte y en `pointTransactions`.
+- [x] **Fallback**: si no hay wallet/red, el reporte se verifica igual en Firestore pero se marca `txHash: null` (no debe romper el flujo).
+- [x] Conectar wallet del admin (MetaMask en web) en el panel → botón "Conectar wallet" en `admin-header.tsx` (`useWallet.tsx`).
 
 ### Fase 3 — Captura de wallet + UI de puntos (día 3-4)
-- [ ] Registrar `walletAddress` en el perfil del usuario (al registrarse / en el tab Perfil).
-- [ ] Mostrar balance on-chain y link a Arbiscan por transacción (`txHash`) en la app y en el admin.
-- [ ] Mostrar en el dashboard del admin el nº de reportes con `txHash` (progreso de integración blockchain).
+- [x] Registrar `walletAddress` en el perfil del usuario (tab Perfil, validada con `ethers.isAddress`).
+- [x] Mostrar balance on-chain y link a Arbiscan por transacción (`txHash`) en la app y en el admin.
+- [x] Mostrar en el dashboard del admin el nº de reportes con `txHash` (KPI "On-chain" en `dashboard-charts/page.tsx`).
+
+> **Notas de implementación (Fase 2-3):**
+> - **Fix de gas**: `awardPointsOnChain` pasa overrides EIP-1559 (`maxFeePerGas` = 2× el recomendado). Resolvió un rechazo real de MetaMask por `maxFeePerGas < baseFee` en Arbitrum Sepolia.
+> - **Idempotencia**: `verifyReport` rechaza reportes ya `verificado`, espejando `AlreadyProcessed` del contrato (evita doble acreditación en Firestore).
+> - **Plan Spark**: Firebase Storage no disponible en el plan gratuito → la foto del reporte no se sube (el reporte se guarda igual y la pantalla de éxito lo informa). Para fotos, migrar a plan Blaze.
 
 ### Fase 4 — Pulido y entregables (día 4-5)
 - [ ] Completar **todos** los entregables de la sección 8.
@@ -310,15 +320,18 @@ Análisis de elegibilidad (requisitos obligatorios):
 - [ ] **Diagrama de arquitectura** → Excalidraw/Mermaid mostrando App ↔ Firestore ↔ Panel Admin ↔ PointLedger (Arbitrum).
 
 ### 8.3 Bloqueo de dependencias (rellenar al final)
-- [ ] `ethers` instalado en `package.json`.
-- [ ] Contrato verificado y lista para mostrar.
+- [x] `ethers` instalado en `package.json` (`ethers ^6.17.0`).
+- [x] Contrato verificado y lista para mostrar.
 
 ### 8.4 Datos del contrato (RELLENAR tras el deploy)
 - **Contrato**: `PointLedger.sol`
 - **Red**: Arbitrum Sepolia (chainId `421614`)
-- **Dirección**: `0x...`
-- **Arbiscan**: `https://sepolia.arbiscan.io/address/0x...`
-- **txHash de prueba**: `0x...`
+- **Dirección**: `0xbA7A9d6cB7581Ef28cD01c77813bA229Cb2B1509`
+- **Arbiscan**: `https://sepolia.arbiscan.io/address/0xbA7A9d6cB7581Ef28cD01c77813bA229Cb2B1509`
+- **txHash de despliegue**: `0x8af8b4d3093384d077fc47c82eea6121b3390993e7f12aacf4d339ca1cfce18d`
+- **txHash de autorización del verificador**: `0x18c529a5cb88794357338aecbc8ae24fe898df90253dc686239a73a2efabf8ca`
+- **Wallet del deployer / owner / verificador autorizado**: `0x3Cba5ABB366cE32dE4a1615348Ad7b7b72835721`
+- **Estado**: ✅ Desplegado y **verificado** en Arbiscan (Etherscan API V2)
 
 ### 8.5 Archivo de resumen para jurado
 Crear `docs/DELIVERABLES.md` con todo lo anterior (dirección de contratos, red, Arbiscan, links de demo, video y arquitectura) en un solo lugar.

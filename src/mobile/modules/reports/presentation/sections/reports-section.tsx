@@ -11,7 +11,7 @@ import { SyncWarning } from '../components/sync-warning';
 import { HistoryHeader } from '../components/history-header';
 import { SurfaceColors } from '../theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
-import { getMyReports } from '@/shared/firebase/reports';
+import { subscribeMyReports } from '@/shared/firebase/reports';
 import type { Report as FirestoreReport, ReportStatus } from '@/shared/firebase/types';
 import { getCached, setCached } from '@/shared/offline/read-cache';
 import { getPendingReports, subscribeOutbox, type PendingReport } from '@/shared/offline/outbox';
@@ -28,19 +28,26 @@ export function ReportsSection() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>('todos');
 
   useEffect(() => {
+    let active = true;
+    const apply = (items: FirestoreReport[]) => {
+      const cards = items.map(toCardReport);
+      setReports(cards);
+      setCached(REPORTS_CACHE_KEY, cards).catch(() => undefined);
+    };
+
     (async () => {
       const cached = await getCached<Report[]>(REPORTS_CACHE_KEY);
-      if (cached?.length) setReports(cached);
-      if (!isFirebaseConfigured()) return;
-      try {
-        const items = await getMyReports();
-        const cards = items.map(toCardReport);
-        setReports(cards);
-        await setCached(REPORTS_CACHE_KEY, cards);
-      } catch {
-        // keep cached data
-      }
+      if (active && cached?.length) setReports(cached);
     })();
+
+    if (!isFirebaseConfigured()) return () => undefined;
+    const unsubscribe = subscribeMyReports((items) => {
+      if (active) apply(items);
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -136,7 +143,7 @@ export function ReportsSection() {
             <ReportCard key={pending.id} report={toQueuedCard(pending)} />
           ))}
           {filteredReports.map((report) => (
-            <ReportCard key={`${report.title}-${report.date}`} report={report} />
+            <ReportCard key={report.id} report={report} />
           ))}
           {listEmpty ? (
             <View style={styles.emptyState}>
@@ -152,6 +159,7 @@ export function ReportsSection() {
 
 function toQueuedCard(pending: PendingReport): Report {
   return {
+    id: pending.id,
     title: pending.input.title,
     time: 'Sin enviar',
     location: pending.input.location?.address ?? 'Pendiente de envío',
@@ -183,6 +191,7 @@ function toCardReport(report: FirestoreReport): Report {
   const statusIcon = status.icon;
 
   return {
+    id: report.id,
     title: report.title,
     time: date.toLocaleDateString(),
     location: report.location?.address ?? 'Ubicación confirmada',
@@ -194,6 +203,7 @@ function toCardReport(report: FirestoreReport): Report {
     thumbnail: report.category === 'pesca_ilegal' ? 'net' : report.category === 'basura_marina' ? 'boat' : 'pending',
     statusKey: report.status,
     pointsAwarded: report.pointsAwarded ?? 0,
+    txHash: report.txHash,
   };
 }
 
