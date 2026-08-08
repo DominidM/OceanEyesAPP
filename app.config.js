@@ -1,6 +1,7 @@
 const appJson = require('./app.json');
 
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
+const withGoogleMapsApiKey = require('./plugins/with-google-maps-api-key.js');
 
 const isGoogleSignInPlugin = (plugin) => {
   if (typeof plugin === 'string') {
@@ -24,6 +25,6 @@ if (googleIosClientId) {
 module.exports = {
   expo: {
     ...appJson.expo,
-    plugins,
+    plugins: [...plugins, withGoogleMapsApiKey],
   },
 };
