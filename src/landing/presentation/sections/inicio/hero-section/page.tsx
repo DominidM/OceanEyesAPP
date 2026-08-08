@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const heroBg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR-opt.jpg');
+const heroBg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166250/hero_m3t2al.jpg';
 
 type HeroSectionProps = {
   onFeaturesPress: () => void;

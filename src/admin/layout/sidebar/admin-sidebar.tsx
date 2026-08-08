@@ -9,7 +9,7 @@ import { ADMIN_NAV, AdminNavItem } from '@admin/config/admin-nav';
 import { SIDEBAR_DARK } from '@admin/config/admin-theme';
 import { logout } from '@/shared/firebase/auth';
 
-const logoImg = require('../../../../assets/images/OCEAN-EYES-LOGO.png');
+const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166247/logotipo_aasun4.png';
 
 export function AdminSidebar() {
   const pathname = usePathname();

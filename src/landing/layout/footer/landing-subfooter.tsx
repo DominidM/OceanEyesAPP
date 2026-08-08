@@ -7,7 +7,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const logoImg = require('../../../../assets/images/logo-ocean-eyes-grande.png');
+const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166247/logotipo_aasun4.png';
 
 const navLinks = [
   { label: 'Inicio', href: '/' },

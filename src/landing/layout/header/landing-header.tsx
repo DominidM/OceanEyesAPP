@@ -8,7 +8,7 @@ import { AppFonts, Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { LANDING_NAV_LINKS, type LandingNavPressKey } from '@landing/config/landing-nav';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const logoImg = require('../../../../assets/images/logo-ocean-eyes-grande.png');
+const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166247/logotipo_aasun4.png';
 
 export type LandingHeaderProps = {
   scrolled: boolean;

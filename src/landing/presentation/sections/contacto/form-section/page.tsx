@@ -6,7 +6,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const contactImg = require('../../../../../../assets/images/IMAGEN-BAJO-MAR-opt.jpg');
+const contactImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166250/hero_m3t2al.jpg';
 
 const SUBJECT_OPTIONS = [
   'Consulta general',

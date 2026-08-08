@@ -6,7 +6,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const mobileMockup = require('../../../../../../assets/images/MOBILE-OCEAN.jpeg');
+const mobileMockup = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166249/mobile-inicio_aeyivo.jpg';
 
 const steps = [
   {

@@ -6,10 +6,10 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const barco1 = require('../../../../../../assets/images/help/barco-1.jpg');
-const barco2 = require('../../../../../../assets/images/help/barco-2.jpg');
-const barco3 = require('../../../../../../assets/images/help/barco-3.jpg');
-const barco4 = require('../../../../../../assets/images/help/barco-4.jpg');
+const barco1 = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166241/barco-1_isp4pb.jpg';
+const barco2 = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166242/barco-2_yynxi8.jpg';
+const barco3 = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166243/barco-3_j28orm.jpg';
+const barco4 = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166246/barco-4_kwf6hl.jpg';
 
 const helpActions = [
   { id: 1, image: barco1, icon: 'exclamation-circle', title: 'Reporta Actividades', description: 'Si observas embarcaciones, redes ilegales o cualquier actividad sospechosa en zonas marinas protegidas, repórtalas de inmediato a las autoridades competentes.' },

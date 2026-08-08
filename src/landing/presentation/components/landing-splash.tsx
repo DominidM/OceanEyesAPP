@@ -7,7 +7,7 @@ import { Image } from 'expo-image';
 import { AppFonts as Fonts, BrandColors } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const logoImg = require('../../../../assets/images/logo-ocean-eyes-grande.png');
+const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166247/logotipo_aasun4.png';
 
 const STATUS_MESSAGES = [
   'Estableciendo conexión segura...',

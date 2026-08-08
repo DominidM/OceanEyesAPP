@@ -10,7 +10,7 @@ const anonimoIcon = require('../../../../../../assets/icons/anonimo-icon.png');
 const camaraIcon = require('../../../../../../assets/icons/camara-icon.png');
 const ubicacionIcon = require('../../../../../../assets/icons/ubicacion-icon.png');
 const alertaIcon = require('../../../../../../assets/icons/alerta-icon.png');
-const mobileOcean = require('../../../../../../assets/images/MOBILE-OCEAN.jpeg');
+const mobileOcean = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166249/mobile-inicio_aeyivo.jpg';
 
 const features = [
   { icon: anonimoIcon, title: 'Reportes Anónimos', description: 'Tu identidad está protegida. Solo usamos DNI para validar, nunca se comparte.' },
