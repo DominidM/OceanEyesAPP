@@ -22,7 +22,7 @@ export function toRewardCard(reward: FirestoreReward): Reward {
 }
 
 export function toClaimCard(redemption: Redemption): Reward {
-  const date = redemption.claimedAt?.toDate?.() ?? new Date();
+  const date = redemption.createdAt?.toDate?.() ?? new Date();
   return {
     id: redemption.id,
     title: 'Recompensa canjeada',

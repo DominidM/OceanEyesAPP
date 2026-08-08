@@ -2,6 +2,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   increment,
   orderBy,
@@ -13,7 +14,7 @@ import {
 } from 'firebase/firestore';
 
 import { firestore } from './app';
-import type { PointTransaction, Redemption, Reward } from './types';
+import type { PointTransaction, Redemption, RedemptionStatus, Reward } from './types';
 
 /* ── Catálogo de recompensas ── */
 
@@ -83,7 +84,8 @@ export async function redeemReward(userId: string, rewardId: string): Promise<st
       rewardId,
       pointsSpent: reward.pointsCost,
       status: 'pendiente',
-      claimedAt: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
     const txRef = doc(collection(firestore, 'pointTransactions'));
@@ -108,10 +110,43 @@ export async function getUserRedemptions(userId: string): Promise<Redemption[]> 
     query(
       collection(firestore, 'redemptions'),
       where('userId', '==', userId),
-      orderBy('claimedAt', 'desc'),
+      orderBy('createdAt', 'desc'),
     ),
   );
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Redemption);
+}
+
+export async function getAllRedemptions(): Promise<Redemption[]> {
+  const snapshot = await getDocs(
+    query(collection(firestore, 'redemptions'), orderBy('createdAt', 'desc')),
+  );
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Redemption);
+}
+
+export async function updateRedemptionStatus(
+  redemptionId: string,
+  status: RedemptionStatus,
+  cancelReason?: string,
+): Promise<void> {
+  const data: Record<string, any> = { status, updatedAt: serverTimestamp() };
+
+  switch (status) {
+    case 'confirmado':
+      data.confirmedAt = serverTimestamp();
+      break;
+    case 'enviado':
+      data.shippedAt = serverTimestamp();
+      break;
+    case 'entregado':
+      data.deliveredAt = serverTimestamp();
+      break;
+    case 'cancelado':
+      data.cancelledAt = serverTimestamp();
+      if (cancelReason) data.cancelReason = cancelReason;
+      break;
+  }
+
+  await updateDoc(doc(firestore, 'redemptions', redemptionId), data);
 }
 
 /* ── Historial de puntos ── */

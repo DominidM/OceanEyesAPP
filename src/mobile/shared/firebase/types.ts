@@ -104,7 +104,13 @@ export type Reward = {
 
 /* ── Canjes ── */
 
-export type RedemptionStatus = 'pendiente' | 'entregado' | 'cancelado';
+export type RedemptionStatus =
+  | 'pendiente'
+  | 'confirmado'
+  | 'en_preparacion'
+  | 'enviado'
+  | 'entregado'
+  | 'cancelado';
 
 export type Redemption = {
   id: string;
@@ -112,8 +118,16 @@ export type Redemption = {
   rewardId: string;
   pointsSpent: number;
   status: RedemptionStatus;
-  claimedAt: Timestamp;
+  shippingAddress?: string;
+  shippingContact?: string;
+  cancelReason?: string;
+  adminNotes?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  confirmedAt?: Timestamp;
+  shippedAt?: Timestamp;
   deliveredAt?: Timestamp;
+  cancelledAt?: Timestamp;
 };
 
 /* ── Transacciones de puntos ── */
