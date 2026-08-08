@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { BrandColors } from '@/constants/theme';
 import { useAppFonts } from '@/hooks/useAppFonts';
-import { NotificationsWatcher } from '@/shared/notifications/report-notifications';
+import { NotificationsGate } from '@/shared/notifications/notification-bridge';
 
 export default function MobileLayout() {
   const { loaded } = useAppFonts();
@@ -18,7 +18,7 @@ export default function MobileLayout() {
     <>
       <StatusBar style="dark" translucent={true} />
       <AnimatedSplashOverlay />
-      <NotificationsWatcher />
+      <NotificationsGate />
       <Stack
         screenOptions={{
           headerShown: false,

@@ -17,7 +17,7 @@ import { AppText } from '@/shared/components/app-text';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { clearLocalData } from '@/shared/offline/clear-data';
 import { useSync } from '@/shared/offline/sync-context';
-import { requestNotificationPermission } from '@/shared/notifications/report-notifications';
+import { requestNotificationPermission } from '@/shared/notifications/notification-bridge';
 import { usePreferences, type FontScaleOption } from '@/shared/settings/preferences';
 import { shadow } from '@/shared/utils/shadows';
 
