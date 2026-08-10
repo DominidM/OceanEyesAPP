@@ -20,6 +20,8 @@ export function HomeScreen() {
 
   const openAlerts = () => router.push('/mobile/alerts');
 
+  const openAlertReport = () => router.push('/mobile/alert-report');
+
   return (
     <PhoneFrame section={section} onSectionChange={setSection} onFabPress={openReportFlow}>
       <TabTransition section={section}>
@@ -28,6 +30,7 @@ export function HomeScreen() {
             onReportPress={openReportFlow}
             onExpandMap={openRealTimeMap}
             onAlertsPress={openAlerts}
+            onAlertReportPress={openAlertReport}
             onPendingPress={() => setSection('reportes')}
           />
         )}

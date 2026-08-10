@@ -23,10 +23,11 @@ type HomeSectionProps = {
   onReportPress?: () => void;
   onExpandMap?: () => void;
   onAlertsPress?: () => void;
+  onAlertReportPress?: () => void;
   onPendingPress?: () => void;
 };
 
-export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onPendingPress }: HomeSectionProps) {
+export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onAlertReportPress, onPendingPress }: HomeSectionProps) {
   const insets = useSafeAreaInsets();
   const { profile, user } = useAuth();
   const guest = useGuestStatus();
@@ -99,6 +100,20 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onPendi
               web: 'my-location',
             }}
             icon={{ ios: 'bell.fill', android: 'notifications', web: 'notifications' }}
+          />
+
+          <ActionCard
+            title="ALERTAR A MI ZONA"
+            subtitle="Envía una señal rápida de peligro"
+            color="#B45309"
+            height={147}
+            onPress={onAlertReportPress}
+            helperIcon={{
+              ios: 'megaphone.fill',
+              android: 'campaign',
+              web: 'campaign',
+            }}
+            icon={{ ios: 'exclamationmark.triangle.fill', android: 'emergency', web: 'emergency' }}
           />
         </View>
 

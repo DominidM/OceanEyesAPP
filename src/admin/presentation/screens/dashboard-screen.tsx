@@ -6,6 +6,7 @@ import { AdminShell } from '@admin/layout/admin-shell';
 import { DashboardCharts } from '../sections/dashboard/dashboard-charts/page';
 import { RecentReportsSection } from '../sections/dashboard/recent-reports/page';
 import { ingestExternalAlerts } from '@/shared/adapters/external-alerts/ingestor';
+import { evaluateAlertClusters } from '@/shared/firebase/alerts';
 import { useAuth } from '@/shared/firebase/auth-context';
 
 function ExternalAlertPoller() {
@@ -13,14 +14,17 @@ function ExternalAlertPoller() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const [lastRun, setLastRun] = useState<Date | null>(null);
   const [lastCount, setLastCount] = useState(0);
+  const [extra, setExtra] = useState('');
   const [error, setError] = useState('');
 
   const poll = useCallback(async () => {
     if (!user) return;
     try {
       const { ingested } = await ingestExternalAlerts();
+      const clusters = await evaluateAlertClusters();
       setLastRun(new Date());
-      setLastCount(ingested);
+      setLastCount(ingested + (clusters.promoted ? 1 : 0));
+      setExtra(`+${clusters.promoted} clúster(es) ciudadano(s)`);
       setError('');
     } catch (e: any) {
       setError(e?.message ?? 'Error al consultar APIs externas');
@@ -41,9 +45,11 @@ function ExternalAlertPoller() {
       <Text style={styles.pollerText}>
         {error
           ? `⚠️ ${error}`
-          : lastCount > 0
-            ? `✅ ${lastCount} alerta(s) externa(s) ingerida(s) — ${lastRun?.toLocaleTimeString('es-PE')}`
-            : `🔍 Sin alertas externas nuevas — ${lastRun?.toLocaleTimeString('es-PE')}`}
+          : `${
+              lastCount > 0
+                ? `✅ ${lastCount} alerta(s) nueva(s) — ${lastRun?.toLocaleTimeString('es-PE')}`
+                : `🔍 Sin alertas nuevas — ${lastRun?.toLocaleTimeString('es-PE')}`
+            }${extra ? ` · ${extra}` : ''}`}
       </Text>
     </View>
   );

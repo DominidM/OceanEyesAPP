@@ -1,0 +1,1 @@
+export { AlertReportScreen as default } from '@/modules/alerts/presentation/screens/alert-report-screen';

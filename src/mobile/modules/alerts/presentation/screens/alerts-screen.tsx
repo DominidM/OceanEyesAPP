@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {ActivityIndicator, Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { useLiveReports } from '@/shared/hooks/use-live-reports';
 import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
 
 import { AlertCard, type Alert } from '../components/alert-card';
+import { OfficialAlertCard, type OfficialAlert } from '../components/official-alert-card';
 import { haversineKm } from '../utils/distance';
 
 export function AlertsScreen() {
@@ -20,8 +21,42 @@ export function AlertsScreen() {
   const { permission, requestPermission, position, loading: locating, refetch: fetchPosition } =
     useCurrentLocation();
   const { reports } = useLiveReports();
+  const [officialAlerts, setOfficialAlerts] = useState<OfficialAlert[]>([]);
+
+  useEffect(() => {
+    let unsub: (() => void) | undefined;
+    import('@/shared/firebase/alerts').then(({ subscribeActiveAlerts }) => {
+      unsub = subscribeActiveAlerts((alerts) => {
+        setOfficialAlerts(
+          alerts
+            .map((a) => {
+              let distanceKm: number | undefined;
+              if (position && a.coordinates) {
+                distanceKm = haversineKm(
+                  position.coords.latitude,
+                  position.coords.longitude,
+                  a.coordinates.latitude,
+                  a.coordinates.longitude,
+                );
+              }
+              return {
+                id: a.id,
+                title: a.title,
+                message: a.message,
+                severity: a.severity,
+                source: a.source,
+                distanceKm,
+              };
+            })
+            .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity)),
+        );
+      });
+    });
+    return () => unsub?.();
+  }, [position]);
 
   const alerts = useMemo(() => toAlerts(reports, position), [reports, position]);
+  const hasContent = officialAlerts.length > 0 || alerts.length > 0;
 
   return (
     <View style={styles.screen}>
@@ -83,7 +118,7 @@ export function AlertsScreen() {
               <AppText style={styles.actionButtonLabel}>Reintentar</AppText>
             </Pressable>
           </StateBox>
-        ) : alerts.length === 0 ? (
+        ) : !hasContent ? (
           <StateBox>
             <AppSymbol
               name={{ ios: 'bell.slash.fill', android: 'notifications-off', web: 'notifications-off' }}
@@ -95,6 +130,9 @@ export function AlertsScreen() {
           </StateBox>
         ) : (
           <View style={styles.list}>
+            {officialAlerts.map((alert) => (
+              <OfficialAlertCard key={alert.id} alert={alert} />
+            ))}
             {alerts.map((alert) => (
               <AlertCard key={alert.id} alert={alert} />
             ))}
