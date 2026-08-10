@@ -13,6 +13,7 @@ import type { ReportDto } from '@/modules/reports/application/dto/report.dto';
 
 import { AlertCard, type Alert } from '../components/alert-card';
 import { OfficialAlertCard, type OfficialAlert } from '../components/official-alert-card';
+import { CampaignCard, type CampaignItem } from '../components/campaign-card';
 import { haversineKm } from '../utils/distance';
 
 export function AlertsScreen() {
@@ -22,6 +23,7 @@ export function AlertsScreen() {
     useCurrentLocation();
   const { reports } = useLiveReports();
   const [officialAlerts, setOfficialAlerts] = useState<OfficialAlert[]>([]);
+  const [campaigns, setCampaigns] = useState<CampaignItem[]>([]);
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
@@ -55,8 +57,28 @@ export function AlertsScreen() {
     return () => unsub?.();
   }, [position]);
 
+  useEffect(() => {
+    let unsub: (() => void) | undefined;
+    import('@/shared/firebase/campaigns').then(({ subscribeActiveCampaigns }) => {
+      unsub = subscribeActiveCampaigns((list) => {
+        setCampaigns(
+          list.map((c) => ({
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            location: c.location,
+            municipalityName: c.municipalityName,
+            startDate: c.startDate ? new Date(c.startDate.seconds * 1000).toISOString() : undefined,
+            endDate: c.endDate ? new Date(c.endDate.seconds * 1000).toISOString() : undefined,
+          })),
+        );
+      });
+    });
+    return () => unsub?.();
+  }, []);
+
   const alerts = useMemo(() => toAlerts(reports, position), [reports, position]);
-  const hasContent = officialAlerts.length > 0 || alerts.length > 0;
+  const hasContent = officialAlerts.length > 0 || campaigns.length > 0 || alerts.length > 0;
 
   return (
     <View style={styles.screen}>
@@ -130,6 +152,12 @@ export function AlertsScreen() {
           </StateBox>
         ) : (
           <View style={styles.list}>
+            {campaigns.length > 0 && (
+              <AppText style={styles.sectionDivider}>Campañas de tu comunidad</AppText>
+            )}
+            {campaigns.map((campaign) => (
+              <CampaignCard key={campaign.id} campaign={campaign} />
+            ))}
             {officialAlerts.map((alert) => (
               <OfficialAlertCard key={alert.id} alert={alert} />
             ))}
@@ -219,6 +247,17 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 12,
+  },
+  sectionDivider: {
+    color: 'rgba(44, 44, 44, 0.72)',
+    fontFamily: Fonts.label,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 8,
+    marginBottom: 2,
+    includeFontPadding: false,
   },
   stateBox: {
     alignItems: 'center',

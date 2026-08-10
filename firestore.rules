@@ -88,6 +88,15 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /campaigns/{campaignId} {
+      allow read: if signedIn();
+      allow create: if isPrivileged()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.active == true;
+      allow update, delete: if isAdmin()
+        || (isRole('municipal') && resource.data.createdBy == request.auth.uid);
+    }
+
     match /alertReports/{reportId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid)

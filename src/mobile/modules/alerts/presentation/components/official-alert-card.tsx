@@ -19,6 +19,7 @@ export type OfficialAlert = {
 
 const SOURCE_LABEL: Record<string, string> = {
   admin: 'Autoridad',
+  municipal: 'Municipalidad',
   usgs: 'USGS',
   noaa: 'NOAA / PTWC',
   user_cluster: 'Comunidad confirmada',

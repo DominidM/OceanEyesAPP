@@ -10,7 +10,8 @@ import { useAuth } from '@/shared/firebase/auth-context';
 import { subscribeMunicipalityByOwner } from '@/shared/firebase/municipalities';
 import { subscribeOrganizations } from '@/shared/firebase/organizations';
 import { createAlert, deactivateAlert, deleteAlert, subscribeAlertReports, subscribeOwnAlerts } from '@/shared/firebase/alerts';
-import type { Municipality, Organization } from '@/shared/firebase/types';
+import { createCampaign, deleteCampaign, subscribeMunicipalityCampaigns, updateCampaign } from '@/shared/firebase/campaigns';
+import type { Campaign, Municipality, Organization } from '@/shared/firebase/types';
 
 function statusCfg(status: string | undefined) {
   switch (status) {
@@ -40,12 +41,20 @@ export function MunicipalityDashboardScreen() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [alertReports, setAlertReports] = useState<{ total: number }>({ total: 0 });
   const [ownAlerts, setOwnAlerts] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState('');
+
+  const [campTitle, setCampTitle] = useState('');
+  const [campDescription, setCampDescription] = useState('');
+  const [campLocation, setCampLocation] = useState('');
+  const [campCreating, setCampCreating] = useState(false);
+  const [campBusy, setCampBusy] = useState(false);
+  const [campError, setCampError] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -60,6 +69,12 @@ export function MunicipalityDashboardScreen() {
       unsubOwn();
     };
   }, [user]);
+
+  useEffect(() => {
+    if (!municipality) return;
+    const unsub = subscribeMunicipalityCampaigns(municipality.id, (list) => setCampaigns(list));
+    return unsub;
+  }, [municipality]);
 
   const config = statusCfg(municipality?.status);
   const activated = municipality?.status === 'active';
@@ -86,6 +101,33 @@ export function MunicipalityDashboardScreen() {
       setFormError(e?.message ?? String(e));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const submitCampaign = async () => {
+    setCampError('');
+    if (!municipality || !campTitle.trim() || !campDescription.trim()) {
+      setCampError('Completa título y descripción.');
+      return;
+    }
+    setCampBusy(true);
+    try {
+      await createCampaign({
+        municipalityId: municipality.id,
+        municipalityName: municipality.name,
+        title: campTitle.trim(),
+        description: campDescription.trim(),
+        location: campLocation.trim() || undefined,
+        createdBy: user?.uid ?? 'unknown',
+      });
+      setCampTitle('');
+      setCampDescription('');
+      setCampLocation('');
+      setCampCreating(false);
+    } catch (e: any) {
+      setCampError(e?.message ?? String(e));
+    } finally {
+      setCampBusy(false);
     }
   };
 
@@ -132,8 +174,103 @@ export function MunicipalityDashboardScreen() {
         <View style={styles.kpiRow}>
           <KpiStat value={ownAlerts.length} label="Alertas propias" color={colors.primary} />
           <KpiStat value={alertReports.total} label="Reportes ciudadanos recientes" color={colors.accent} />
-          <KpiStat value={organizations.length} label="ONGs aliadas" color="#10B981" />
+          <KpiStat value={campaigns.length} label="Campañas activas" color="#0D9488" />
         </View>
+      )}
+
+      {activated && (
+        <Card>
+          <View style={styles.cardHeader}>
+            <Text style={[styles.cardTitle, { color: colors.primary }]}>Campañas municipales</Text>
+            <Button
+              label={campCreating ? 'Cancelar' : 'Nueva campaña'}
+              variant={campCreating ? 'secondary' : 'primary'}
+              onPress={() => setCampCreating((v) => !v)}
+            />
+          </View>
+
+          {campCreating && (
+            <View style={styles.form}>
+              <View style={styles.field}>
+                <Text style={[styles.label, { color: muted }]}>Título</Text>
+                <TextInput
+                  style={[styles.input, { color: colors.primary, borderColor, backgroundColor: inputBg }]}
+                  value={campTitle}
+                  onChangeText={setCampTitle}
+                  placeholder="Ej: Limpieza de playas de Pucusana"
+                  placeholderTextColor={muted}
+                />
+              </View>
+              <View style={styles.field}>
+                <Text style={[styles.label, { color: muted }]}>Descripción</Text>
+                <TextInput
+                  style={[styles.input, styles.inputMulti, { color: colors.primary, borderColor, backgroundColor: inputBg }]}
+                  value={campDescription}
+                  onChangeText={setCampDescription}
+                  placeholder="¿Qué campaña es y cómo participar?"
+                  placeholderTextColor={muted}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+              </View>
+              <View style={styles.field}>
+                <Text style={[styles.label, { color: muted }]}>Zona / lugar (opcional)</Text>
+                <TextInput
+                  style={[styles.input, { color: colors.primary, borderColor, backgroundColor: inputBg }]}
+                  value={campLocation}
+                  onChangeText={setCampLocation}
+                  placeholder="Ej: Playa Hermosa"
+                  placeholderTextColor={muted}
+                />
+              </View>
+              {!!campError && <Text style={[styles.error, { color: colors.danger }]}>{campError}</Text>}
+              <View style={styles.actions}>
+                <Button
+                  label={campBusy ? 'Creando...' : 'Crear campaña'}
+                  onPress={submitCampaign}
+                  disabled={campBusy}
+                />
+              </View>
+            </View>
+          )}
+
+          {campaigns.length === 0 && !campCreating && (
+            <Text style={[styles.body, { color: muted, marginTop: Spacing.two }]}>
+              Aún no hay campañas. Crea la primera para difundirla a tu comunidad.
+            </Text>
+          )}
+
+          {campaigns.map((c) => (
+            <View key={c.id} style={[styles.campaignItem, { borderColor }]}>
+              <View style={styles.campaignBody}>
+                <View style={styles.alertTop}>
+                  <Text style={[styles.alertTitle, { color: colors.primary }]}>{c.title}</Text>
+                  {c.active ? (
+                    <Badge label="Activa" color="#0D9488" bg="rgba(13,148,136,0.15)" />
+                  ) : (
+                    <Badge label="Pausada" color="#F59E0B" bg="rgba(245,158,11,0.15)" />
+                  )}
+                </View>
+                <Text style={[styles.alertMsg, { color: muted }]}>{c.description}</Text>
+                {c.location ? <Text style={[styles.alertDate, { color: muted }]}>📍 {c.location}</Text> : null}
+              </View>
+              <View style={styles.alertActions}>
+                <Pressable
+                  style={styles.actionBtn}
+                  onPress={async () => { await updateCampaign(c.id, { active: !c.active }); }}
+                >
+                  <FontAwesome5 name={c.active ? 'pause-circle' : 'play-circle'} size={18} color="#0D9488" />
+                  <Text style={[styles.actionLabel, { color: '#0D9488' }]}>{c.active ? 'Pausar' : 'Activar'}</Text>
+                </Pressable>
+                <Pressable style={styles.actionBtn} onPress={async () => { await deleteCampaign(c.id); }}>
+                  <FontAwesome5 name="trash-alt" size={16} color="#EF4444" />
+                  <Text style={[styles.actionLabel, { color: '#EF4444' }]}>Eliminar</Text>
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </Card>
       )}
 
       {activated && (
@@ -291,4 +428,15 @@ const styles = StyleSheet.create({
   orgName: { fontFamily: Fonts.headline, fontSize: 15, fontWeight: '700' },
   orgCategory: { fontFamily: Fonts.body, fontSize: 13 },
   orgWebsite: { fontFamily: Fonts.body, fontSize: 12 },
+  campaignItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: Spacing.three,
+    marginTop: Spacing.two,
+  },
+  campaignBody: { flex: 1, gap: Spacing.one, minWidth: 0 },
 });

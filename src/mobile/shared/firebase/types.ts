@@ -227,3 +227,20 @@ export type Organization = {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 };
+
+/* ── Campañas municipales (Fase 2E) ── */
+
+export type Campaign = {
+  id: string;
+  municipalityId: string;
+  municipalityName?: string;
+  title: string;
+  description: string;
+  location?: string;
+  startDate?: Timestamp;
+  endDate?: Timestamp;
+  active: boolean;
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
