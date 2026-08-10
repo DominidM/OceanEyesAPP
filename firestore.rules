@@ -7,7 +7,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
+      return isRole('admin');
     }
 
     function isRole(role) {
@@ -65,7 +65,7 @@ service cloud.firestore {
     }
 
     match /alerts/{alertId} {
-      allow read: if signedIn();
+      allow read: if signedIn() || resource.data.active == true;
       allow create: if isAdmin() || isRole('municipal');
       allow update, delete: if isAdmin() || isRole('municipal');
     }
@@ -89,7 +89,7 @@ service cloud.firestore {
     }
 
     match /campaigns/{campaignId} {
-      allow read: if signedIn();
+      allow read: if signedIn() || resource.data.active == true;
       allow create: if isPrivileged()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.active == true;
@@ -118,6 +118,16 @@ service cloud.firestore {
 
     match /rewards/{rewardId} {
       allow read: if signedIn() && resource.data.active == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /bannedDevices/{deviceHash} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /bans/{userId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       allow write: if isAdmin();
     }
 

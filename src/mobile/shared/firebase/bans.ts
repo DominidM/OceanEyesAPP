@@ -32,8 +32,12 @@ export type UserBan = {
 
 export async function isDeviceBanned(deviceHash: string): Promise<boolean> {
   if (!isFirebaseConfigured()) return false;
-  const snapshot = await getDoc(doc(firestore, 'bannedDevices', deviceHash));
-  return snapshot.exists();
+  try {
+    const snapshot = await getDoc(doc(firestore, 'bannedDevices', deviceHash));
+    return snapshot.exists();
+  } catch {
+    return false;
+  }
 }
 
 export async function banDevice(
