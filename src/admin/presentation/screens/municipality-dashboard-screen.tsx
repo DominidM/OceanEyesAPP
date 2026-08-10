@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AdminShell } from '@admin/layout/admin-shell';
 import { Badge, Button, Card, EmptyState, KpiStat, LoadingState, SectionHeader } from '@admin/presentation/components/ui';
+import { BarChart } from '@admin/presentation/components/charts';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { useAdminTheme } from '@admin/theme/context';
 import { useAuth } from '@/shared/firebase/auth-context';
@@ -33,6 +34,7 @@ function formatTime(ts: any) {
 export function MunicipalityDashboardScreen() {
   const { user } = useAuth();
   const { colors, mode } = useAdminTheme();
+  const { width } = useWindowDimensions();
   const isDark = mode === 'dark';
   const muted = isDark ? '#94A3B8' : '#64748B';
   const borderColor = isDark ? '#1E293B' : '#E2E8F0';
@@ -103,6 +105,31 @@ export function MunicipalityDashboardScreen() {
     ? alertReports.filter(reportsInBounds).length
     : alertReports.length;
   const openDangers = alertReports.filter((r) => r.status === 'pending').length;
+
+  const territoryWeek = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const days: { start: Date; end: Date; label: string }[] = [];
+    const names = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+    for (let i = 6; i >= 0; i--) {
+      const s = new Date(now);
+      s.setDate(now.getDate() - i);
+      const e = new Date(s);
+      e.setDate(s.getDate() + 1);
+      days.push({ start: s, end: e, label: names[s.getDay()] });
+    }
+    const inTerritory = municipality?.bounds
+      ? alertReports.filter(reportsInBounds)
+      : alertReports;
+    return days.map((d, i) => ({
+      label: d.label,
+      value: inTerritory.filter((r) => {
+        const t = r.createdAt?.toDate?.();
+        return t && t >= d.start && t < d.end;
+      }).length,
+      color: i === 6 ? colors.primary : colors.primary + '99',
+    }));
+  }, [alertReports, municipality?.bounds]);
 
   const submit = async () => {
     setFormError('');
@@ -232,6 +259,21 @@ export function MunicipalityDashboardScreen() {
           />
           <KpiStat value={campaigns.length} label="Campañas activas" color="#0D9488" />
         </View>
+      )}
+
+      {activated && (
+        <Card>
+          <Text style={[styles.cardTitle, { color: colors.primary }]}>
+            Señales de la comunidad · últimos 7 días
+          </Text>
+          {territoryWeek.every((d) => d.value === 0) ? (
+            <Text style={[styles.body, { color: muted }]}>
+              Aún no hay señales de la comunidad esta semana.
+            </Text>
+          ) : (
+            <BarChart data={territoryWeek} width={Math.min(width - 80, 900)} height={200} />
+          )}
+        </Card>
       )}
 
       {activated && openDangers > 0 && (

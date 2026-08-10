@@ -107,6 +107,13 @@ export function subscribeActiveAlerts(callback: (alerts: Alert[]) => void): Unsu
   });
 }
 
+export function subscribeAllAlerts(callback: (alerts: Alert[]) => void): Unsubscribe {
+  const q = query(collection(firestore, COLLECTION), orderBy('createdAt', 'desc'), limit(50));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Alert)));
+  });
+}
+
 export function subscribeOwnAlerts(uid: string, callback: (alerts: Alert[]) => void): Unsubscribe {
   const q = query(
     collection(firestore, COLLECTION),

@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AdminShell } from '@admin/layout/admin-shell';
 import { DashboardCharts } from '../sections/dashboard/dashboard-charts/page';
 import { RecentReportsSection } from '../sections/dashboard/recent-reports/page';
+import { RecentAlertsSection } from '../sections/dashboard/recent-alerts/page';
 import { ingestExternalAlerts } from '@/shared/adapters/external-alerts/ingestor';
 import { evaluateAlertClusters } from '@/shared/firebase/alerts';
 import { useAuth } from '@/shared/firebase/auth-context';
@@ -60,6 +61,7 @@ export function DashboardScreen() {
     <AdminShell title="Dashboard">
       <ExternalAlertPoller />
       <DashboardCharts />
+      <RecentAlertsSection />
       <RecentReportsSection />
     </AdminShell>
   );
