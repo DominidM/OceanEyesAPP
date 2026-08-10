@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 
@@ -7,6 +8,7 @@ import { usePreferences } from '@/shared/settings/preferences';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { REPORT_CATEGORIES, type Report as FirestoreReport } from '@/shared/firebase/types';
 import { subscribeReports } from '@/shared/firebase/reports';
+import { saveDeviceToken } from '@/shared/firebase/device-tokens';
 import { haversineKm, formatDistance } from '@/modules/alerts/presentation/utils/distance';
 
 export const NEAR_RADIUS_KM = 25;
@@ -48,6 +50,21 @@ export async function requestNotificationPermission(): Promise<boolean> {
     return requested.granted;
   }
   return false;
+}
+
+export async function registerPushToken(userId: string): Promise<string | null> {
+  if (Platform.OS === 'web') return null;
+  const granted = await requestNotificationPermission();
+  if (!granted) return null;
+  const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+  if (!projectId) return null;
+  try {
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    await saveDeviceToken(token, userId, Platform.OS);
+    return token;
+  } catch {
+    return null;
+  }
 }
 
 async function scheduleNearNotification(report: FirestoreReport, km: number): Promise<void> {
@@ -102,6 +119,12 @@ export function useReportNotifications(): void {
   useEffect(() => {
     void ensureNotificationChannel().catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    const currentUser = user;
+    if (!currentUser || Platform.OS === 'web') return;
+    void registerPushToken(currentUser.uid);
+  }, [user]);
 
   const enabled = notifyNear || notifyStatus;
 

@@ -47,6 +47,7 @@ export function AlertsScreen() {
                 message: a.message,
                 severity: a.severity,
                 source: a.source,
+                coordinates: a.coordinates,
                 distanceKm,
               };
             })

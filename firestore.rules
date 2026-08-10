@@ -94,7 +94,19 @@ service cloud.firestore {
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.active == true;
       allow update, delete: if isAdmin()
-        || (isRole('municipal') && resource.data.createdBy == request.auth.uid);
+        || (isRole('municipal')
+          && resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.municipalityId == resource.data.municipalityId);
+    }
+
+    match /deviceTokens/{token} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
     }
 
     match /alertReports/{reportId} {

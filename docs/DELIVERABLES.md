@@ -34,9 +34,9 @@
 
 ## 4. Links y medios (rellenar)
 
-- [ ] **Demo URL (panel admin)**: `<pendiente — Vercel/Cloudflare Pages>`
-- [ ] **Demo URL (app)**: `<pendiente — Expo / EAS>`
-- [ ] **Repositorio público**: `github.com/DominidM/OceanEyesAPP`
+- [x] **Demo URL (panel admin)**: `https://ocean-eyes.solvegrades.workers.dev/admin`
+- [x] **Demo URL (app)**: `https://ocean-eyes.solvegrades.workers.dev/mobile`
+- [x] **Repositorio público**: `github.com/DominidM/OceanEyesAPP`
 - [ ] **Video pitch (2-3 min)**: `<link>`
 - [ ] **Video demo (flujo reportar → verificar → Arbiscan)**: `<link>`
 - [ ] **Pitch deck PDF**: `<link>`

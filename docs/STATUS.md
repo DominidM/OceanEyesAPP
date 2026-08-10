@@ -222,6 +222,33 @@ pointTransactions/{txId}
 | `txHash` | `string?` | Transacción Ethereum |
 | `createdAt` | `timestamp` | |
 
+### 3.6 Colección: `alerts` (Fase 2A–2E)
+
+```
+alerts/{alertId}
+```
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `title` | `string` | Título de la alerta |
+| `message` | `string` | Mensaje |
+| `severity` | `'info' \| 'warning' \| 'danger'` | Nivel |
+| `source` | `'admin' \| 'usgs' \| 'noaa' \| 'user_cluster' \| 'municipal'` | Origen |
+| `coordinates` | `{ latitude, longitude }?` | Ubicación (geo) |
+| `radiusKm` | `number?` | Radio de alcance |
+| `active` | `boolean` | Activa/visible |
+| `pendingReview` | `boolean?` | Alerta danger ciudadana esperando aprobación admin |
+| `sentBy` | `uid \| 'system'` | Emisor |
+| `externalId` | `string?` | Dedup de APIs externas |
+| `createdAt` | `timestamp` | |
+
+### 3.7 Colecciones Fase 2E: `municipalities`, `organizations`, `campaigns`, `deviceTokens`
+
+- **`municipalities/{id}`**: `name`, `province`, `region`, `contactName/Email`, `status` (`pending|active|rejected`), `ownerUid`, `bounds?` (`south/west/north/east`), timestamps.
+- **`organizations/{id}`**: ONGs verificadas (`name`, `category`, `website`, `contactEmail`, `verified`).
+- **`campaigns/{id}`**: `municipalityId`, `title`, `description`, `location?`, `active`, `createdBy`.
+- **`deviceTokens/{token}`**: tokens Expo Push por dispositivo (`userId`, `platform`) para el push masivo.
+
 ---
 
 ## 4. Funciones Firebase Disponibles
@@ -277,8 +304,20 @@ seedRewards()  // Inserta 5 recompensas iniciales
 | `UsersScreen` | `/admin/users` | Listado de usuarios paginado (10) |
 
 ### Pendiente en Admin
-- [ ] Sección Recompensas (CRUD del catálogo, nav muestra "Pronto")
-- [ ] Gestión de canjes (aprobar/entregar redemptions)
+- [x] Sección Alertas (`/admin/alerts`) — crear alerta + push masivo (Expo Push)
+- [x] Gestión de canjes (`/admin/redemptions`)
+- [x] Recompensas CRUD (`/admin/rewards`)
+- [x] Municipalidades (`/admin/municipalities` + `/admin/municipio`)
+- [x] ONGs (`/admin/organizations`)
+- [x] Bans (`/admin/bans`)
+
+### Fases 2A–2E implementadas
+- 2A: diagrama arquitectura + colección `alerts` + pantalla `/admin/alertas`
+- 2B: ingestor alertas externas USGS + NOAA PTWC (poller admin, dedupe por `externalId`)
+- 2C: alertas ciudadanas con verificación por clústeres (`alertReports` + CF `promoteAlertCluster`) + `/mobile/alert-report`. Alertas `danger` requieren confirmación admin (`pendingReview`)
+- 2D: mapa de calor tipo Waze con densidad + filtros por categoría + clusters (native + web)
+- 2E: onboarding municipal (2 fases), dashboard municipal con límites geográficos, catálogo de ONGs y campañas municipales
+- Push real: registro de `deviceTokens` + endpoint `POST /api/send-push` (Expo Push)
 
 ---
 

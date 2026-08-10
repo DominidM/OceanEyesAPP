@@ -11,7 +11,8 @@ import { subscribeMunicipalityByOwner } from '@/shared/firebase/municipalities';
 import { subscribeOrganizations } from '@/shared/firebase/organizations';
 import { createAlert, deactivateAlert, deleteAlert, subscribeAlertReports, subscribeOwnAlerts } from '@/shared/firebase/alerts';
 import { createCampaign, deleteCampaign, subscribeMunicipalityCampaigns, updateCampaign } from '@/shared/firebase/campaigns';
-import type { Campaign, Municipality, Organization } from '@/shared/firebase/types';
+import { updateMunicipality } from '@/shared/firebase/municipalities';
+import type { Campaign, Municipality, Organization, GeoBounds } from '@/shared/firebase/types';
 
 function statusCfg(status: string | undefined) {
   switch (status) {
@@ -39,7 +40,7 @@ export function MunicipalityDashboardScreen() {
 
   const [municipality, setMunicipality] = useState<Municipality | null | undefined>(undefined);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [alertReports, setAlertReports] = useState<{ total: number }>({ total: 0 });
+  const [alertReports, setAlertReports] = useState<any[]>([]);
   const [ownAlerts, setOwnAlerts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
@@ -56,11 +57,19 @@ export function MunicipalityDashboardScreen() {
   const [campBusy, setCampBusy] = useState(false);
   const [campError, setCampError] = useState('');
 
+  const [boundsEditing, setBoundsEditing] = useState(false);
+  const [boundsSouth, setBoundsSouth] = useState('');
+  const [boundsWest, setBoundsWest] = useState('');
+  const [boundsNorth, setBoundsNorth] = useState('');
+  const [boundsEast, setBoundsEast] = useState('');
+  const [boundsBusy, setBoundsBusy] = useState(false);
+  const [boundsError, setBoundsError] = useState('');
+
   useEffect(() => {
     if (!user) return;
     const unsubMunicipality = subscribeMunicipalityByOwner(user.uid, (m) => setMunicipality(m));
     const unsubOrgs = subscribeOrganizations((list) => setOrganizations(list));
-    const unsubReports = subscribeAlertReports((reports) => setAlertReports({ total: reports.length }));
+    const unsubReports = subscribeAlertReports((reports) => setAlertReports(reports));
     const unsubOwn = subscribeOwnAlerts(user.uid, (alerts) => setOwnAlerts(alerts));
     return () => {
       unsubMunicipality();
@@ -78,6 +87,22 @@ export function MunicipalityDashboardScreen() {
 
   const config = statusCfg(municipality?.status);
   const activated = municipality?.status === 'active';
+
+  const reportsInBounds = (r: any) => {
+    const bounds = municipality?.bounds;
+    if (!bounds || !r?.location) return false;
+    const { latitude, longitude } = r.location;
+    return (
+      latitude >= bounds.south &&
+      latitude <= bounds.north &&
+      longitude >= bounds.west &&
+      longitude <= bounds.east
+    );
+  };
+  const territoryReports = municipality?.bounds
+    ? alertReports.filter(reportsInBounds).length
+    : alertReports.length;
+  const openDangers = alertReports.filter((r) => r.status === 'pending').length;
 
   const submit = async () => {
     setFormError('');
@@ -131,6 +156,33 @@ export function MunicipalityDashboardScreen() {
     }
   };
 
+  const saveBounds = async () => {
+    setBoundsError('');
+    if (!municipality) return;
+    const south = parseFloat(boundsSouth);
+    const west = parseFloat(boundsWest);
+    const north = parseFloat(boundsNorth);
+    const east = parseFloat(boundsEast);
+    if ([south, west, north, east].some((n) => Number.isNaN(n))) {
+      setBoundsError('Ingresa las 4 coordenadas numéricas.');
+      return;
+    }
+    if (south > north || west > east) {
+      setBoundsError('Sur debe ser menor que norte, y oeste menor que este.');
+      return;
+    }
+    setBoundsBusy(true);
+    try {
+      const bounds: GeoBounds = { south, west, north, east };
+      await updateMunicipality(municipality.id, { bounds });
+      setBoundsEditing(false);
+    } catch (e: any) {
+      setBoundsError(e?.message ?? String(e));
+    } finally {
+      setBoundsBusy(false);
+    }
+  };
+
   return (
     <AdminShell title="Mi municipio" breadcrumb={[{ label: 'Mi municipio' }]}>
       <SectionHeader
@@ -173,9 +225,96 @@ export function MunicipalityDashboardScreen() {
       {activated && (
         <View style={styles.kpiRow}>
           <KpiStat value={ownAlerts.length} label="Alertas propias" color={colors.primary} />
-          <KpiStat value={alertReports.total} label="Reportes ciudadanos recientes" color={colors.accent} />
+          <KpiStat
+            value={territoryReports}
+            label={municipality?.bounds ? 'Reportes en tu territorio' : 'Reportes ciudadanos'}
+            color={colors.accent}
+          />
           <KpiStat value={campaigns.length} label="Campañas activas" color="#0D9488" />
         </View>
+      )}
+
+      {activated && openDangers > 0 && (
+        <Card>
+          <View style={styles.alertTop}>
+            <Badge label="Señales pendientes" color="#F59E0B" bg="rgba(245,158,11,0.15)" />
+            <Text style={[styles.alertDate, { color: muted }]}>
+              {openDangers} señal(es) de la comunidad esperan tu atención
+            </Text>
+          </View>
+        </Card>
+      )}
+
+      {activated && (
+        <Card>
+          <View style={styles.cardHeader}>
+            <Text style={[styles.cardTitle, { color: colors.primary }]}>Territorio municipal</Text>
+            <Button
+              label={boundsEditing ? 'Cancelar' : 'Definir límites'}
+              variant={boundsEditing ? 'secondary' : 'primary'}
+              onPress={() => {
+                const b = municipality?.bounds;
+                if (b) {
+                  setBoundsSouth(String(b.south));
+                  setBoundsWest(String(b.west));
+                  setBoundsNorth(String(b.north));
+                  setBoundsEast(String(b.east));
+                }
+                setBoundsEditing((v) => !v);
+              }}
+            />
+          </View>
+
+          {municipality?.bounds ? (
+            <View style={styles.alertTop}>
+              <Badge label="Límites definidos" color="#22C55E" bg="rgba(34,197,94,0.15)" />
+              <Text style={[styles.alertDate, { color: muted }]}>
+                Sur {municipality.bounds.south} · Oeste {municipality.bounds.west} · Norte{' '}
+                {municipality.bounds.north} · Este {municipality.bounds.east}
+              </Text>
+            </View>
+          ) : (
+            <Text style={[styles.body, { color: muted }]}>
+              Si defines los límites geográficos de tu distrito, las métricas mostrarán solo los
+              reportes ciudadanos dentro de tu territorio.
+            </Text>
+          )}
+
+          {boundsEditing && (
+            <View style={styles.form}>
+              <View style={styles.boundsRow}>
+                {(
+                  [
+                    { label: 'Sur', value: boundsSouth, setter: setBoundsSouth, ph: '-12.1' },
+                    { label: 'Oeste', value: boundsWest, setter: setBoundsWest, ph: '-77.0' },
+                    { label: 'Norte', value: boundsNorth, setter: setBoundsNorth, ph: '-12.0' },
+                    { label: 'Este', value: boundsEast, setter: setBoundsEast, ph: '-76.9' },
+                  ] as const
+                ).map((f) => (
+                  <View key={f.label} style={styles.boundsField}>
+                    <Text style={[styles.label, { color: muted }]}>{f.label}</Text>
+                    <TextInput
+                      style={[styles.input, { color: colors.primary, borderColor, backgroundColor: inputBg }]}
+                      value={f.value}
+                      onChangeText={f.setter}
+                      placeholder={f.ph}
+                      placeholderTextColor={muted}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                ))}
+              </View>
+              {!!boundsError && <Text style={[styles.error, { color: colors.danger }]}>{boundsError}</Text>}
+              <View style={styles.actions}>
+                <Button
+                  label={boundsBusy ? 'Guardando...' : 'Guardar límites'}
+                  onPress={saveBounds}
+                  disabled={boundsBusy}
+                />
+              </View>
+            </View>
+          )}
+        </Card>
       )}
 
       {activated && (
@@ -439,4 +578,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.two,
   },
   campaignBody: { flex: 1, gap: Spacing.one, minWidth: 0 },
+  boundsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  boundsField: { flex: 1, minWidth: 120, gap: Spacing.one },
 });

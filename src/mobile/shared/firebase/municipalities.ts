@@ -102,3 +102,13 @@ export async function getMunicipality(uid: string): Promise<Municipality | null>
   const snapshot = await getDoc(doc(firestore, COLLECTION, uid));
   return snapshot.exists() ? ({ id: snapshot.id, ...snapshot.data() } as Municipality) : null;
 }
+
+export async function updateMunicipality(
+  municipalityId: string,
+  changes: Partial<Pick<Municipality, 'address' | 'phone' | 'contactEmail' | 'bounds'>>,
+): Promise<void> {
+  await updateDoc(doc(firestore, COLLECTION, municipalityId), {
+    ...changes,
+    updatedAt: serverTimestamp(),
+  });
+}

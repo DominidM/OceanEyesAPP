@@ -195,6 +195,8 @@ export const promoteAlertCluster = onDocumentCreated(
       const lat = cluster.reduce((acc: number, c: any) => acc + c.location.latitude, 0) / cluster.length;
       const lng = cluster.reduce((acc: number, c: any) => acc + c.location.longitude, 0) / cluster.length;
 
+      const requiresReview = severity === 'danger';
+
       await db.collection('alerts').add({
         title: CLUSTER_TITLES[cluster[0].type] ?? 'Alerta ciudadana confirmada',
         message:
@@ -204,7 +206,8 @@ export const promoteAlertCluster = onDocumentCreated(
         source: 'user_cluster',
         coordinates: { latitude: lat, longitude: lng },
         radiusKm: CLUSTER_RADIUS_KM,
-        active: true,
+        active: !requiresReview,
+        pendingReview: requiresReview,
         sentBy: 'system',
         externalId,
         createdAt: FieldValue.serverTimestamp(),

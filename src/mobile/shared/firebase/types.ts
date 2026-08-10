@@ -25,6 +25,16 @@ export type UserProfile = {
   updatedAt: Timestamp;
 };
 
+/* ── Tokens de dispositivo (push) ── */
+
+export type DeviceToken = {
+  id: string;
+  userId: string;
+  platform?: string;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+};
+
 /* ── Reportes ── */
 
 export type ReportCategory =
@@ -164,6 +174,7 @@ export type Alert = {
   coordinates?: { latitude: number; longitude: number };
   radiusKm?: number;
   active: boolean;
+  pendingReview?: boolean;
   createdAt: Timestamp;
   sentBy: string;
   externalId?: string;
@@ -195,6 +206,13 @@ export type AlertReport = {
 
 export type MunicipalityStatus = 'pending' | 'active' | 'rejected';
 
+export type GeoBounds = {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+};
+
 export type Municipality = {
   id: string;
   name: string;
@@ -206,6 +224,7 @@ export type Municipality = {
   phone?: string;
   status: MunicipalityStatus;
   ownerUid: string;
+  bounds?: GeoBounds;
   approvedBy?: string;
   approvedAt?: Timestamp;
   rejectedReason?: string;

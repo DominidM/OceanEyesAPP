@@ -5,11 +5,14 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { BrandColors } from '@/constants/theme';
 import {
+  approveAlert,
   createAlert,
   deactivateAlert,
   deleteAlert,
   getAllAlerts,
+  rejectAlert,
 } from '@/shared/firebase/alerts';
+import { getAllDeviceTokens } from '@/shared/firebase/device-tokens';
 import { useAuth } from '@/shared/firebase/auth-context';
 import type { Alert, AlertSeverity } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
@@ -31,6 +34,24 @@ const SEVERITIES: { key: AlertSeverity; label: string; color: string; bg: string
 
 function severityCfg(s: AlertSeverity) {
   return SEVERITIES.find((x) => x.key === s) ?? SEVERITIES[0];
+}
+
+async function sendPush(title: string, message: string): Promise<void> {
+  try {
+    const tokens = await getAllDeviceTokens();
+    if (tokens.length === 0) return;
+    await fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tokens: tokens.map((t) => t.id),
+        title,
+        message,
+      }),
+    });
+  } catch (e) {
+    console.error('sendPush failed:', e);
+  }
 }
 
 function formatTime(ts: any) {
@@ -84,6 +105,7 @@ export default function AlertsScreen() {
         source: 'admin',
         sentBy: user?.uid ?? 'unknown',
       });
+      void sendPush(title.trim(), message.trim());
       setTitle('');
       setMessage('');
       setSeverity('info');
@@ -105,6 +127,18 @@ export default function AlertsScreen() {
     await deleteAlert(id);
     await load();
   };
+
+  const approve = async (id: string) => {
+    await approveAlert(id);
+    await load();
+  };
+
+  const reject = async (id: string) => {
+    await rejectAlert(id);
+    await load();
+  };
+
+  const pendingReview = alerts.filter((a) => a.pendingReview);
 
   return (
     <AdminShell title="Alertas">
@@ -186,8 +220,53 @@ export default function AlertsScreen() {
           />
         )}
 
+        {!loading && pendingReview.length > 0 && (
+          <>
+            <SectionHeader
+              title="Por revisar"
+              subtitle={`${pendingReview.length} alerta(s) de peligro ciudadano esperando tu confirmación`}
+            />
+            {pendingReview.map((a) => {
+              const s = severityCfg(a.severity);
+              return (
+                <Card key={a.id}>
+                  <View style={styles.alertRow}>
+                    <View style={styles.alertBody}>
+                      <View style={styles.alertTop}>
+                        <Badge label={s.label} color={s.color} bg={s.bg} />
+                        <Badge label="Comunidad" color="#7C3AED" bg="rgba(124,58,237,0.12)" />
+                        <Badge label="Requiere revisión" color="#EF4444" bg="rgba(239,68,68,0.15)" />
+                      </View>
+                      <Text style={[styles.alertTitle, { color: BrandColors.primary }]}>{a.title}</Text>
+                      <Text style={[styles.alertMsg, { color: muted }]}>{a.message}</Text>
+                      {a.coordinates && (
+                        <Text style={styles.alertDate}>
+                          📍 {a.coordinates.latitude.toFixed(4)}, {a.coordinates.longitude.toFixed(4)}
+                        </Text>
+                      )}
+                      <Text style={[styles.alertDate, { color: muted }]}>{formatTime(a.createdAt)}</Text>
+                    </View>
+                    <View style={styles.alertActions}>
+                      <Pressable style={styles.actionBtn} onPress={() => approve(a.id)}>
+                        <FontAwesome5 name="check-circle" size={20} color="#22C55E" />
+                        <Text style={[styles.actionLabel, { color: '#22C55E' }]}>Aprobar</Text>
+                      </Pressable>
+                      <Pressable style={styles.actionBtn} onPress={() => reject(a.id)}>
+                        <FontAwesome5 name="times-circle" size={20} color="#EF4444" />
+                        <Text style={[styles.actionLabel, { color: '#EF4444' }]}>Rechazar</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Card>
+              );
+            })}
+          </>
+        )}
+
         {!loading &&
-          alerts.map((a) => {
+          alerts
+            .filter((a) => !a.pendingReview)
+            .map((a) => {
             const s = severityCfg(a.severity);
             return (
               <Card key={a.id}>

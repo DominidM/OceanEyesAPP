@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
@@ -14,6 +14,7 @@ export type OfficialAlert = {
   message: string;
   severity: AlertSeverity;
   source: string;
+  coordinates?: { latitude: number; longitude: number };
   distanceKm?: number;
 };
 
@@ -31,8 +32,17 @@ const SEVERITY_STYLE: Record<AlertSeverity, { color: string; bg: string }> = {
   danger: { color: '#B91C1C', bg: 'rgba(239,68,68,0.14)' },
 };
 
+function buildShareUrl(alert: OfficialAlert): string | null {
+  if (!alert.coordinates) return null;
+  const text = encodeURIComponent(
+    `${alert.title}: ${alert.message}. Coordenadas: https://maps.google.com/?q=${alert.coordinates.latitude},${alert.coordinates.longitude}`,
+  );
+  return `https://wa.me/?text=${text}`;
+}
+
 export function OfficialAlertCard({ alert }: { alert: OfficialAlert }) {
   const sev = SEVERITY_STYLE[alert.severity] ?? SEVERITY_STYLE.info;
+  const shareUrl = buildShareUrl(alert);
 
   return (
     <View
@@ -75,6 +85,23 @@ export function OfficialAlertCard({ alert }: { alert: OfficialAlert }) {
         <AppText style={styles.message} numberOfLines={3}>
           {alert.message}
         </AppText>
+
+        <View style={styles.footerRow}>
+          <AppText style={styles.actionHint}>Reportado en tu zona</AppText>
+          {shareUrl ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => void Linking.openURL(shareUrl)}
+              style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}>
+              <AppSymbol
+                name={{ ios: 'square.and.arrow.up.fill', android: 'share', web: 'share' }}
+                color={BrandColors.primary}
+                size={13}
+              />
+              <AppText style={styles.shareLabel}>Compartir con ONG</AppText>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     </View>
   );
@@ -156,5 +183,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     includeFontPadding: false,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: 2,
+  },
+  actionHint: {
+    color: SurfaceColors.mutedText,
+    fontFamily: Fonts.body,
+    fontSize: 11,
+    includeFontPadding: false,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(19, 78, 94, 0.35)',
+  },
+  shareLabel: {
+    color: BrandColors.primary,
+    fontFamily: Fonts.label,
+    fontSize: 11,
+    fontWeight: '700',
+    includeFontPadding: false,
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });

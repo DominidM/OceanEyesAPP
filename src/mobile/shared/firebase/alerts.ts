@@ -59,6 +59,20 @@ export async function deleteAlert(alertId: string): Promise<void> {
   await deleteDoc(doc(firestore, COLLECTION, alertId));
 }
 
+export async function approveAlert(alertId: string): Promise<void> {
+  await updateDoc(doc(firestore, COLLECTION, alertId), {
+    active: true,
+    pendingReview: false,
+  });
+}
+
+export async function rejectAlert(alertId: string): Promise<void> {
+  await updateDoc(doc(firestore, COLLECTION, alertId), {
+    pendingReview: false,
+    active: false,
+  });
+}
+
 export async function getActiveAlerts(): Promise<Alert[]> {
   const snapshot = await getDocs(
     query(
