@@ -148,3 +148,45 @@ export type PointTransaction = {
   txHash?: string;
   createdAt: Timestamp;
 };
+
+/* ── Alertas ── */
+
+export type AlertSeverity = 'info' | 'warning' | 'danger';
+
+export type AlertSource = 'admin' | 'usgs' | 'noaa' | 'user_cluster';
+
+export type Alert = {
+  id: string;
+  title: string;
+  message: string;
+  severity: AlertSeverity;
+  source: AlertSource;
+  coordinates?: { latitude: number; longitude: number };
+  radiusKm?: number;
+  active: boolean;
+  createdAt: Timestamp;
+  sentBy: string;
+  externalId?: string;
+};
+
+export type AlertReportType =
+  | 'retroceso_mar'
+  | 'oleaje_extremo'
+  | 'contaminacion'
+  | 'otro';
+
+export type AlertReportStatus = 'pending' | 'verified' | 'rejected';
+
+export type AlertReport = {
+  id: string;
+  userId: string;
+  type: AlertReportType;
+  description: string;
+  photoURL?: string;
+  location: { latitude: number; longitude: number };
+  severity: AlertSeverity;
+  status: AlertReportStatus;
+  createdAt: Timestamp;
+  verifiedAt?: Timestamp;
+  clusteredWith?: string[];
+};
