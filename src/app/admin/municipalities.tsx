@@ -1,0 +1,1 @@
+export { MunicipalitiesScreen as default } from '@admin/presentation/screens/municipalities-screen';

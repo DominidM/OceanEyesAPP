@@ -5,14 +5,18 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
-import { ADMIN_NAV, AdminNavItem } from '@admin/config/admin-nav';
+import { getAdminNav, AdminNavItem } from '@admin/config/admin-nav';
 import { SIDEBAR_DARK } from '@admin/config/admin-theme';
+import { useAuth } from '@/shared/firebase/auth-context';
 import { logout } from '@/shared/firebase/auth';
 
 const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786169052/logotipo_q2mkhv.png';
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const { profile } = useAuth();
+
+  const nav = getAdminNav(profile?.role);
 
   return (
     <View style={[styles.sidebar, { backgroundColor: SIDEBAR_DARK.bg }]}>
@@ -26,7 +30,7 @@ export function AdminSidebar() {
         </View>
       </View>
       <View style={styles.nav}>
-        {ADMIN_NAV.map((item) => (
+        {nav.map((item) => (
           <NavItem
             key={item.key}
             item={item}
@@ -40,9 +44,11 @@ export function AdminSidebar() {
           style={({ hovered }) => [
             styles.footerItem,
             hovered && { backgroundColor: SIDEBAR_DARK.activeBg },
-            pathname === '/admin' && { backgroundColor: SIDEBAR_DARK.activeBg },
+            pathname === (profile?.role === 'municipal' ? '/admin/municipio' : '/admin') && {
+              backgroundColor: SIDEBAR_DARK.activeBg,
+            },
           ]}
-          onPress={() => router.push('/admin')}
+          onPress={() => router.push(profile?.role === 'municipal' ? '/admin/municipio' : '/admin')}
         >
           <View style={styles.navLabelRow}>
             <FontAwesome5 name="home" size={15} color={SIDEBAR_DARK.text} style={styles.navIcon} />

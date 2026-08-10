@@ -1,0 +1,1 @@
+export { OrganizationsScreen as default } from '@admin/presentation/screens/organizations-screen';

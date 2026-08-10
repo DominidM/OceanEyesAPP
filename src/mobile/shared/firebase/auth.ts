@@ -113,6 +113,31 @@ export async function registerUser(input: {
   return credential.user;
 }
 
+export async function registerMunicipalUser(input: {
+  email: string;
+  password: string;
+  displayName: string;
+}) {
+  const credential = await createUserWithEmailAndPassword(requireAuth(), input.email, input.password);
+  await updateProfile(credential.user, { displayName: input.displayName });
+
+  await setDoc(doc(firestore, 'users', credential.user.uid), {
+    role: 'municipal',
+    profileType: 'citizen',
+    displayName: input.displayName,
+    email: input.email,
+    dni: null,
+    pointsBalance: 0,
+    totalPointsEarned: 0,
+    verifiedReportsCount: 0,
+    status: 'active',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  return credential.user;
+}
+
 let adminSession: { email: string; password: string } | null = null;
 
 export function rememberAdminSession(email: string, password: string) {

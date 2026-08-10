@@ -1,6 +1,6 @@
 import type { Timestamp } from 'firebase/firestore';
 
-export type UserRole = 'fisher' | 'citizen' | 'admin';
+export type UserRole = 'fisher' | 'citizen' | 'admin' | 'municipal';
 export type ProfileType = 'fisher' | 'citizen';
 export type AccountStatus = 'active' | 'suspended';
 
@@ -153,7 +153,7 @@ export type PointTransaction = {
 
 export type AlertSeverity = 'info' | 'warning' | 'danger';
 
-export type AlertSource = 'admin' | 'usgs' | 'noaa' | 'user_cluster';
+export type AlertSource = 'admin' | 'usgs' | 'noaa' | 'user_cluster' | 'municipal';
 
 export type Alert = {
   id: string;
@@ -189,4 +189,41 @@ export type AlertReport = {
   createdAt: Timestamp;
   verifiedAt?: Timestamp;
   clusteredWith?: string[];
+};
+
+/* ── Municipalidades (Fase 2E) ── */
+
+export type MunicipalityStatus = 'pending' | 'active' | 'rejected';
+
+export type Municipality = {
+  id: string;
+  name: string;
+  province: string;
+  region: string;
+  address?: string;
+  contactName?: string;
+  contactEmail?: string;
+  phone?: string;
+  status: MunicipalityStatus;
+  ownerUid: string;
+  approvedBy?: string;
+  approvedAt?: Timestamp;
+  rejectedReason?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+
+/* ── Organizaciones / ONGs (Fase 2E) ── */
+
+export type Organization = {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  website?: string;
+  contactEmail?: string;
+  verified: boolean;
+  logoURL?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 };

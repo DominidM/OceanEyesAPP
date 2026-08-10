@@ -93,6 +93,17 @@ export function subscribeActiveAlerts(callback: (alerts: Alert[]) => void): Unsu
   });
 }
 
+export function subscribeOwnAlerts(uid: string, callback: (alerts: Alert[]) => void): Unsubscribe {
+  const q = query(
+    collection(firestore, COLLECTION),
+    where('sentBy', '==', uid),
+    orderBy('createdAt', 'desc'),
+  );
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Alert)));
+  });
+}
+
 /* ── AlertReports (reportes ciudadanos de alerta) ── */
 
 const CLUSTER_TITLES: Record<AlertReportType, string> = {

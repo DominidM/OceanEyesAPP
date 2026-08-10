@@ -1,0 +1,1 @@
+export { MunicipalityDashboardScreen as default } from '@admin/presentation/screens/municipality-dashboard-screen';

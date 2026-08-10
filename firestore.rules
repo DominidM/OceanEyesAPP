@@ -10,6 +10,15 @@ service cloud.firestore {
       return signedIn() && request.auth.token.admin == true;
     }
 
+    function isRole(role) {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isPrivileged() {
+      return isRole('admin') || isRole('municipal');
+    }
+
     function isOwner(userId) {
       return signedIn() && request.auth.uid == userId;
     }
@@ -56,6 +65,24 @@ service cloud.firestore {
     }
 
     match /alerts/{alertId} {
+      allow read: if signedIn();
+      allow create: if isAdmin() || isRole('municipal');
+      allow update, delete: if isAdmin() || isRole('municipal');
+    }
+
+    match /municipalities/{municipalityId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if isPrivileged()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.ownerUid == resource.data.ownerUid);
+      allow delete: if isAdmin();
+    }
+
+    match /organizations/{organizationId} {
       allow read: if signedIn();
       allow create: if isAdmin();
       allow update, delete: if isAdmin();

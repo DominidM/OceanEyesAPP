@@ -21,13 +21,13 @@ export function AdminLoginScreen() {
     try {
       const user = await loginWithEmail(email.trim(), password);
       const profile = await getUserProfile(user.uid);
-      if (!profile || profile.role !== 'admin') {
+      if (!profile || (profile.role !== 'admin' && profile.role !== 'municipal')) {
         await logout();
         setError('Acceso denegado. Esta cuenta no tiene permisos de administrador.');
         return;
       }
       rememberAdminSession(email.trim(), password);
-      router.replace('/admin');
+      router.replace(profile.role === 'municipal' ? '/admin/municipio' : '/admin');
     } catch (e: any) {
       const msg = e?.code || e?.message || String(e);
       setError(msg);
@@ -83,6 +83,13 @@ export function AdminLoginScreen() {
             <Text style={styles.submitLabel}>{busy ? 'Validando...' : 'Entrar al panel'}</Text>
           </Pressable>
           {!!error && <Text style={styles.error}>{error}</Text>}
+
+          <Pressable onPress={() => router.push('/municipio')} style={styles.municipioLink}>
+            <FontAwesome5 name="landmark" size={13} color={BrandColors.neutral} />
+            <Text style={styles.municipioLinkLabel}>
+              ¿Representás una municipalidad? Registrate para sumar tu distrito
+            </Text>
+          </Pressable>
         </View>
       </View>
 
@@ -226,6 +233,20 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.label,
     fontSize: 15,
     fontWeight: '700',
+  },
+  municipioLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
+    cursor: 'pointer',
+  },
+  municipioLinkLabel: {
+    color: BrandColors.neutral,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    textDecorationLine: 'underline',
   },
   error: {
     color: '#B42318',

@@ -35,7 +35,7 @@ export function UsersNewScreen() {
         email: email.trim(),
         password,
         displayName: displayName.trim(),
-        profileType: isAdmin ? 'citizen' : role,
+        profileType: role === 'fisher' ? 'fisher' : 'citizen',
         role,
         dni: dni.trim() || undefined,
       });
@@ -147,6 +147,7 @@ export function UsersNewScreen() {
               <View style={styles.typeRow}>
                 {roleOption('citizen', 'Ciudadano')}
                 {roleOption('fisher', 'Pescador')}
+                {roleOption('municipal', 'Municipal')}
                 {roleOption('admin', 'Admin')}
               </View>
             </View>
