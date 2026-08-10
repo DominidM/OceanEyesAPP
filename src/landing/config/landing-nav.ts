@@ -6,6 +6,7 @@ export type LandingNavLink = { label: string; href: Href };
 
 export const LANDING_NAV_LINKS: LandingNavLink[] = [
   { label: 'Inicio', href: '/' },
+  { label: 'Descubre tu Rol', href: '/descubre-tu-rol' },
   { label: 'Preguntas Frecuentes', href: '/faq' },
   { label: 'Contacto', href: '/contacto' },
 ];

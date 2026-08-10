@@ -6,7 +6,7 @@ import { LandingHeader } from '@landing/layout/header/landing-header';
 import { LandingFooter } from '@landing/layout/footer/landing-footer';
 import { LandingSubfooter } from '@landing/layout/footer/landing-subfooter';
 import { PageTransition } from '@landing/presentation/components/page-transition';
-import { PerfilHero } from '@landing/presentation/sections/perfil';
+import { PerfilHero, RolQuizSection } from '@landing/presentation/sections/perfil';
 
 export default function DescubreTuRolScreen() {
   return (
@@ -14,6 +14,7 @@ export default function DescubreTuRolScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <LandingHeader scrolled={true} />
         <PerfilHero />
+        <RolQuizSection />
         <LandingSubfooter />
         <LandingFooter />
       </ScrollView>

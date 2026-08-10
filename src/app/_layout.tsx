@@ -55,7 +55,7 @@ const AppLightTheme: Theme = {
   },
 };
 
-const LANDING_PATHS = new Set(['/', '/faq', '/descargas', '/contacto']);
+const LANDING_PATHS = new Set(['/', '/descubre-tu-rol', '/faq', '/descargas', '/contacto']);
 
 let splashShownOnce = false;
 
