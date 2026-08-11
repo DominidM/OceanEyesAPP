@@ -4,6 +4,11 @@ import { Platform } from 'react-native';
 
 export function canUseExpoNotifications(): boolean {
   if (Platform.OS === 'web') return false;
+  return true;
+}
+
+export function canRegisterPushToken(): boolean {
+  if (Platform.OS === 'web') return false;
   if (Platform.OS === 'android' && isRunningInExpoGo()) return false;
   return true;
 }

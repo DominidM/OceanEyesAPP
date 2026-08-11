@@ -3,17 +3,20 @@ import Constants from 'expo-constants';
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 
+import { canRegisterPushToken } from './notification-bridge';
 import { useCurrentLocation } from '@/shared/hooks/use-current-location';
 import { usePreferences } from '@/shared/settings/preferences';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { REPORT_CATEGORIES, type Report as FirestoreReport } from '@/shared/firebase/types';
 import { subscribeReports } from '@/shared/firebase/reports';
+import { subscribeActiveAlerts } from '@/shared/firebase/alerts';
 import { saveDeviceToken } from '@/shared/firebase/device-tokens';
 import { haversineKm, formatDistance } from '@/modules/alerts/presentation/utils/distance';
 
 export const NEAR_RADIUS_KM = 25;
 
 const CHANNEL_ID = 'oceaneyes';
+const ALERT_CHANNEL_ID = 'official-alerts';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -35,6 +38,17 @@ async function ensureNotificationChannel(): Promise<void> {
   });
 }
 
+async function ensureAlertChannel(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(ALERT_CHANNEL_ID, {
+    name: 'Alertas oficiales',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 400, 200, 400, 200, 400, 200, 400],
+    lightColor: '#EF4444',
+    sound: 'default',
+  });
+}
+
 export async function getNotificationPermissionStatus(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   const current = await Notifications.getPermissionsAsync();
@@ -53,10 +67,12 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 export async function registerPushToken(userId: string): Promise<string | null> {
-  if (Platform.OS === 'web') return null;
+  if (!canRegisterPushToken()) return null;
   const granted = await requestNotificationPermission();
   if (!granted) return null;
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+  const projectId =
+    (Constants.expoConfig?.extra?.eas?.projectId as string | undefined) ??
+    process.env.EXPO_PUBLIC_EAS_PROJECT_ID;
   if (!projectId) return null;
   try {
     const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
@@ -65,6 +81,58 @@ export async function registerPushToken(userId: string): Promise<string | null> 
   } catch {
     return null;
   }
+}
+
+const ALARM_BURST_DELAYS = [0, 4, 8, 12, 16, 20];
+
+async function scheduleOfficialAlertNotification(alert: {
+  id?: string;
+  title?: string;
+  message?: string;
+}): Promise<void> {
+  for (const delay of ALARM_BURST_DELAYS) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `⚠ ${alert.title || 'ALERTA'}`,
+        body: alert.message || 'Nueva alerta oficial en tu zona',
+        data: { kind: 'official-alert', alertId: alert.id ?? null },
+        sound: 'default',
+        interruptionLevel: 'timeSensitive',
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(Date.now() + delay * 1000),
+        channelId: ALERT_CHANNEL_ID,
+      },
+    });
+  }
+}
+
+export function useOfficialAlertSound(): void {
+  const seen = useRef<Set<string>>(new Set());
+  const primed = useRef(false);
+
+  useEffect(() => {
+    void ensureAlertChannel().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    void requestNotificationPermission().catch(() => undefined);
+
+    const unsubscribe = subscribeActiveAlerts((alerts) => {
+      for (const alert of alerts) {
+        if (!alert.id || seen.current.has(alert.id)) continue;
+        seen.current.add(alert.id);
+        if (primed.current) {
+          void scheduleOfficialAlertNotification(alert).catch(() => undefined);
+        }
+      }
+      primed.current = true;
+    });
+
+    return unsubscribe;
+  }, []);
 }
 
 async function scheduleNearNotification(report: FirestoreReport, km: number): Promise<void> {
@@ -177,5 +245,6 @@ export function useReportNotifications(): void {
 
 export function NotificationsWatcher(): null {
   useReportNotifications();
+  useOfficialAlertSound();
   return null;
 }
