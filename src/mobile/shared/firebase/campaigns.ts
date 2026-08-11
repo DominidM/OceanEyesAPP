@@ -70,9 +70,13 @@ export function subscribeActiveCampaigns(callback: (campaigns: Campaign[]) => vo
     where('active', '==', true),
     orderBy('createdAt', 'desc'),
   );
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Campaign)));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Campaign)));
+    },
+    (err) => console.warn('[campaigns] subscribeActiveCampaigns:', err),
+  );
 }
 
 export function subscribeMunicipalityCampaigns(
@@ -84,7 +88,11 @@ export function subscribeMunicipalityCampaigns(
     where('municipalityId', '==', municipalityId),
     orderBy('createdAt', 'desc'),
   );
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Campaign)));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Campaign)));
+    },
+    (err) => console.warn('[campaigns] subscribeMunicipalityCampaigns:', err),
+  );
 }

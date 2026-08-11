@@ -18,14 +18,17 @@ export function RecentReportsSection() {
   const [hasMore, setHasMore] = useState(true);
 
   const load = useCallback(async (reset = false) => {
-    let q = query(collection(firestore, 'reports'), orderBy('createdAt', 'desc'), fireLimit(PAGE_SIZE));
-    if (!reset && lastDoc) q = query(q, startAfter(lastDoc));
+    try {
+      let q = query(collection(firestore, 'reports'), orderBy('createdAt', 'desc'), fireLimit(PAGE_SIZE));
+      if (!reset && lastDoc) q = query(q, startAfter(lastDoc));
 
-    const snap = await getDocs(q);
-    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Report);
-    setReports(reset ? docs : [...reports, ...docs]);
-    setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
-    setHasMore(snap.docs.length === PAGE_SIZE);
+      const snap = await getDocs(q);
+      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Report);
+      setReports(reset ? docs : [...reports, ...docs]);
+      setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
+      setHasMore(snap.docs.length === PAGE_SIZE);
+    } catch {
+    }
   }, [lastDoc, reports]);
 
   useEffect(() => { load(true); }, []);

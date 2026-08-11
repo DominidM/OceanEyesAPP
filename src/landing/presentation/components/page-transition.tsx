@@ -9,7 +9,7 @@ export type PageTransitionProps = {
 
 type SlideDirection = 'forward' | 'backward' | 'none';
 
-const ROUTE_ORDER = ['/', '/descargas', '/descubre-tu-rol', '/faq', '/contacto'];
+const ROUTE_ORDER = ['/', '/admin/login', '/municipio', '/descargas', '/descubre-tu-rol', '/faq', '/contacto'];
 
 const ENTER_DURATION = 380;
 const ENTER_EASING = Easing.out(Easing.cubic);

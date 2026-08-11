@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: 0,
     height: 0,
-    zIndex: 9999,
+    zIndex: 2147483000,
   },
   dot: {
     position: 'fixed',

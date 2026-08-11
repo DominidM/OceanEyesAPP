@@ -102,16 +102,24 @@ export function subscribeActiveAlerts(callback: (alerts: Alert[]) => void): Unsu
     where('active', '==', true),
     orderBy('createdAt', 'desc'),
   );
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Alert)));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Alert)));
+    },
+    (err) => console.warn('[alerts] subscribeActiveAlerts:', err),
+  );
 }
 
 export function subscribeAllAlerts(callback: (alerts: Alert[]) => void): Unsubscribe {
   const q = query(collection(firestore, COLLECTION), orderBy('createdAt', 'desc'), limit(50));
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Alert)));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Alert)));
+    },
+    (err) => console.warn('[alerts] subscribeAllAlerts:', err),
+  );
 }
 
 export function subscribeOwnAlerts(uid: string, callback: (alerts: Alert[]) => void): Unsubscribe {
@@ -120,9 +128,13 @@ export function subscribeOwnAlerts(uid: string, callback: (alerts: Alert[]) => v
     where('sentBy', '==', uid),
     orderBy('createdAt', 'desc'),
   );
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Alert)));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Alert)));
+    },
+    (err) => console.warn('[alerts] subscribeOwnAlerts:', err),
+  );
 }
 
 /* ── AlertReports (reportes ciudadanos de alerta) ── */
@@ -155,6 +167,7 @@ export function subscribeAlertReports(callback: (reports: AlertReport[]) => void
     (snapshot) => {
       callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as AlertReport)));
     },
+    (err) => console.warn('[alerts] subscribeAlertReports:', err),
   );
 }
 

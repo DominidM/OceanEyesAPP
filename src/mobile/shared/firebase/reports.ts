@@ -208,6 +208,9 @@ export function subscribeReports(callback: (reports: Report[]) => void): () => v
     (snapshot) => {
       callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report));
     },
+    (error) => {
+      console.warn('No se pudieron cargar los reportes', error);
+    },
   );
 }
 

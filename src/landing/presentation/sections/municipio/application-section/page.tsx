@@ -7,26 +7,48 @@ import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 import { registerMunicipalUser } from '@/shared/firebase/auth';
 import { createMunicipalityApplication } from '@/shared/firebase/municipalities';
+import { SelectField } from './select-field';
+import { REGIONS, PROVINCES_BY_REGION } from './peru-data';
+
+const CONTACT_ROLES = [
+  'Alcalde/sa',
+  'Teniente alcalde',
+  'Regidor/a',
+  'Funcionario/a municipal',
+  'Otro',
+];
 
 export function MunicipalityApplicationForm() {
   const { isMobile } = useBreakpoints();
 
   const [name, setName] = useState('');
-  const [province, setProvince] = useState('');
   const [region, setRegion] = useState('');
+  const [province, setProvince] = useState('');
   const [address, setAddress] = useState('');
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const provinceOptions = region ? PROVINCES_BY_REGION[region] ?? [] : [];
+
+  const handleRegionChange = (value: string) => {
+    setRegion(value);
+    setProvince('');
+  };
+
   const handleSubmit = async () => {
     setError('');
-    if (!name.trim() || !province.trim() || !region.trim() || !email.trim() || password.length < 6) {
-      setError('Completa nombre de la municipalidad, provincia, región, correo y una contraseña de al menos 6 caracteres.');
+    if (!name.trim() || !region.trim() || !province.trim() || !email.trim() || password.length < 6) {
+      setError('Completa nombre de la municipalidad, región, provincia, correo y una contraseña de al menos 6 caracteres.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden.');
       return;
     }
     setLoading(true);
@@ -34,7 +56,7 @@ export function MunicipalityApplicationForm() {
       const user = await registerMunicipalUser({
         email: email.trim(),
         password,
-        displayName: contactName.trim() || name.trim(),
+        displayName: name.trim(),
       });
       await createMunicipalityApplication({
         name: name.trim(),
@@ -87,23 +109,22 @@ export function MunicipalityApplicationForm() {
 
             <View style={[styles.inlineFields, isMobile && styles.inlineFieldsMobile]}>
               <View style={[styles.field, styles.fieldHalf]}>
-                <Text style={styles.label}>Provincia *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={province}
-                  onChangeText={setProvince}
+                <SelectField
+                  label="Región *"
+                  value={region}
+                  onChange={handleRegionChange}
+                  options={REGIONS}
                   placeholder="Ej: Lima"
-                  placeholderTextColor="rgba(0,0,0,0.35)"
                 />
               </View>
               <View style={[styles.field, styles.fieldHalf]}>
-                <Text style={styles.label}>Región *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={region}
-                  onChangeText={setRegion}
-                  placeholder="Ej: Lima Provincias"
-                  placeholderTextColor="rgba(0,0,0,0.35)"
+                <SelectField
+                  label="Provincia *"
+                  value={province}
+                  onChange={setProvince}
+                  options={provinceOptions}
+                  placeholder={region ? 'Ej: Cañete' : 'Primero elegí región'}
+                  disabled={!region}
                 />
               </View>
             </View>
@@ -121,13 +142,12 @@ export function MunicipalityApplicationForm() {
 
             <View style={[styles.inlineFields, isMobile && styles.inlineFieldsMobile]}>
               <View style={[styles.field, styles.fieldHalf]}>
-                <Text style={styles.label}>Nombre del contacto</Text>
-                <TextInput
-                  style={styles.input}
+                <SelectField
+                  label="Cargo del contacto"
                   value={contactName}
-                  onChangeText={setContactName}
-                  placeholder="Alcalde/a o funcionario/a a cargo"
-                  placeholderTextColor="rgba(0,0,0,0.35)"
+                  onChange={setContactName}
+                  options={CONTACT_ROLES}
+                  placeholder="Alcalde/sa, regidor/a…"
                 />
               </View>
               <View style={[styles.field, styles.fieldHalf]}>
@@ -143,19 +163,20 @@ export function MunicipalityApplicationForm() {
               </View>
             </View>
 
+            <View style={styles.field}>
+              <Text style={styles.label}>Correo de la cuenta *</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="municipio@correo.gob.pe"
+                placeholderTextColor="rgba(0,0,0,0.35)"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
             <View style={[styles.inlineFields, isMobile && styles.inlineFieldsMobile]}>
-              <View style={[styles.field, styles.fieldHalf]}>
-                <Text style={styles.label}>Correo de la cuenta *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="municipio@correo.gob.pe"
-                  placeholderTextColor="rgba(0,0,0,0.35)"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
               <View style={[styles.field, styles.fieldHalf]}>
                 <Text style={styles.label}>Contraseña *</Text>
                 <TextInput
@@ -163,6 +184,17 @@ export function MunicipalityApplicationForm() {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Mínimo 6 caracteres"
+                  placeholderTextColor="rgba(0,0,0,0.35)"
+                  secureTextEntry
+                />
+              </View>
+              <View style={[styles.field, styles.fieldHalf]}>
+                <Text style={styles.label}>Confirmar contraseña *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Repetí la contraseña"
                   placeholderTextColor="rgba(0,0,0,0.35)"
                   secureTextEntry
                 />
@@ -190,7 +222,6 @@ const styles = StyleSheet.create({
   section: {
     paddingVertical: Spacing.six,
     paddingHorizontal: Spacing.five,
-    backgroundColor: BrandColors.tertiary,
     alignItems: 'center',
   },
   sectionMobile: {
