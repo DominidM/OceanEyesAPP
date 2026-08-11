@@ -22,7 +22,6 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -41,11 +40,17 @@ async function ensureNotificationChannel(): Promise<void> {
 async function ensureAlertChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(ALERT_CHANNEL_ID, {
-    name: 'Alertas oficiales',
+    name: 'Alertas de peligro',
     importance: Notifications.AndroidImportance.MAX,
-    vibrationPattern: [0, 400, 200, 400, 200, 400, 200, 400],
+    bypassDnd: true,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    vibrationPattern: [0, 500, 250, 500, 250, 500, 250, 500],
     lightColor: '#EF4444',
-    sound: 'default',
+    sound: 'alarma_peligro.wav',
+    audioAttributes: {
+      usage: Notifications.AndroidAudioUsage.ALARM,
+      contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+    },
   });
 }
 
@@ -83,19 +88,19 @@ export async function registerPushToken(userId: string): Promise<string | null> 
   }
 }
 
-const ALARM_BURST_DELAYS = [0, 4, 8, 12, 16, 20];
+const ALARM_BURST_DELAYS = [0, 2, 4, 6, 8, 10];
 
-async function scheduleOfficialAlertNotification(alert: {
-  id?: string;
-  title?: string;
-  message?: string;
-}): Promise<void> {
+function alertMessageFor(alert: { title?: string; message?: string }): string {
+  return alert.message ?? 'Nueva alerta oficial en tu zona';
+}
+
+async function scheduleDangerAlarm(alert: { id?: string; title?: string; message?: string }): Promise<void> {
   for (const delay of ALARM_BURST_DELAYS) {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: `⚠ ${alert.title || 'ALERTA'}`,
-        body: alert.message || 'Nueva alerta oficial en tu zona',
-        data: { kind: 'official-alert', alertId: alert.id ?? null },
+        title: `⚠ ALERTA DE PELIGRO${alert.title ? `: ${alert.title}` : ''}`,
+        body: alertMessageFor(alert),
+        data: { kind: 'official-alert', alertId: alert.id ?? null, severity: 'danger' },
         sound: 'default',
         interruptionLevel: 'timeSensitive',
       },
@@ -106,6 +111,22 @@ async function scheduleOfficialAlertNotification(alert: {
       },
     });
   }
+}
+
+async function scheduleNormalAlert(alert: { id?: string; title?: string; message?: string }): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: alert.title || 'Nueva alerta',
+      body: alertMessageFor(alert),
+      data: { kind: 'official-alert', alertId: alert.id ?? null, severity: 'normal' },
+      sound: 'default',
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(),
+      channelId: CHANNEL_ID,
+    },
+  });
 }
 
 export function useOfficialAlertSound(): void {
@@ -124,8 +145,11 @@ export function useOfficialAlertSound(): void {
       for (const alert of alerts) {
         if (!alert.id || seen.current.has(alert.id)) continue;
         seen.current.add(alert.id);
-        if (primed.current) {
-          void scheduleOfficialAlertNotification(alert).catch(() => undefined);
+        if (!primed.current) continue;
+        if (alert.severity === 'danger') {
+          void scheduleDangerAlarm(alert).catch(() => undefined);
+        } else {
+          void scheduleNormalAlert(alert).catch(() => undefined);
         }
       }
       primed.current = true;

@@ -200,7 +200,11 @@ export function subscribeReports(callback: (reports: Report[]) => void): () => v
   if (!isFirebaseConfigured()) return () => undefined;
 
   return onSnapshot(
-    query(collection(firestore, 'reports'), orderBy('createdAt', 'desc')),
+    query(
+      collection(firestore, 'reports'),
+      where('status', '==', 'verificado'),
+      orderBy('createdAt', 'desc'),
+    ),
     (snapshot) => {
       callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report));
     },
