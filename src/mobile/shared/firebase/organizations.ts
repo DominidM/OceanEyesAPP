@@ -61,7 +61,11 @@ export function subscribeOrganizations(
   callback: (organizations: Organization[]) => void,
 ): Unsubscribe {
   const q = query(collection(firestore, COLLECTION), orderBy('name', 'asc'));
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Organization)));
-  });
+return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Organization));
+    },
+    (err) => console.warn('[organizations] subscribeOrganizations:', err),
+  );
 }

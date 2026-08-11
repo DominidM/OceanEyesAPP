@@ -52,19 +52,27 @@ export function subscribeMunicipalityByOwner(
   callback: (municipality: Municipality | null) => void,
 ): Unsubscribe {
   const q = query(collection(firestore, COLLECTION), where('ownerUid', '==', ownerUid), limit(1));
-  return onSnapshot(q, (snapshot) => {
-    const docSnap = snapshot.docs[0];
-    callback(docSnap ? ({ id: docSnap.id, ...docSnap.data() } as Municipality) : null);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const docSnap = snapshot.docs[0];
+      callback(docSnap ? ({ id: docSnap.id, ...docSnap.data() } as Municipality) : null);
+    },
+    (err) => console.warn('[municipalities] subscribeMunicipalityByOwner:', err),
+  );
 }
 
 export function subscribeAllMunicipalities(
   callback: (municipalities: Municipality[]) => void,
 ): Unsubscribe {
   const q = query(collection(firestore, COLLECTION), orderBy('createdAt', 'desc'));
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Municipality)));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Municipality)));
+    },
+    (err) => console.warn('[municipalities] subscribeAllMunicipalities:', err),
+  );
 }
 
 export async function approveMunicipality(municipalityId: string, adminUid: string): Promise<void> {

@@ -165,6 +165,9 @@ export function DashboardCharts() {
     const unsubUsers = onSnapshot(
       query(collection(firestore, 'users'), where('status', '==', 'active')),
       (snap) => setUsuarios(snap.size),
+      (err) => {
+        console.warn('Dashboard users snapshot error:', err);
+      },
     );
     return () => {
       unsubReports();
