@@ -1,5 +1,9 @@
 import { getRolRecommendation, getRolReply } from './shared/rol/service';
-import { buildRolEmailHtml } from './shared/rol/email-template';
+import {
+  buildContactConfirmationHtml,
+  buildContactDataHtml,
+  buildRolEmailHtml,
+} from './shared/rol/email-template';
 import type { RolSugerido, RolUserData } from './shared/rol/types';
 
 interface ContactBody {
@@ -18,19 +22,22 @@ interface Env {
   GEMINI_MODEL?: string;
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
 function json(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function sendBrevoEmail(apiKey: string, brevoBody: unknown): Promise<Response> {
+  return fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(brevoBody),
   });
 }
 
@@ -60,35 +67,33 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
     return json({ error: 'Email remitente no configurado' }, 500);
   }
 
-  const brevoBody = {
+  const confirmationBody = {
+    sender: { email: senderEmail, name: 'Ocean Eyes' },
+    to: [{ email, name }],
+    subject: 'Recibimos tu mensaje · Ocean Eyes',
+    htmlContent: buildContactConfirmationHtml({ nombre: name, email, message }),
+  };
+
+  const dataBody = {
     sender: { email: senderEmail, name: 'Ocean Eyes' },
     to: [{ email: senderEmail, name: 'Ocean Eyes' }],
     replyTo: { email, name },
     subject: `Contacto OceanEyes - ${name}`,
-    htmlContent: `
-      <h2>Nuevo mensaje de contacto</h2>
-      <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
-      <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-      ${subject ? `<p><strong>Asunto:</strong> ${escapeHtml(subject)}</p>` : ''}
-      ${phone ? `<p><strong>Teléfono:</strong> ${escapeHtml(phone)}</p>` : ''}
-      <p><strong>Mensaje:</strong></p>
-      <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
-    `,
+    htmlContent: buildContactDataHtml({ nombre: name, email, phone, subject, message }),
   };
 
   try {
-    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'api-key': apiKey,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(brevoBody),
-    });
+    const confirmationRes = await sendBrevoEmail(apiKey, confirmationBody);
+    const dataRes = await sendBrevoEmail(apiKey, dataBody);
 
-    if (!res.ok) {
+    if (!dataRes.ok) {
+      const text = await dataRes.text().catch(() => '');
+      console.error('[api/contact] Brevo data error:', text.slice(0, 300));
       return json({ error: 'Error al enviar el mensaje' }, 502);
+    }
+
+    if (!confirmationRes.ok) {
+      console.error('[api/contact] No se pudo enviar la confirmación al usuario.');
     }
 
     return json({ success: true }, 200);
