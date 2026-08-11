@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { getUserProfile, loginWithEmail, logout, rememberAdminSession } from '@/shared/firebase/auth';
+import { PageTransition } from '@landing/presentation/components/page-transition';
 
 const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786169052/logotipo_q2mkhv.png';
 
@@ -37,14 +38,15 @@ export function AdminLoginScreen() {
   };
 
   return (
-    <View style={[styles.screen, { backgroundImage: 'linear-gradient(180deg, #051F2D 0%, #0E3D52 35%, #134E5E 60%, #1A7F8A 85%, #22B0B8 100%)' }]}>
-      <View style={styles.brandBlock}>
-        <Image source={logoImg} style={styles.logo} contentFit="contain" />
-        <View style={styles.brandText}>
-          <Text style={styles.brand}>OceanEyes</Text>
-          <Text style={styles.brandSub}>Panel de administración</Text>
+    <PageTransition style={styles.transition}>
+      <View style={[styles.screen, { backgroundImage: 'linear-gradient(180deg, #051F2D 0%, #0E3D52 35%, #134E5E 60%, #1A7F8A 85%, #22B0B8 100%)' }]}>
+        <View style={styles.brandBlock}>
+          <Image source={logoImg} style={styles.logo} contentFit="contain" />
+          <View style={styles.brandText}>
+            <Text style={styles.brand}>OceanEyes</Text>
+            <Text style={styles.brandSub}>Panel de administración</Text>
+          </View>
         </View>
-      </View>
 
       <View style={styles.card}>
         <Text style={styles.eyebrow}>Acceso privado</Text>
@@ -100,13 +102,17 @@ export function AdminLoginScreen() {
         </Pressable>
         <Text style={styles.footer}>OceanEyes · Gestión de vigilancia marina</Text>
       </View>
-    </View>
+      </View>
+    </PageTransition>
   );
 }
 
 export default AdminLoginScreen;
 
 const styles = StyleSheet.create({
+  transition: {
+    flex: 1,
+  },
   screen: {
     flex: 1,
     alignItems: 'center',

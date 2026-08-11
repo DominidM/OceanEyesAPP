@@ -14,7 +14,7 @@ export interface Rol {
   imagen: string;
 }
 
-export const MASCOT_NAME = 'Nereo';
+export const MASCOT_NAME = 'Guía';
 
 export const MASCOT_IMAGES = {
   bienvenido:
