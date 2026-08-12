@@ -6,7 +6,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const mobileMockup = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166249/mobile-inicio_aeyivo.jpg';
+const mobileMockup = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786560861/reportar-incidente_zxlbet.jpg';
 
 const steps = [
   {

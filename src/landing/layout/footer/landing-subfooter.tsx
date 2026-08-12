@@ -16,6 +16,9 @@ const navLinks = [
 ];
 
 const rutasLinks = [
+  { label: 'Municipalidades', href: '/municipio' },
+  { label: 'Descubre tu Rol', href: '/descubre-tu-rol' },
+  { label: 'Arbitrum', href: '/arbitrum' },
   { label: 'Descargas', href: '/descargas' },
   { label: 'FAQ', href: '/faq' },
   { label: 'Contacto', href: '/contacto' },

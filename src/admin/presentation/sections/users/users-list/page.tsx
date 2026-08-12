@@ -2,6 +2,7 @@ import { collection, getCountFromServer, getDocs, limit as fireLimit, orderBy, q
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
@@ -171,17 +172,27 @@ const roleConfig = (role: string) => {
                   <Text style={[styles.cellNum, { color: colors.contentTextMuted }]}>{u.verifiedReportsCount ?? 0}</Text>
                   <View style={styles.cellActions}>
                     {u.role !== 'admin' ? (
-                      <Button
-                        label={suspended ? 'Desbanear' : 'Banear'}
-                        variant={suspended ? 'primary' : 'danger'}
+                      <Pressable
+                        style={[styles.detailsBtn, { borderColor: suspended ? colors.success : colors.danger }]}
                         onPress={() => (suspended ? toggleStatus(u) : setBanning(u))}
-                      />
+                      >
+                        <MaterialCommunityIcons
+                          name={suspended ? 'shield-check-outline' : 'shield-off-outline'}
+                          size={14}
+                          color={suspended ? colors.success : colors.danger}
+                        />
+                        <Text style={[styles.detailsBtnText, { color: suspended ? colors.success : colors.danger }]}>
+                          {suspended ? 'Desbanear' : 'Banear'}
+                        </Text>
+                      </Pressable>
                     ) : (
-                      <Button
-                        label="Ver perfil"
-                        variant="secondary"
+                      <Pressable
+                        style={[styles.detailsBtn, { borderColor: colors.cardBorder }]}
                         onPress={() => router.push(`/admin/users/${u.id}`)}
-                      />
+                      >
+                        <MaterialCommunityIcons name="information-outline" size={14} color={colors.contentText} />
+                        <Text style={[styles.detailsBtnText, { color: colors.contentText }]}>Detalles</Text>
+                      </Pressable>
                     )}
                   </View>
                 </Pressable>
@@ -245,4 +256,15 @@ const styles = StyleSheet.create({
   cellRole: { width: 110, alignItems: 'flex-end', gap: 4 },
   cellNum: { width: 96, fontFamily: Fonts.label, fontSize: 14, fontWeight: '700', textAlign: 'right' },
   cellActions: { width: 120, alignItems: 'flex-end' },
+  detailsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 6,
+    cursor: 'pointer',
+  },
+  detailsBtnText: { fontFamily: Fonts.body, fontSize: 12, fontWeight: '600' },
 });

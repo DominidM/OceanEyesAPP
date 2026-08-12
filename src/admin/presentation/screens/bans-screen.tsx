@@ -152,8 +152,8 @@ export default BansScreen;
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { gap: Spacing.four, paddingBottom: Spacing.six },
-  list: { gap: Spacing.three },
-  row: { gap: Spacing.three },
+  list: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three },
+  row: { flex: 1, minWidth: 300, maxWidth: '33.33%', gap: Spacing.three },
   rowHeader: {
     flexDirection: 'row',
     alignItems: 'center',

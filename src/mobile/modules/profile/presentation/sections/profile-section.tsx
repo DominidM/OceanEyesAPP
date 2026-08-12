@@ -1,8 +1,8 @@
 import { isAddress } from 'ethers';
 import { useRouter } from 'expo-router';
 import { Timestamp, deleteField, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { firestore } from '@/shared/firebase/app';
@@ -20,6 +20,7 @@ import { shadow } from '@/shared/utils/shadows';
 import { buildArbiscanAddressUrl, getOnChainBalance } from '@shared/blockchain/ledger';
 import { isPointLedgerConfigured } from '@shared/blockchain/config';
 import { connectWallet, getBrowserSigner, isWalletInstalled } from '@shared/blockchain/wallet';
+import { useMobileWallet } from '@/shared/blockchain/appkit';
 
 import { levelLabelFor } from '@/modules/rewards/presentation/data/rewards';
 
@@ -350,6 +351,8 @@ export function ProfileSection() {
   const [balanceError, setBalanceError] = useState('');
 
   const isWeb = Platform.OS === 'web';
+  const mobileWallet = useMobileWallet();
+  const walletModalWasOpen = useRef(false);
 
   useEffect(() => {
     if (isWeb) setMetaMaskReady(isWalletInstalled());
@@ -380,7 +383,7 @@ export function ProfileSection() {
     };
   }, [walletAddress]);
 
-  const saveWallet = async (address: string) => {
+  const saveWallet = useCallback(async (address: string) => {
     if (!user) return;
     setSaving(true);
     setError('');
@@ -395,7 +398,24 @@ export function ProfileSection() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (isWeb || !connecting) return;
+
+    if (mobileWallet.address && isAddress(mobileWallet.address)) {
+      setConnecting(false);
+      void saveWallet(mobileWallet.address);
+      return;
+    }
+
+    if (mobileWallet.isOpen) {
+      walletModalWasOpen.current = true;
+    } else if (walletModalWasOpen.current && !mobileWallet.isLoading) {
+      walletModalWasOpen.current = false;
+      setConnecting(false);
+    }
+  }, [connecting, isWeb, mobileWallet.address, mobileWallet.isLoading, mobileWallet.isOpen, saveWallet]);
 
   const handleConnect = async () => {
     setConnecting(true);
@@ -421,12 +441,16 @@ export function ProfileSection() {
     await saveWallet(value);
   };
 
-  const handleOpenMetaMask = async () => {
+  const handleOpenMetaMask = () => {
     setError('');
+    setSaved(false);
+    setConnecting(true);
+    walletModalWasOpen.current = false;
     try {
-      await Linking.openURL('https://metamask.app.link/');
+      mobileWallet.open();
     } catch {
-      setError('No se pudo abrir MetaMask. Instálalo y vuelve a intentarlo.');
+      setConnecting(false);
+      setError('No se pudo iniciar la conexión con MetaMask. Inténtalo nuevamente.');
     }
   };
 
@@ -580,13 +604,13 @@ export function ProfileSection() {
                     <>
                       <Pressable
                         accessibilityRole="button"
-                        disabled={saving}
-                        onPress={() => void handleOpenMetaMask()}
-                        style={({ pressed }) => [styles.primaryButton, saving && styles.disabled, pressed && styles.pressed]}>
-                        <Text style={styles.primaryButtonLabel}>Abrir MetaMask</Text>
+                        disabled={saving || connecting}
+                        onPress={handleOpenMetaMask}
+                        style={({ pressed }) => [styles.primaryButton, (saving || connecting) && styles.disabled, pressed && styles.pressed]}>
+                        <Text style={styles.primaryButtonLabel}>{connecting ? 'Esperando autorización...' : 'Conectar con MetaMask'}</Text>
                       </Pressable>
                       <Text style={styles.nativeHint}>
-                        Abre tu cuenta en MetaMask, copia la dirección pública y vuelve a OceanEyes. Nunca compartas tu frase secreta.
+                        MetaMask te pedirá autorizar la conexión y luego volverá a OceanEyes. Nunca compartas tu frase secreta.
                       </Text>
                     </>
                   )}

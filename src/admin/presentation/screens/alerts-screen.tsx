@@ -101,11 +101,16 @@ export default function AlertsScreen() {
         source: 'admin',
         sentBy: user?.uid ?? 'unknown',
       });
-      await sendPush(title.trim(), message.trim(), severity, alertId);
       setTitle('');
       setMessage('');
       setSeverity('info');
       setCreating(false);
+      try {
+        await sendPush(title.trim(), message.trim(), severity, alertId);
+      } catch (pushErr: any) {
+        setFormError('Alerta creada, pero: ' + (pushErr?.message ?? String(pushErr)));
+        setCreating(true);
+      }
     } catch (e: any) {
       setFormError(e?.message ?? String(e));
     } finally {
@@ -251,11 +256,11 @@ export default function AlertsScreen() {
                       </Text>
                     )}
                     <View style={[styles.alertFooter, { borderTopColor: colors.cardBorder }]}>
-                      <Pressable style={styles.actionBtn} onPress={() => approve(a.id)}>
+                      <Pressable style={[styles.actionBtn, { borderColor: '#22C55E' }]} onPress={() => approve(a.id)}>
                         <FontAwesome5 name="check-circle" size={15} color="#22C55E" />
                         <Text style={[styles.actionLabel, { color: '#22C55E' }]}>Aprobar</Text>
                       </Pressable>
-                      <Pressable style={styles.actionBtn} onPress={() => reject(a.id)}>
+                      <Pressable style={[styles.actionBtn, { borderColor: '#EF4444' }]} onPress={() => reject(a.id)}>
                         <FontAwesome5 name="times-circle" size={15} color="#EF4444" />
                         <Text style={[styles.actionLabel, { color: '#EF4444' }]}>Rechazar</Text>
                       </Pressable>
@@ -298,12 +303,12 @@ export default function AlertsScreen() {
                   </Text>
                   <View style={[styles.alertFooter, { borderTopColor: colors.cardBorder }]}>
                     {a.active && (
-                      <Pressable style={styles.actionBtn} onPress={() => deactivate(a.id)}>
+                      <Pressable style={[styles.actionBtn, { borderColor: '#F59E0B' }]} onPress={() => deactivate(a.id)}>
                         <FontAwesome5 name="pause-circle" size={14} color="#F59E0B" />
                         <Text style={[styles.actionLabel, { color: '#F59E0B' }]}>Pausar</Text>
                       </Pressable>
                     )}
-                    <Pressable style={styles.actionBtn} onPress={() => remove(a.id)}>
+                    <Pressable style={[styles.actionBtn, { borderColor: '#EF4444' }]} onPress={() => remove(a.id)}>
                       <FontAwesome5 name="trash-alt" size={13} color="#EF4444" />
                       <Text style={[styles.actionLabel, { color: '#EF4444' }]}>Eliminar</Text>
                     </Pressable>
@@ -371,6 +376,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: Spacing.two,
   },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 8, cursor: 'pointer' },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, cursor: 'pointer' },
   actionLabel: { fontFamily: Fonts.body, fontSize: 12, fontWeight: '600' },
 });

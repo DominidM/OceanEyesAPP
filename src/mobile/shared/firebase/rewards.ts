@@ -128,6 +128,11 @@ export async function getAllRedemptions(): Promise<Redemption[]> {
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Redemption);
 }
 
+export async function getRedemptionById(id: string): Promise<Redemption | null> {
+  const snap = await getDoc(doc(firestore, 'redemptions', id));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as Redemption) : null;
+}
+
 export async function updateRedemptionStatus(
   redemptionId: string,
   status: RedemptionStatus,

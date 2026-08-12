@@ -1,13 +1,15 @@
 import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 import { firestore } from '@/shared/firebase/app';
-import { getAllRedemptions, updateRedemptionStatus } from '@/shared/firebase/rewards';
+import { getAllRedemptions } from '@/shared/firebase/rewards';
 import type { Redemption, RedemptionStatus } from '@/shared/firebase/types';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, EmptyState, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Card, EmptyState, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
 import { useAdminTheme } from '@admin/theme/context';
 
 type RedemptionRow = Redemption & {
@@ -49,7 +51,6 @@ export function RedemptionsScreen() {
   const { colors } = useAdminTheme();
   const [redemptions, setRedemptions] = useState<RedemptionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actingId, setActingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -84,17 +85,6 @@ export function RedemptionsScreen() {
     load();
   }, []);
 
-  const handleAction = async (redemption: RedemptionRow, next: RedemptionStatus) => {
-    if (actingId) return;
-    setActingId(redemption.id);
-    try {
-      await updateRedemptionStatus(redemption.id, next);
-      await load();
-    } catch {} finally {
-      setActingId(null);
-    }
-  };
-
   const statusBadge = (status: RedemptionStatus) => {
     switch (status) {
       case 'pendiente': return { label: STATUS_LABELS[status], color: colors.warning, bg: colors.warningBg };
@@ -116,7 +106,7 @@ export function RedemptionsScreen() {
       {!(loading && redemptions.length === 0) && (
         <SectionHeader
           title="Gestión de canjes"
-          subtitle="Administra los canjes de recompensas. Avanza cada pedido por su flujo: Confirmar → Preparar → Enviar → Entregar."
+          subtitle="Administra los canjes de recompensas. Revisá cada pedido y avanzá su flujo."
         />
       )}
 
@@ -167,15 +157,13 @@ export function RedemptionsScreen() {
                   {formatDate(r.createdAt)}
                 </Text>
                 <View style={styles.cellActions}>
-                  {actions.map((a) => (
-                    <Button
-                      key={a.next}
-                      label={actingId === r.id ? '...' : a.label}
-                      variant={a.variant}
-                      onPress={() => handleAction(r, a.next)}
-                      disabled={actingId === r.id}
-                    />
-                  ))}
+                  <Pressable
+                    style={[styles.detailsBtn, { borderColor: colors.cardBorder }]}
+                    onPress={() => router.push({ pathname: '/admin/redemptions/[id]', params: { id: r.id } })}
+                  >
+                    <MaterialCommunityIcons name="information-outline" size={14} color={colors.contentText} />
+                    <Text style={[styles.detailsBtnText, { color: colors.contentText }]}>Detalles</Text>
+                  </Pressable>
                 </View>
               </View>
             );
@@ -204,7 +192,7 @@ const styles = StyleSheet.create({
   thPoints: { width: 70, textAlign: 'center' },
   thStatus: { width: 120, textAlign: 'center' },
   thDate: { width: 90 },
-  thActions: { width: 160, textAlign: 'center' },
+  thActions: { width: 120, textAlign: 'center' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -220,5 +208,16 @@ const styles = StyleSheet.create({
   cellPoints: { width: 70, fontFamily: Fonts.body, fontSize: 13, fontWeight: '600', textAlign: 'center' },
   cellStatus: { width: 120, alignItems: 'center' },
   cellDate: { width: 90, fontFamily: Fonts.body, fontSize: 12 },
-  cellActions: { width: 160, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: Spacing.one },
+  cellActions: { width: 120, alignItems: 'center' },
+  detailsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 6,
+    cursor: 'pointer',
+  },
+  detailsBtnText: { fontFamily: Fonts.body, fontSize: 12, fontWeight: '600' },
 });

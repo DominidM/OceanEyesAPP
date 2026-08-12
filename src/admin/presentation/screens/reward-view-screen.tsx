@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AdminShell } from '@admin/layout/admin-shell';
@@ -61,27 +62,30 @@ export function RewardViewScreen() {
 
       {!loading && reward && (
         <>
-          <Card style={styles.card}>
-            <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
-              <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de la recompensa</Text>
+          <View style={styles.layout}>
+            {reward.imageURL ? (
+              <Card style={[styles.imageCard, { borderColor: colors.cardBorder }]}>
+                <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Imagen</Text>
+                <Image source={{ uri: reward.imageURL }} style={styles.rewardImage} contentFit="cover" />
+              </Card>
+            ) : null}
 
-              <View style={styles.headingRow}>
-                <Badge
-                  label={active ? 'Activo' : 'Inactivo'}
-                  color={active ? colors.success : colors.contentTextMuted}
-                  bg={active ? colors.successBg : 'rgba(100,116,139,0.10)'}
-                />
+            <Card style={[styles.card, !reward.imageURL && { flex: 1 }]}>
+              <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+                <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de la recompensa</Text>
+
+                <View style={styles.headingRow}>
+                  <Badge
+                    label={active ? 'Activo' : 'Inactivo'}
+                    color={active ? colors.success : colors.contentTextMuted}
+                    bg={active ? colors.successBg : 'rgba(100,116,139,0.10)'}
+                  />
+                </View>
+
+                <ReportDataList rows={rows} />
               </View>
-
-              <ReportDataList rows={rows} />
-
-              {reward.imageURL ? (
-                <Text style={[styles.imageLink, { color: colors.primary }]} numberOfLines={2}>
-                  {reward.imageURL}
-                </Text>
-              ) : null}
-            </View>
-          </Card>
+            </Card>
+          </View>
 
           <View style={styles.footerActions}>
             <Button label="Editar" onPress={() => router.push(`/admin/rewards/${reward.id}/edit`)} />
@@ -96,7 +100,10 @@ export function RewardViewScreen() {
 export default RewardViewScreen;
 
 const styles = StyleSheet.create({
-  card: { gap: Spacing.three },
+  layout: { flexDirection: 'row', gap: Spacing.four },
+  imageCard: { width: 280, flexShrink: 0, gap: Spacing.three, borderWidth: 1, borderRadius: 12 },
+  rewardImage: { width: '100%', height: 220, borderRadius: 12 },
+  card: { flex: 1, gap: Spacing.three },
   subBlock: {
     borderWidth: 1,
     borderRadius: 12,
@@ -105,6 +112,5 @@ const styles = StyleSheet.create({
   },
   subBlockTitle: { fontFamily: Fonts.label, fontSize: 14, fontWeight: '700' },
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexWrap: 'wrap' },
-  imageLink: { fontFamily: Fonts.body, fontSize: 13, marginTop: Spacing.one },
-  footerActions: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
+  footerActions: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap', justifyContent: 'flex-end' },
 });
