@@ -7,6 +7,7 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { BrandColors } from '@/constants/theme';
 import { useAppFonts } from '@/hooks/useAppFonts';
 import { NotificationsGate } from '@/shared/notifications/notification-bridge';
+import { MobileWalletModal, MobileWalletProvider } from '@/shared/blockchain/appkit';
 
 export default function MobileLayout() {
   const { loaded } = useAppFonts();
@@ -15,7 +16,7 @@ export default function MobileLayout() {
   if (!loaded) return null;
 
   return (
-    <>
+    <MobileWalletProvider>
       <StatusBar style="dark" translucent={true} />
       <AnimatedSplashOverlay />
       <NotificationsGate />
@@ -26,6 +27,7 @@ export default function MobileLayout() {
           contentStyle: { backgroundColor: BrandColors.tertiary },
         }}
       />
-    </>
+      <MobileWalletModal />
+    </MobileWalletProvider>
   );
 }
