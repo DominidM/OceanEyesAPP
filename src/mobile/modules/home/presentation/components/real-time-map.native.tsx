@@ -39,9 +39,10 @@ const FOCUS_REGION: Region = {
 
 type RealTimeMapProps = {
   reports: MapReport[];
+  showFilters?: boolean;
 };
 
-export function RealTimeMap({ reports }: RealTimeMapProps) {
+export function RealTimeMap({ reports, showFilters = true }: RealTimeMapProps) {
   const { permission, requestPermission, position, loading } = useCurrentLocation();
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
   const [selected, setSelected] = useState<MapReport | null>(null);
@@ -195,7 +196,7 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
         </View>
       ) : null}
 
-      <View style={styles.filterBar} pointerEvents="box-none">
+      {showFilters && <View style={styles.filterBar} pointerEvents="box-none">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -216,7 +217,7 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
             );
           })}
         </ScrollView>
-      </View>
+      </View>}
 
       <ReportDetailSheet report={selected} onClose={() => setSelected(null)} />
     </View>

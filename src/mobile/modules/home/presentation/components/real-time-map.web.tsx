@@ -13,11 +13,12 @@ import type { ReportCategory } from '@/shared/firebase/types';
 
 type RealTimeMapProps = {
   reports: MapReport[];
+  showFilters?: boolean;
 };
 
 type LMapModule = typeof import('leaflet');
 
-export function RealTimeMap({ reports }: RealTimeMapProps) {
+export function RealTimeMap({ reports, showFilters = true }: RealTimeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
@@ -119,7 +120,7 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
   return (
     <View style={styles.container}>
       <div ref={containerRef} style={styles.map} />
-      <View style={styles.filterBar} pointerEvents="box-none">
+      {showFilters && <View style={styles.filterBar} pointerEvents="box-none">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -140,7 +141,7 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
             );
           })}
         </ScrollView>
-      </View>
+      </View>}
     </View>
   );
 }

@@ -15,7 +15,7 @@ type MapPreviewProps = {
 export function MapPreview({ reports, onExpand }: MapPreviewProps) {
   return (
     <View style={styles.mapCard}>
-      <RealTimeMap reports={reports} />
+      <RealTimeMap reports={reports} showFilters={false} />
 
       <View style={styles.mapOverlay}>
         <Pressable
@@ -32,12 +32,12 @@ export function MapPreview({ reports, onExpand }: MapPreviewProps) {
 
 const styles = StyleSheet.create({
   mapCard: {
-    height: 160,
+    height: 300,
     borderRadius: 24,
     overflow: 'hidden',
     backgroundColor: '#E5E7EB',
     position: 'relative',
-    marginTop: 26,
+    marginTop: 0,
   },
   mapOverlay: {
     ...StyleSheet.absoluteFillObject,
