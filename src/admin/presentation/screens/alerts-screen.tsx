@@ -208,7 +208,26 @@ export default function AlertsScreen() {
           </Card>
         )}
 
-        {loading && <AdminLoading variant="list" />}
+        {loading && (
+          <View style={styles.alertGrid}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} style={styles.alertCard}>
+                <View style={styles.alertHead}>
+                  <View style={styles.alertHeadLeft}>
+                    <View style={[styles.skeletonIcon, { backgroundColor: inputBg }]} />
+                    <View style={styles.alertHeadText}>
+                      <View style={[styles.skeletonLine, { backgroundColor: inputBg, width: '70%' }]} />
+                      <View style={[styles.skeletonLine, { backgroundColor: inputBg, width: '40%' }]} />
+                    </View>
+                  </View>
+                </View>
+                <View style={[styles.skeletonLine, { backgroundColor: inputBg, width: '100%' }]} />
+                <View style={[styles.skeletonLine, { backgroundColor: inputBg, width: '80%' }]} />
+                <View style={[styles.skeletonLine, { backgroundColor: inputBg, width: '50%' }]} />
+              </Card>
+            ))}
+          </View>
+        )}
 
         {!loading && alerts.length === 0 && !creating && (
           <EmptyState
@@ -378,4 +397,6 @@ const styles = StyleSheet.create({
   },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, cursor: 'pointer' },
   actionLabel: { fontFamily: Fonts.body, fontSize: 12, fontWeight: '600' },
+  skeletonIcon: { width: 40, height: 40, borderRadius: 12 },
+  skeletonLine: { height: 12, borderRadius: 4, marginTop: 8 },
 });
