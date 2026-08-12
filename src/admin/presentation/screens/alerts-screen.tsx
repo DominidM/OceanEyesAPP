@@ -1,5 +1,5 @@
 import { FontAwesome5 } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
@@ -9,8 +9,8 @@ import {
   createAlert,
   deactivateAlert,
   deleteAlert,
-  getAllAlerts,
   rejectAlert,
+  subscribeAllAlerts,
 } from '@/shared/firebase/alerts';
 import { getAllDeviceTokens } from '@/shared/firebase/device-tokens';
 import { useAuth } from '@/shared/firebase/auth-context';
@@ -36,22 +36,24 @@ function severityCfg(s: AlertSeverity) {
   return SEVERITIES.find((x) => x.key === s) ?? SEVERITIES[0];
 }
 
-async function sendPush(title: string, message: string): Promise<void> {
-  try {
-    const tokens = await getAllDeviceTokens();
-    if (tokens.length === 0) return;
-    await fetch('/api/send-push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tokens: tokens.map((t) => t.id),
-        title,
-        message,
-      }),
-    });
-  } catch (e) {
-    console.error('sendPush failed:', e);
-  }
+async function sendPush(title: string, message: string, severity: AlertSeverity, alertId: string): Promise<number> {
+  const tokens = await getAllDeviceTokens();
+  if (tokens.length === 0) throw new Error('No hay teléfonos registrados para recibir la alerta.');
+  const response = await fetch('/api/send-push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      tokens: tokens.map((t) => t.id),
+      title,
+      message,
+      severity,
+      data: { alertId },
+    }),
+  });
+  const result = await response.json().catch(() => ({})) as { sent?: number; error?: string };
+  if (!response.ok) throw new Error(result.error ?? 'No se pudo enviar la alerta a los teléfonos.');
+  if (!result.sent) throw new Error('Expo no aceptó la alerta para ningún teléfono registrado.');
+  return result.sent;
 }
 
 function formatTime(ts: any) {
@@ -77,18 +79,12 @@ export default function AlertsScreen() {
   const borderColor = isDark ? '#1E293B' : '#E2E8F0';
   const inputBg = isDark ? '#0F172A' : '#F8FAFC';
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setAlerts(await getAllAlerts());
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    void load();
-  }, [load]);
+    return subscribeAllAlerts((nextAlerts) => {
+      setAlerts(nextAlerts);
+      setLoading(false);
+    });
+  }, []);
 
   const submit = async () => {
     setFormError('');
@@ -98,19 +94,18 @@ export default function AlertsScreen() {
     }
     setBusy(true);
     try {
-      await createAlert({
+      const alertId = await createAlert({
         title: title.trim(),
         message: message.trim(),
         severity,
         source: 'admin',
         sentBy: user?.uid ?? 'unknown',
       });
-      void sendPush(title.trim(), message.trim());
+      await sendPush(title.trim(), message.trim(), severity, alertId);
       setTitle('');
       setMessage('');
       setSeverity('info');
       setCreating(false);
-      await load();
     } catch (e: any) {
       setFormError(e?.message ?? String(e));
     } finally {
@@ -120,22 +115,18 @@ export default function AlertsScreen() {
 
   const deactivate = async (id: string) => {
     await deactivateAlert(id);
-    await load();
   };
 
   const remove = async (id: string) => {
     await deleteAlert(id);
-    await load();
   };
 
   const approve = async (id: string) => {
     await approveAlert(id);
-    await load();
   };
 
   const reject = async (id: string) => {
     await rejectAlert(id);
-    await load();
   };
 
   const pendingReview = alerts.filter((a) => a.pendingReview);

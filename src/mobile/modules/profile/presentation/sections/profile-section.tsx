@@ -416,6 +416,15 @@ export function ProfileSection() {
     await saveWallet(value);
   };
 
+  const handleOpenMetaMask = async () => {
+    setError('');
+    try {
+      await Linking.openURL('https://metamask.app.link/');
+    } catch {
+      setError('No se pudo abrir MetaMask. Instálalo y vuelve a intentarlo.');
+    }
+  };
+
   const handleRemove = async () => {
     if (!user) return;
     setSaving(true);
@@ -561,10 +570,20 @@ export function ProfileSection() {
                     </Pressable>
                   )}
                   {!isWeb && (
-                    <Text style={styles.nativeHint}>
-                      En tu celular, pega la dirección de tu wallet (por ejemplo, la de MetaMask).
-                    </Text>
+                    <>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={saving}
+                        onPress={() => void handleOpenMetaMask()}
+                        style={({ pressed }) => [styles.primaryButton, saving && styles.disabled, pressed && styles.pressed]}>
+                        <Text style={styles.primaryButtonLabel}>Abrir MetaMask</Text>
+                      </Pressable>
+                      <Text style={styles.nativeHint}>
+                        Abre tu cuenta en MetaMask, copia la dirección pública y vuelve a OceanEyes. Nunca compartas tu frase secreta.
+                      </Text>
+                    </>
                   )}
+                  <Text style={styles.walletInputLabel}>O ingresa tu dirección pública</Text>
                   <View style={styles.inputRow}>
                     <TextInput
                       autoCapitalize="none"
@@ -838,6 +857,12 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19,
     includeFontPadding: false,
+  },
+  walletInputLabel: {
+    color: 'rgba(44, 44, 44, 0.55)',
+    fontFamily: Fonts.label,
+    fontSize: 12,
+    fontWeight: '600',
   },
   success: {
     color: '#1B7F3B',

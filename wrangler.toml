@@ -5,3 +5,7 @@ compatibility_date = "2026-08-07"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+
+[vars]
+FIREBASE_API_KEY = "AIzaSyCnF9iV-ClDkue-lMsznIMCRS3ZUdhN8Nc"
+FIREBASE_PROJECT_ID = "oceaneyes-5e7b4"

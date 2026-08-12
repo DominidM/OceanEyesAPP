@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 
 import { PhoneFrame } from '@/shared/components/phone-frame';
 import { MainTabKey } from '@/shared/config/main-tabs';
@@ -12,7 +12,14 @@ import { TabTransition } from '../components/tab-transition';
 
 export function HomeScreen() {
   const router = useRouter();
+  const { section: requestedSection } = useLocalSearchParams<{ section?: string }>();
   const [section, setSection] = useState<MainTabKey>('inicio');
+
+  useEffect(() => {
+    if (requestedSection && ['inicio', 'reportes', 'recompensas', 'perfil'].includes(requestedSection)) {
+      setSection(requestedSection as MainTabKey);
+    }
+  }, [requestedSection]);
 
   const openReportFlow = () => router.push('/mobile/report');
 

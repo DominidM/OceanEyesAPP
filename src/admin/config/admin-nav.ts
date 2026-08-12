@@ -3,13 +3,17 @@ import type { UserRole } from '@/shared/firebase/types';
 export type AdminRoute =
   | '/admin'
   | '/admin/reports'
+  | '/admin/mapa'
   | '/admin/users'
   | '/admin/bans'
   | '/admin/rewards'
   | '/admin/redemptions'
   | '/admin/alerts'
   | '/admin/municipalities'
-  | '/admin/municipio';
+  | '/admin/municipio'
+  | '/admin/municipio/reportes'
+  | '/admin/municipio/alertas'
+  | '/admin/municipio/campanas';
 
 export type AdminNavItem = {
   key: string;
@@ -22,6 +26,7 @@ export type AdminNavItem = {
 export const ADMIN_NAV: AdminNavItem[] = [
   { key: 'dashboard', label: 'Dashboard', icon: 'tachometer-alt', href: '/admin', roles: ['admin'] },
   { key: 'reports', label: 'Reportes', icon: 'clipboard-list', href: '/admin/reports', roles: ['admin'] },
+  { key: 'map', label: 'Mapa en tiempo real', icon: 'map-marked-alt', href: '/admin/mapa', roles: ['admin'] },
   { key: 'users', label: 'Usuarios', icon: 'users', href: '/admin/users', roles: ['admin'] },
   { key: 'bans', label: 'Baneos', icon: 'ban', href: '/admin/bans', roles: ['admin'] },
   { key: 'rewards', label: 'Recompensas', icon: 'award', href: '/admin/rewards', roles: ['admin'] },
@@ -34,7 +39,10 @@ export const ADMIN_NAV: AdminNavItem[] = [
     href: '/admin/municipalities',
     roles: ['admin'],
   },
-  { key: 'municipio', label: 'Mi municipio', icon: 'building', href: '/admin/municipio', roles: ['municipal'] },
+  { key: 'municipio', label: 'Resumen municipal', icon: 'building', href: '/admin/municipio', roles: ['municipal'] },
+  { key: 'municipio-reportes', label: 'Reportes y auditoría', icon: 'clipboard-check', href: '/admin/municipio/reportes', roles: ['municipal'] },
+  { key: 'municipio-alertas', label: 'Señales y alertas', icon: 'bell', href: '/admin/municipio/alertas', roles: ['municipal'] },
+  { key: 'municipio-campanas', label: 'Campañas', icon: 'bullhorn', href: '/admin/municipio/campanas', roles: ['municipal'] },
 ];
 
 export function getAdminNav(role: UserRole | undefined): AdminNavItem[] {

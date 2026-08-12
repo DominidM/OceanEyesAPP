@@ -1,18 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Linking, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 import { AdminShell } from '@admin/layout/admin-shell';
 import { Badge, Button, Card, EmptyState, KpiStat, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
 import { BarChart } from '@admin/presentation/components/charts';
+import { TerritoryMap } from '@admin/presentation/components/municipality/territory-map';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { useAdminTheme } from '@admin/theme/context';
 import { useAuth } from '@/shared/firebase/auth-context';
-import { subscribeMunicipalityByOwner } from '@/shared/firebase/municipalities';
-import { createAlert, deactivateAlert, deleteAlert, subscribeAlertReports, subscribeOwnAlerts } from '@/shared/firebase/alerts';
+import { subscribeMunicipalityByOwner, updateMunicipality } from '@/shared/firebase/municipalities';
+import { ALERT_REPORT_TITLES, createAlert, deactivateAlert, deleteAlert, subscribeAlertReports, subscribeOwnAlerts } from '@/shared/firebase/alerts';
 import { createCampaign, deleteCampaign, subscribeMunicipalityCampaigns, updateCampaign } from '@/shared/firebase/campaigns';
-import { updateMunicipality } from '@/shared/firebase/municipalities';
-import type { Campaign, Municipality, GeoBounds } from '@/shared/firebase/types';
+import { subscribeReports } from '@/shared/firebase/reports';
+import { subscribeReportPointTransactions } from '@/shared/firebase/rewards';
+import { REPORT_CATEGORIES, type AlertReport, type Campaign, type Municipality, type GeoBounds, type PointTransaction, type Report } from '@/shared/firebase/types';
+import { buildArbiscanTxUrl } from '@shared/blockchain/ledger';
 
 function statusCfg(status: string | undefined) {
   switch (status) {
@@ -30,7 +34,16 @@ function formatTime(ts: any) {
   return ts.toDate().toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
 }
 
-export function MunicipalityDashboardScreen() {
+type MunicipalitySection = 'overview' | 'reports' | 'alerts' | 'campaigns';
+
+const SECTION_META: Record<MunicipalitySection, { title: string; subtitle: string }> = {
+  overview: { title: 'Mi municipio', subtitle: 'Resumen y configuración territorial' },
+  reports: { title: 'Reportes y auditoría', subtitle: 'Reportes ciudadanos y recompensas verificadas on-chain' },
+  alerts: { title: 'Señales y alertas', subtitle: 'Monitoreo comunitario y comunicaciones oficiales' },
+  campaigns: { title: 'Campañas', subtitle: 'Iniciativas municipales para la comunidad' },
+};
+
+export function MunicipalityDashboardScreen({ section = 'overview' }: { section?: MunicipalitySection }) {
   const { user } = useAuth();
   const { colors, mode } = useAdminTheme();
   const { width } = useWindowDimensions();
@@ -43,6 +56,8 @@ export function MunicipalityDashboardScreen() {
   const [alertReports, setAlertReports] = useState<any[]>([]);
   const [ownAlerts, setOwnAlerts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [pointTransactions, setPointTransactions] = useState<PointTransaction[]>([]);
 
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -58,6 +73,7 @@ export function MunicipalityDashboardScreen() {
   const [campError, setCampError] = useState('');
 
   const [boundsEditing, setBoundsEditing] = useState(false);
+  const [coordinatesAdvanced, setCoordinatesAdvanced] = useState(false);
   const [boundsSouth, setBoundsSouth] = useState('');
   const [boundsWest, setBoundsWest] = useState('');
   const [boundsNorth, setBoundsNorth] = useState('');
@@ -68,14 +84,20 @@ export function MunicipalityDashboardScreen() {
   useEffect(() => {
     if (!user) return;
     const unsubMunicipality = subscribeMunicipalityByOwner(user.uid, (m) => setMunicipality(m));
-    const unsubReports = subscribeAlertReports((reports) => setAlertReports(reports));
     const unsubOwn = subscribeOwnAlerts(user.uid, (alerts) => setOwnAlerts(alerts));
     return () => {
       unsubMunicipality();
-      unsubReports();
       unsubOwn();
     };
   }, [user]);
+
+  useEffect(() => {
+    if (!user || municipality?.id !== user.uid || municipality.status !== 'active') {
+      setAlertReports([]);
+      return;
+    }
+    return subscribeAlertReports(setAlertReports);
+  }, [user, municipality?.id, municipality?.status]);
 
   useEffect(() => {
     if (!municipality) return;
@@ -83,10 +105,35 @@ export function MunicipalityDashboardScreen() {
     return unsub;
   }, [municipality]);
 
+  useEffect(() => {
+    if (!user || municipality?.id !== user.uid || municipality.status !== 'active' || !municipality.bounds) {
+      setReports([]);
+      setPointTransactions([]);
+      return;
+    }
+    const bounds = municipality.bounds;
+    return subscribeReports((verifiedReports) => {
+      setReports(verifiedReports.filter((report) => {
+        const location = report.location;
+        return !!location
+          && location.latitude >= bounds.south
+          && location.latitude <= bounds.north
+          && location.longitude >= bounds.west
+          && location.longitude <= bounds.east;
+      }));
+    });
+  }, [user, municipality?.id, municipality?.status, municipality?.bounds]);
+
+  useEffect(() => {
+    return subscribeReportPointTransactions(reports.map((report) => report.id), setPointTransactions);
+  }, [reports]);
+
   const config = statusCfg(municipality?.status);
   const activated = municipality?.status === 'active';
+  const migrationRequired = !!user && !!municipality && municipality.id !== user.uid;
+  const sectionMeta = SECTION_META[section];
 
-  const reportsInBounds = (r: any) => {
+  const reportsInBounds = useCallback((r: any) => {
     const bounds = municipality?.bounds;
     if (!bounds || !r?.location) return false;
     const { latitude, longitude } = r.location;
@@ -96,11 +143,16 @@ export function MunicipalityDashboardScreen() {
       longitude >= bounds.west &&
       longitude <= bounds.east
     );
-  };
-  const territoryReports = municipality?.bounds
-    ? alertReports.filter(reportsInBounds).length
-    : alertReports.length;
-  const openDangers = alertReports.filter((r) => r.status === 'pending').length;
+  }, [municipality?.bounds]);
+  const territoryAlertReports = municipality?.bounds ? alertReports.filter(reportsInBounds) : [];
+  const pendingSignals = territoryAlertReports.filter((r) => r.status === 'pending');
+  const openDangers = pendingSignals.length;
+  const reportIds = useMemo(() => new Set(reports.map((report) => report.id)), [reports]);
+  const territoryTransactions = pointTransactions.filter((tx) => tx.reportId && reportIds.has(tx.reportId));
+  const onChainPoints = reports.reduce(
+    (sum, report) => sum + (report.onChainStatus === 'awarded' ? report.pointsAwarded ?? 0 : 0),
+    0,
+  );
 
   const territoryWeek = useMemo(() => {
     const now = new Date();
@@ -116,7 +168,7 @@ export function MunicipalityDashboardScreen() {
     }
     const inTerritory = municipality?.bounds
       ? alertReports.filter(reportsInBounds)
-      : alertReports;
+      : [];
     return days.map((d, i) => ({
       label: d.label,
       value: inTerritory.filter((r) => {
@@ -125,7 +177,7 @@ export function MunicipalityDashboardScreen() {
       }).length,
       color: i === 6 ? colors.primary : colors.primary + '99',
     }));
-  }, [alertReports, municipality?.bounds]);
+  }, [alertReports, municipality?.bounds, reportsInBounds, colors.primary]);
 
   const submit = async () => {
     setFormError('');
@@ -206,14 +258,25 @@ export function MunicipalityDashboardScreen() {
     }
   };
 
+  const draftBounds = [boundsSouth, boundsWest, boundsNorth, boundsEast].every((value) => value.trim() !== '' && !Number.isNaN(Number(value)))
+    ? { south: Number(boundsSouth), west: Number(boundsWest), north: Number(boundsNorth), east: Number(boundsEast) }
+    : municipality?.bounds;
+
+  const selectBoundsOnMap = (bounds: GeoBounds) => {
+    setBoundsSouth(bounds.south.toFixed(6));
+    setBoundsWest(bounds.west.toFixed(6));
+    setBoundsNorth(bounds.north.toFixed(6));
+    setBoundsEast(bounds.east.toFixed(6));
+  };
+
   return (
-    <AdminShell title="Mi municipio" breadcrumb={[{ label: 'Mi municipio' }]}>
+    <AdminShell title={sectionMeta.title} breadcrumb={[{ label: sectionMeta.title }]}>
       {municipality !== undefined && (
         <SectionHeader
-          title="Mi municipio"
+          title={sectionMeta.title}
           subtitle={
             municipality
-              ? `${municipality.name} · ${municipality.province}, ${municipality.region}`
+              ? `${municipality.name} · ${municipality.province}, ${municipality.region} · ${sectionMeta.subtitle}`
               : 'Municipalidad vinculada a esta cuenta'
           }
           actions={[<Badge key="status" label={config.label} color={config.color} bg={config.bg} />]}
@@ -247,19 +310,89 @@ export function MunicipalityDashboardScreen() {
         </Card>
       )}
 
-      {activated && (
+      {migrationRequired && (
+        <Card>
+          <View style={styles.alertTop}>
+            <Badge label="Migración requerida" color="#EF4444" bg="rgba(239,68,68,0.12)" />
+          </View>
+          <Text style={[styles.cardTitle, { color: colors.primary }]}>Actualiza el ID de la municipalidad</Text>
+          <Text style={[styles.body, { color: muted }]}>
+            El registro usa un ID antiguo. Copia este documento en Firestore como municipalities/{user?.uid}
+            y conserva todos sus campos, especialmente status, ownerUid y bounds. Hasta completar esa migración,
+            las reglas bloquean los reportes territoriales y las señales comunitarias.
+          </Text>
+        </Card>
+      )}
+
+      {activated && section === 'overview' && (
         <View style={styles.kpiRow}>
           <KpiStat value={ownAlerts.length} label="Alertas propias" color={colors.primary} />
           <KpiStat
-            value={territoryReports}
-            label={municipality?.bounds ? 'Reportes en tu territorio' : 'Reportes ciudadanos'}
+            value={reports.length}
+            label="Reportes en tu territorio"
             color={colors.accent}
           />
+          <KpiStat value={onChainPoints} label="Puntos on-chain" color="#7C3AED" />
           <KpiStat value={campaigns.length} label="Campañas activas" color="#0D9488" />
         </View>
       )}
 
-      {activated && (
+      {activated && section === 'reports' && (
+        <Card>
+          <Text style={[styles.cardTitle, { color: colors.primary }]}>Reportes de la comunidad</Text>
+          {reports.length === 0 ? (
+            <Text style={[styles.body, { color: muted }]}>No hay reportes accesibles dentro del territorio definido.</Text>
+          ) : reports.map((report) => (
+            <Pressable
+              key={report.id}
+              onPress={() => router.push({ pathname: '/admin/municipio/reports/[id]', params: { id: report.id } })}
+              style={({ hovered }) => [styles.auditItem, { borderColor }, hovered && { opacity: 0.75 }]}
+            >
+              <View style={styles.auditBody}>
+                <Text style={[styles.alertTitle, { color: colors.primary }]}>{report.title}</Text>
+                <Text style={[styles.alertMsg, { color: muted }]}>
+                  {REPORT_CATEGORIES[report.category]?.label ?? report.category} · {report.status} · {report.pointsAwarded ?? 0} puntos
+                </Text>
+              </View>
+              <View style={styles.alertTop}>
+                <Badge
+                  label={report.onChainStatus === 'awarded' ? 'On-chain' : 'Sin confirmar'}
+                  color={report.onChainStatus === 'awarded' ? '#7C3AED' : muted}
+                  bg={report.onChainStatus === 'awarded' ? 'rgba(124,58,237,0.12)' : inputBg}
+                />
+                {report.txHash && (
+                  <Pressable onPress={(event) => { event.stopPropagation(); Linking.openURL(buildArbiscanTxUrl(report.txHash!)); }}>
+                    <Text style={[styles.link, { color: colors.accent }]}>Arbiscan ↗</Text>
+                  </Pressable>
+                )}
+              </View>
+            </Pressable>
+          ))}
+        </Card>
+      )}
+
+      {activated && section === 'reports' && (
+        <Card>
+          <Text style={[styles.cardTitle, { color: colors.primary }]}>Auditoría on-chain</Text>
+          {territoryTransactions.length === 0 ? (
+            <Text style={[styles.body, { color: muted }]}>Aún no hay transacciones de recompensas en este territorio.</Text>
+          ) : territoryTransactions.map((tx) => (
+            <View key={tx.id} style={[styles.auditItem, { borderColor }]}>
+              <View style={styles.auditBody}>
+                <Text style={[styles.alertTitle, { color: colors.primary }]}>+{tx.amount} puntos</Text>
+                <Text style={[styles.alertMsg, { color: muted }]}>Reporte {tx.reportId ?? '—'} · {formatTime(tx.createdAt)}</Text>
+              </View>
+              {tx.txHash ? (
+                <Pressable onPress={() => Linking.openURL(buildArbiscanTxUrl(tx.txHash!))}>
+                  <Text style={[styles.link, { color: colors.accent }]}>Ver transacción ↗</Text>
+                </Pressable>
+              ) : <Badge label="Pendiente on-chain" color="#F59E0B" bg="rgba(245,158,11,0.15)" />}
+            </View>
+          ))}
+        </Card>
+      )}
+
+      {activated && section === 'alerts' && (
         <Card>
           <Text style={[styles.cardTitle, { color: colors.primary }]}>
             Señales de la comunidad · últimos 7 días
@@ -274,7 +407,7 @@ export function MunicipalityDashboardScreen() {
         </Card>
       )}
 
-      {activated && openDangers > 0 && (
+      {activated && section === 'alerts' && openDangers > 0 && (
         <Card>
           <View style={styles.alertTop}>
             <Badge label="Señales pendientes" color="#F59E0B" bg="rgba(245,158,11,0.15)" />
@@ -282,15 +415,31 @@ export function MunicipalityDashboardScreen() {
               {openDangers} señal(es) de la comunidad esperan tu atención
             </Text>
           </View>
+          {pendingSignals.map((signal: AlertReport) => (
+            <View key={signal.id} style={[styles.auditItem, { borderColor }]}>
+              <View style={styles.auditBody}>
+                <Text style={[styles.alertTitle, { color: colors.primary }]}>{ALERT_REPORT_TITLES[signal.type]}</Text>
+                <Text style={[styles.alertMsg, { color: muted }]}>{signal.description}</Text>
+              </View>
+              <Button
+                label="Emitir alerta oficial"
+                onPress={() => {
+                  setTitle(ALERT_REPORT_TITLES[signal.type]);
+                  setMessage(signal.description);
+                  setCreating(true);
+                }}
+              />
+            </View>
+          ))}
         </Card>
       )}
 
-      {activated && (
+      {activated && section === 'overview' && (
         <Card>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: colors.primary }]}>Territorio municipal</Text>
             <Button
-              label={boundsEditing ? 'Cancelar' : 'Definir límites'}
+              label={boundsEditing ? 'Cancelar' : municipality?.bounds ? 'Ajustar en mapa' : 'Marcar en mapa'}
               variant={boundsEditing ? 'secondary' : 'primary'}
               onPress={() => {
                 const b = municipality?.bounds;
@@ -300,6 +449,7 @@ export function MunicipalityDashboardScreen() {
                   setBoundsNorth(String(b.north));
                   setBoundsEast(String(b.east));
                 }
+                setCoordinatesAdvanced(false);
                 setBoundsEditing((v) => !v);
               }}
             />
@@ -315,14 +465,21 @@ export function MunicipalityDashboardScreen() {
             </View>
           ) : (
             <Text style={[styles.body, { color: muted }]}>
-              Si defines los límites geográficos de tu distrito, las métricas mostrarán solo los
-              reportes ciudadanos dentro de tu territorio.
+              Marca visualmente el distrito en el mapa para mostrar únicamente sus reportes ciudadanos.
             </Text>
           )}
 
           {boundsEditing && (
             <View style={styles.form}>
-              <View style={styles.boundsRow}>
+              <TerritoryMap bounds={draftBounds} onChange={selectBoundsOnMap} />
+              <View style={styles.mapActions}>
+                <Button
+                  label={coordinatesAdvanced ? 'Ocultar coordenadas' : 'Editar coordenadas'}
+                  variant="secondary"
+                  onPress={() => setCoordinatesAdvanced((value) => !value)}
+                />
+              </View>
+              {coordinatesAdvanced && <View style={styles.boundsRow}>
                 {(
                   [
                     { label: 'Sur', value: boundsSouth, setter: setBoundsSouth, ph: '-12.1' },
@@ -343,7 +500,7 @@ export function MunicipalityDashboardScreen() {
                     />
                   </View>
                 ))}
-              </View>
+              </View>}
               {!!boundsError && <Text style={[styles.error, { color: colors.danger }]}>{boundsError}</Text>}
               <View style={styles.actions}>
                 <Button
@@ -357,7 +514,7 @@ export function MunicipalityDashboardScreen() {
         </Card>
       )}
 
-      {activated && (
+      {activated && section === 'campaigns' && (
         <Card>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: colors.primary }]}>Campañas municipales</Text>
@@ -452,7 +609,7 @@ export function MunicipalityDashboardScreen() {
         </Card>
       )}
 
-      {activated && (
+      {activated && section === 'alerts' && (
         <Card>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: colors.primary }]}>Emitir alerta oficial</Text>
@@ -493,7 +650,7 @@ export function MunicipalityDashboardScreen() {
         </Card>
       )}
 
-      {activated &&
+      {activated && section === 'alerts' &&
         ownAlerts.map((a) => (
           <Card key={a.id}>
             <View style={styles.alertRow}>
@@ -523,7 +680,7 @@ export function MunicipalityDashboardScreen() {
           </Card>
         ))}
 
-      {activated && ownAlerts.length === 0 && !creating && (
+      {activated && section === 'alerts' && ownAlerts.length === 0 && !creating && (
         <EmptyState
           icon="bullhorn"
           title="No has emitido alertas aún."
@@ -579,6 +736,18 @@ const styles = StyleSheet.create({
     marginTop: Spacing.two,
   },
   campaignBody: { flex: 1, gap: Spacing.one, minWidth: 0 },
+  auditItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    borderBottomWidth: 1,
+    paddingVertical: Spacing.two,
+  },
+  auditBody: { flex: 1, minWidth: 240, gap: 2 },
+  link: { fontFamily: Fonts.body, fontSize: 13, fontWeight: '700' },
+  mapActions: { flexDirection: 'row', justifyContent: 'flex-end' },
   boundsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   boundsField: { flex: 1, minWidth: 120, gap: Spacing.one },
 });

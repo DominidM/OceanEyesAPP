@@ -1,7 +1,7 @@
 import {
-  addDoc,
   collection,
   doc,
+  documentId,
   getDoc,
   getDocs,
   limit,
@@ -9,6 +9,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
   type Unsubscribe,
@@ -29,7 +30,8 @@ export async function createMunicipalityApplication(input: {
   phone?: string;
   ownerUid: string;
 }): Promise<string> {
-  const ref = await addDoc(collection(firestore, COLLECTION), {
+  const ref = doc(firestore, COLLECTION, input.ownerUid);
+  await setDoc(ref, {
     ...input,
     status: 'pending',
     createdAt: serverTimestamp(),
@@ -39,6 +41,14 @@ export async function createMunicipalityApplication(input: {
 }
 
 export async function getMunicipalityByOwner(ownerUid: string): Promise<Municipality | null> {
+  try {
+    const directSnapshot = await getDoc(doc(firestore, COLLECTION, ownerUid));
+    if (directSnapshot.exists()) {
+      return { id: directSnapshot.id, ...directSnapshot.data() } as Municipality;
+    }
+  } catch {
+    // Los registros anteriores usaban un ID automático; se consultan abajo.
+  }
   const snapshot = await getDocs(
     query(collection(firestore, COLLECTION), where('ownerUid', '==', ownerUid), limit(1)),
   );
@@ -51,15 +61,43 @@ export function subscribeMunicipalityByOwner(
   ownerUid: string,
   callback: (municipality: Municipality | null) => void,
 ): Unsubscribe {
-  const q = query(collection(firestore, COLLECTION), where('ownerUid', '==', ownerUid), limit(1));
-  return onSnapshot(
-    q,
+  let unsubscribeLegacy: Unsubscribe | undefined;
+  const directQuery = query(
+    collection(firestore, COLLECTION),
+    where(documentId(), '==', ownerUid),
+    where('ownerUid', '==', ownerUid),
+    limit(1),
+  );
+  const unsubscribeDirect = onSnapshot(
+    directQuery,
     (snapshot) => {
-      const docSnap = snapshot.docs[0];
-      callback(docSnap ? ({ id: docSnap.id, ...docSnap.data() } as Municipality) : null);
+      unsubscribeLegacy?.();
+      unsubscribeLegacy = undefined;
+      const directDoc = snapshot.docs[0];
+      if (directDoc) {
+        callback({ id: directDoc.id, ...directDoc.data() } as Municipality);
+        return;
+      }
+      const legacyQuery = query(
+        collection(firestore, COLLECTION),
+        where('ownerUid', '==', ownerUid),
+        limit(1),
+      );
+      unsubscribeLegacy = onSnapshot(
+        legacyQuery,
+        (legacySnapshot) => {
+          const legacyDoc = legacySnapshot.docs[0];
+          callback(legacyDoc ? ({ id: legacyDoc.id, ...legacyDoc.data() } as Municipality) : null);
+        },
+        (err) => console.warn('[municipalities] subscribeMunicipalityByOwner legacy:', err),
+      );
     },
     (err) => console.warn('[municipalities] subscribeMunicipalityByOwner:', err),
   );
+  return () => {
+    unsubscribeDirect();
+    unsubscribeLegacy?.();
+  };
 }
 
 export function subscribeAllMunicipalities(

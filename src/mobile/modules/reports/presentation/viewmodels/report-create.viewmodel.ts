@@ -135,6 +135,10 @@ export class ReportCreateViewModel extends ViewModel<ReportCreateState, ReportCr
   send = async () => {
     const { incident, anonymous, location, media, audio, sending } = this.state;
     if (!incident || sending) return;
+    if (!this.deps.user || !this.deps.profile?.walletAddress) {
+      this.setState({ sendError: 'Vincula una wallet en tu perfil antes de enviar el reporte.' });
+      return;
+    }
     if (this.deps.verdict !== 'ok') {
       this.setState({ sendError: 'Tu cuenta o dispositivo está bloqueado para enviar reportes.' });
       return;
