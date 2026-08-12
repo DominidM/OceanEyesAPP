@@ -1,11 +1,12 @@
 import * as Audio from 'expo-audio';
 import React, { useState } from 'react';
-import {Pressable, ScrollView, StyleSheet, TextInput, View} from 'react-native';
+import {Pressable, StyleSheet, TextInput, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { KeyboardScrollView } from '@/shared/components/keyboard-scroll-view';
 import { formatDuration } from '@/shared/utils/format-duration';
 
 import {
@@ -100,10 +101,9 @@ export function IncidentStep({ initial, onBack, onContinue }: IncidentStepProps)
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <KeyboardScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 8 }]}
-        showsVerticalScrollIndicator={false}>
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 8 }]}>
         <View style={styles.header}>
           <Pressable
             accessibilityRole="button"
@@ -230,7 +230,7 @@ export function IncidentStep({ initial, onBack, onContinue }: IncidentStepProps)
             <AppText style={styles.micDenied}>Sin permiso de micrófono. Habilítalo en los ajustes.</AppText>
           ) : null}
         </View>
-      </ScrollView>
+      </KeyboardScrollView>
 
       <View style={[styles.ctaArea, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <Pressable

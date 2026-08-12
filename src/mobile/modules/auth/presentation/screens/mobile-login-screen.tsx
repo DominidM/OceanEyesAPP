@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import {Animated, Keyboard, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
+import {Animated, Keyboard, Platform, Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle} from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
 import { AppSymbol, type SymbolName } from '@/shared/components/app-symbol';
+import { KeyboardScrollView } from '@/shared/components/keyboard-scroll-view';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
 import { canLinkAccount, isGoogleSignInAvailable, linkAccountWithEmail, linkAccountWithGoogle, loginWithEmail, registerUser, signInAsGuest, signInWithGoogle } from '@/shared/firebase/auth';
@@ -101,11 +102,9 @@ export default function MobileLoginScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
+      <KeyboardScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
+        contentContainerStyle={styles.scrollContent}>
       <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} accessibilityRole="none" />
       <AppText style={styles.brand}>OceanEyes</AppText>
       <AppText style={styles.subtitle}>
@@ -226,7 +225,7 @@ export default function MobileLoginScreen() {
           </ToneButton>
         )}
       </View>
-      </ScrollView>
+      </KeyboardScrollView>
     </View>
   );
 }
@@ -234,7 +233,7 @@ export default function MobileLoginScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BrandColors.primary, padding: Spacing.five },
   scroll: { flex: 1, width: '100%' },
-  scrollContent: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
+  scrollContent: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.four },
   brand: { color: BrandColors.tertiary, fontFamily: Fonts.headline, fontSize: 34, fontWeight: '700' },
   subtitle: { color: BrandColors.secondary, fontFamily: Fonts.body, fontSize: 15, marginTop: Spacing.one },
   card: { width: '100%', maxWidth: 420, gap: Spacing.three, backgroundColor: BrandColors.tertiary, borderRadius: 20, marginTop: Spacing.five, padding: Spacing.five },

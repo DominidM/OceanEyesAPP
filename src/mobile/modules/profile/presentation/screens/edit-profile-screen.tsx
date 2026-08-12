@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import { updateProfile } from 'firebase/auth';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
+import { KeyboardScrollView } from '@/shared/components/keyboard-scroll-view';
 import { updateUserProfile } from '@/shared/firebase/auth';
 import { useAuth } from '@/shared/firebase/auth-context';
 import type { ProfileType } from '@/shared/firebase/types';
@@ -82,7 +83,7 @@ export function EditProfileScreen() {
         <View style={styles.topBarSpacer} />
       </View>
 
-      <ScrollView
+      <KeyboardScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
@@ -151,7 +152,7 @@ export function EditProfileScreen() {
             <AppText style={styles.submitLabel}>{busy ? 'Guardando...' : 'Guardar cambios'}</AppText>
           </Pressable>
         </View>
-      </ScrollView>
+      </KeyboardScrollView>
     </View>
   );
 }

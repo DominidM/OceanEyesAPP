@@ -1,28 +1,26 @@
 import 'leaflet/dist/leaflet.css';
-import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { StyleSheet, View } from 'react-native';
 import type * as L from 'leaflet';
 
-import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
-import { AppText } from '@/shared/components/app-text';
+import { BrandColors } from '@/constants/theme';
 
 import type { MapReport } from './map-report';
-import { CATEGORY_COLORS, REPORT_CATEGORY_LABELS } from './map-report';
+import { CATEGORY_COLORS } from './map-report';
 import { buildClusters, buildHeatCells, heatColor } from './map-layers';
-import type { ReportCategory } from '@/shared/firebase/types';
 
 type RealTimeMapProps = {
   reports: MapReport[];
+  activeCategories?: Set<string> | null;
 };
 
 type LMapModule = typeof import('leaflet');
 
-export function RealTimeMap({ reports }: RealTimeMapProps) {
+export function RealTimeMap({ reports, activeCategories }: RealTimeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
   const LRef = useRef<LMapModule | null>(null);
-  const [activeCategories, setActiveCategories] = useState<Set<string> | null>(null);
 
   const initLazy = async () => {
     if (LRef.current || !containerRef.current) return;
@@ -106,41 +104,9 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
     }
   }, [reports, activeCategories]);
 
-  const toggleCategory = (category: string) => {
-    setActiveCategories((prev) => {
-      const next = new Set(prev ?? (Object.keys(REPORT_CATEGORY_LABELS) as ReportCategory[]));
-      if (next.has(category) && next.size === 1) return next;
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
-      return next;
-    });
-  };
-
   return (
     <View style={styles.container}>
       <div ref={containerRef} style={styles.map} />
-      <View style={styles.filterBar} pointerEvents="box-none">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterContent}>
-          {Object.entries(REPORT_CATEGORY_LABELS).map(([category, label]) => {
-            const active = !activeCategories || activeCategories.has(category);
-            const color = CATEGORY_COLORS[category as ReportCategory] ?? BrandColors.primary;
-            return (
-              <Pressable
-                key={category}
-                accessibilityRole="button"
-                onPress={() => toggleCategory(category)}
-                style={[styles.filterChip, active && { backgroundColor: color }]}>
-                <AppText style={[styles.filterChipLabel, { color: active ? '#FFFFFF' : 'rgba(44,44,44,0.75)' }]}>
-                  {label}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
     </View>
   );
 }
@@ -157,31 +123,5 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  filterBar: {
-    position: 'absolute' as const,
-    top: 64,
-    left: 0,
-    right: 0,
-  },
-  filterContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-    flexDirection: 'row' as const,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderWidth: 1,
-    borderColor: 'rgba(19,78,94,0.2)',
-  },
-  filterChipLabel: {
-    fontFamily: Fonts.label,
-    fontSize: 12,
-    fontWeight: '600',
-    includeFontPadding: false,
   },
 });

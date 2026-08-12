@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View} from 'react-native';
+import {ActivityIndicator, Pressable, StyleSheet, TextInput, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol, type SymbolName } from '@/shared/components/app-symbol';
+import { KeyboardScrollView } from '@/shared/components/keyboard-scroll-view';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { subscribeAlertReports, submitAlertReport } from '@/shared/firebase/alerts';
 import type { AlertReportType, AlertSeverity } from '@/shared/firebase/types';
@@ -160,7 +161,7 @@ export function AlertReportScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
+      <KeyboardScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}>
@@ -316,7 +317,7 @@ export function AlertReportScreen() {
             </AppText>
           )}
         </Pressable>
-      </ScrollView>
+      </KeyboardScrollView>
     </View>
   );
 }

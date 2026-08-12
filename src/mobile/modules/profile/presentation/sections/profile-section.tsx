@@ -2,7 +2,7 @@ import { isAddress } from 'ethers';
 import { useRouter } from 'expo-router';
 import { Timestamp, deleteField, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { firestore } from '@/shared/firebase/app';
@@ -10,6 +10,7 @@ import { firestore } from '@/shared/firebase/app';
 import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/constants/theme';
 import { AppSymbol, SymbolName } from '@/shared/components/app-symbol';
+import { KeyboardScrollView } from '@/shared/components/keyboard-scroll-view';
 import { SectionHeader } from '@/shared/components/section-header';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { logout, updateUserProfile } from '@/shared/firebase/auth';
@@ -448,7 +449,7 @@ export function ProfileSection() {
           </Pressable>
         }
       />
-      <ScrollView
+      <KeyboardScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
@@ -594,7 +595,7 @@ export function ProfileSection() {
             </View>
           </>
         )}
-      </ScrollView>
+      </KeyboardScrollView>
     </>
   );
 }

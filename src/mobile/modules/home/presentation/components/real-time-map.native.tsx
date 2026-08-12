@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {ActivityIndicator, Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import {ActivityIndicator, Pressable, StyleSheet, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import MapView, { Circle, Marker } from 'react-native-maps';
 
@@ -8,9 +8,7 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { useCurrentLocation } from '@/shared/hooks/use-current-location';
 
 import type { MapReport } from './map-report';
-import { CATEGORY_COLORS, REPORT_CATEGORY_LABELS } from './map-report';
 import { buildClusters, buildHeatCells, heatColor } from './map-layers';
-import type { ReportCategory } from '@/shared/firebase/types';
 import { ReportDetailSheet } from './report-detail-sheet';
 import { ReportMarker } from './report-marker';
 
@@ -39,13 +37,13 @@ const FOCUS_REGION: Region = {
 
 type RealTimeMapProps = {
   reports: MapReport[];
+  activeCategories?: Set<string> | null;
 };
 
-export function RealTimeMap({ reports }: RealTimeMapProps) {
+export function RealTimeMap({ reports, activeCategories }: RealTimeMapProps) {
   const { permission, requestPermission, position, loading } = useCurrentLocation();
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
   const [selected, setSelected] = useState<MapReport | null>(null);
-  const [activeCategories, setActiveCategories] = useState<Set<string> | null>(null);
   const markerTapped = useRef(false);
   const mapRef = useRef<MapView>(null);
 
@@ -98,16 +96,6 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
     setTimeout(() => {
       markerTapped.current = false;
     }, 0);
-  };
-
-  const toggleCategory = (category: string) => {
-    setActiveCategories((prev) => {
-      const next = new Set(prev ?? (Object.keys(REPORT_CATEGORY_LABELS) as ReportCategory[]));
-      if (next.has(category) && next.size === 1) return next;
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
-      return next;
-    });
   };
 
   useEffect(() => {
@@ -195,29 +183,6 @@ export function RealTimeMap({ reports }: RealTimeMapProps) {
         </View>
       ) : null}
 
-      <View style={styles.filterBar} pointerEvents="box-none">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterContent}>
-          {Object.entries(REPORT_CATEGORY_LABELS).map(([category, label]) => {
-            const active = !activeCategories || activeCategories.has(category);
-            const color = CATEGORY_COLORS[category as ReportCategory] ?? BrandColors.primary;
-            return (
-              <Pressable
-                key={category}
-                accessibilityRole="button"
-                onPress={() => toggleCategory(category)}
-                style={[styles.filterChip, active && { backgroundColor: color }]}>
-                <AppText style={[styles.filterChipLabel, { color: active ? '#FFFFFF' : 'rgba(44,44,44,0.75)' }]}>
-                  {label}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
-
       <ReportDetailSheet report={selected} onClose={() => setSelected(null)} />
     </View>
   );
@@ -275,31 +240,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
-    includeFontPadding: false,
-  },
-  filterBar: {
-    position: 'absolute',
-    top: 64,
-    left: 0,
-    right: 0,
-  },
-  filterContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderWidth: 1,
-    borderColor: 'rgba(19,78,94,0.2)',
-  },
-  filterChipLabel: {
-    fontFamily: Fonts.label,
-    fontSize: 12,
-    fontWeight: '600',
     includeFontPadding: false,
   },
   cluster: {
