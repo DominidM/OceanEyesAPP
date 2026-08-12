@@ -64,7 +64,7 @@ export function UserProfileScreen() {
 
   return (
     <AdminShell title="Perfil de usuario" breadcrumb={[{ label: 'Usuarios', href: '/admin/users' }, { label: 'Perfil' }]}>
-      {loading && <AdminLoading variant="list" />}
+      {loading && <AdminLoading variant="detail" />}
 
       {!loading && (
         <>

@@ -53,7 +53,7 @@ export function RewardViewScreen() {
         />
       )}
 
-      {loading && <AdminLoading variant="list" />}
+      {loading && <AdminLoading variant="detail" />}
 
       {!loading && !reward && (
         <Text style={{ color: colors.contentTextMuted }}>No se encontró la recompensa.</Text>

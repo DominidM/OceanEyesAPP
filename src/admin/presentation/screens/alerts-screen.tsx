@@ -1,6 +1,6 @@
 import { FontAwesome5 } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { BrandColors } from '@/constants/theme';
@@ -142,7 +142,7 @@ export default function AlertsScreen() {
 
   return (
     <AdminShell title="Alertas">
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
+      <View style={styles.container}>
         {!loading && (
           <SectionHeader
             title="Alertas"
@@ -299,14 +299,13 @@ export default function AlertsScreen() {
               </Card>
             );
           })}
-      </ScrollView>
+      </View>
     </AdminShell>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1 },
-  container: { padding: Spacing.five, gap: Spacing.four, paddingBottom: 80 },
+  container: { gap: Spacing.four },
   cardTitle: { fontFamily: Fonts.headline, fontSize: 18, fontWeight: '700', marginBottom: Spacing.three },
   field: { gap: Spacing.one, marginBottom: Spacing.three },
   label: { fontFamily: Fonts.body, fontSize: 13, fontWeight: '600' },

@@ -149,7 +149,7 @@ export function ReportDetailScreen() {
         />
       )}
 
-      {loading && <AdminLoading variant="list" />}
+      {loading && <AdminLoading variant="detail" />}
 
       {!loading && !report && (
         <EmptyState

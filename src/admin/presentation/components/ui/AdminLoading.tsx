@@ -367,6 +367,39 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 12,
   },
+  detailCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  detailBlock: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  detailSpace: {
+    marginTop: Spacing.two,
+  },
+  detailList: {
+    marginTop: Spacing.three,
+    gap: 0,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.four,
+    paddingVertical: Spacing.three,
+    borderBottomWidth: 1,
+  },
+  detailActions: {
+    marginTop: Spacing.three,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
   inlineLoader: {
     flexDirection: 'row',
     alignItems: 'center',
