@@ -41,17 +41,18 @@ export function ActivityCard({ stats }: { stats: ActivityStat[] }) {
 
 const styles = StyleSheet.create({
   activityCard: {
-    height: 158,
-    borderRadius: 24,
+    height: 108,
+    borderRadius: 18,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#F3F4F6',
-    padding: Spacing.four,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 12,
     justifyContent: 'space-between',
     ...shadow('subtle'),
   },
   statsGrid: {
-    height: 47,
+    height: 41,
     flexDirection: 'row',
     gap: 16,
   },
@@ -67,9 +68,9 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontFamily: Fonts.label,
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '900',
-    lineHeight: 32,
+    lineHeight: 25,
     includeFontPadding: false,
   },
   statLabel: {
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   levelRow: {
-    paddingTop: Spacing.three,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderColor: '#F3F4F6',
     flexDirection: 'row',
@@ -94,9 +95,9 @@ const styles = StyleSheet.create({
   levelText: {
     color: BrandColors.neutral,
     fontFamily: Fonts.body,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
-    lineHeight: 20,
+    lineHeight: 16,
     includeFontPadding: false,
   },
 });

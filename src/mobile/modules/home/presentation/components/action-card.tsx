@@ -60,12 +60,13 @@ export function ActionCard({
 const styles = StyleSheet.create({
   actionCard: {
     height: 145,
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 16,
+    gap: 12,
     ...shadow('card'),
   },
   pressed: {
@@ -81,18 +82,18 @@ const styles = StyleSheet.create({
   actionTitle: {
     color: '#FFFFFF',
     fontFamily: Fonts.label,
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '900',
-    lineHeight: 25,
+    lineHeight: 20,
     letterSpacing: 0.5,
     includeFontPadding: false,
   },
   actionSubtitle: {
     color: 'rgba(255, 255, 255, 0.82)',
     fontFamily: Fonts.body,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
-    lineHeight: 21,
+    lineHeight: 16,
     includeFontPadding: false,
   },
   actionIconRow: {
@@ -101,9 +102,9 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   actionIconBox: {
-    width: 80,
-    height: 80,
-    borderRadius: 16,
+    width: 58,
+    height: 58,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.18)',

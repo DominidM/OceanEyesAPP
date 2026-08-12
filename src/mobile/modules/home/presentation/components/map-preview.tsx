@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#E5E7EB',
     position: 'relative',
-    marginTop: 0,
+    marginTop: 12,
   },
   mapOverlay: {
     ...StyleSheet.absoluteFillObject,

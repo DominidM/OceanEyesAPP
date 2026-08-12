@@ -248,10 +248,9 @@ type LoggedInCardProps = {
   fallbackName?: string;
   activity?: ActivityItem[];
   extraStats?: { redeemed?: number; activeDays?: number };
-  onLogout: () => void;
 };
 
-function LoggedInCard({ profile, fallbackName, activity = [], extraStats, onLogout }: LoggedInCardProps) {
+function LoggedInCard({ profile, fallbackName, activity = [], extraStats }: LoggedInCardProps) {
   const name = profile?.displayName || fallbackName || 'Usuario';
   const typeLabel = profile ? PROFILE_TYPE_LABELS[profile.profileType] : undefined;
   const balance = profile?.pointsBalance ?? 0;
@@ -309,13 +308,18 @@ function LoggedInCard({ profile, fallbackName, activity = [], extraStats, onLogo
         </>
       ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={onLogout}
-        style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
-        <AppText style={styles.logoutButtonLabel}>Cerrar sesión</AppText>
-      </Pressable>
     </View>
+  );
+}
+
+function LogoutButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
+      <AppText style={styles.logoutButtonLabel}>Cerrar sesión</AppText>
+    </Pressable>
   );
 }
 
@@ -463,13 +467,15 @@ export function ProfileSection() {
         contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
         {guest ? (
           showDevPreview && __DEV__ ? (
-            <LoggedInCard
-              profile={DEV_PREVIEW_PROFILE}
-              fallbackName={DEV_PREVIEW_PROFILE.displayName}
-              activity={DEV_PREVIEW_ACTIVITY}
-              extraStats={{ redeemed: 3, activeDays: 214 }}
-              onLogout={() => setShowDevPreview(false)}
-            />
+            <>
+              <LoggedInCard
+                profile={DEV_PREVIEW_PROFILE}
+                fallbackName={DEV_PREVIEW_PROFILE.displayName}
+                activity={DEV_PREVIEW_ACTIVITY}
+                extraStats={{ redeemed: 3, activeDays: 214 }}
+              />
+              <LogoutButton onPress={() => setShowDevPreview(false)} />
+            </>
           ) : (
             <>
               <View style={styles.placeholderCard}>
@@ -514,7 +520,7 @@ export function ProfileSection() {
                 </Pressable>
               </View>
             ) : null}
-            <LoggedInCard profile={profile} fallbackName={user?.displayName ?? undefined} onLogout={handleLogout} />
+            <LoggedInCard profile={profile} fallbackName={user?.displayName ?? undefined} />
 
             <View style={styles.walletCard}>
               <View style={styles.walletHeader}>
@@ -611,6 +617,8 @@ export function ProfileSection() {
               {!!saved && <Text style={styles.success}>Wallet guardada correctamente.</Text>}
               {!!error && <Text style={styles.error}>{error}</Text>}
             </View>
+
+            <LogoutButton onPress={handleLogout} />
           </>
         )}
       </ScrollView>

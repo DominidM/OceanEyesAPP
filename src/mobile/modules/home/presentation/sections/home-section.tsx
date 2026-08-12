@@ -77,6 +77,9 @@ export function HomeSection({ onExpandMap, onAlertsPress, onAlertReportPress, on
           />
         </View>
 
+        <AppText style={styles.sectionTitle}>Tu Actividad</AppText>
+        <ActivityCard stats={activityStats} />
+
         <MapPreview reports={reports} onExpand={onExpandMap} />
 
         <View style={styles.actionsStack}>
@@ -84,7 +87,7 @@ export function HomeSection({ onExpandMap, onAlertsPress, onAlertReportPress, on
             title="VER ALERTAS EN MI ZONA"
             subtitle="Reportes verificados cerca de ti"
             color={BrandColors.secondary}
-            height={147}
+            height={104}
             onPress={onAlertsPress}
             helperIcon={{
               ios: 'location.fill',
@@ -98,7 +101,7 @@ export function HomeSection({ onExpandMap, onAlertsPress, onAlertReportPress, on
             title="ALERTAR A MI ZONA"
             subtitle="Envía una señal rápida de peligro"
             color={BrandColors.primary}
-            height={147}
+            height={104}
             onPress={onAlertReportPress}
             helperIcon={{
               ios: 'megaphone.fill',
@@ -109,8 +112,6 @@ export function HomeSection({ onExpandMap, onAlertsPress, onAlertReportPress, on
           />
         </View>
 
-        <AppText style={styles.sectionTitle}>Tu Actividad</AppText>
-        <ActivityCard stats={activityStats} />
       </ScrollView>
     </>
   );
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    marginBottom: 25,
+    marginBottom: 12,
   },
   headline: {
     flexShrink: 1,
@@ -140,18 +141,18 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   actionsStack: {
-    gap: 16,
-    marginTop: 20,
+    gap: 10,
+    marginTop: 12,
   },
   sectionTitle: {
     color: BrandColors.neutral,
     fontFamily: Fonts.headline,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     lineHeight: 22,
     letterSpacing: -0.27,
     includeFontPadding: false,
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 0,
+    marginBottom: 8,
   },
 });

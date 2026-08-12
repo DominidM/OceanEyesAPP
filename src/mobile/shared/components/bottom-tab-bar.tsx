@@ -24,7 +24,7 @@ export type BottomTabBarProps = {
 };
 
 const INACTIVE_COLOR = '#9CA3AF';
-const BASE_HEIGHT = Platform.select({ ios: 52, android: 68, default: 76 });
+const BASE_HEIGHT = Platform.select({ ios: 50, android: 58, default: 60 });
 
 export function BottomTabBar({ items, fab }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
@@ -49,7 +49,7 @@ export function BottomTabBar({ items, fab }: BottomTabBarProps) {
                   accessibilityRole="button"
                   onPress={fab.onPress}
                   style={({ pressed }) => [styles.fab, pressed && styles.pressed]}>
-                  <AppSymbol name={fab.icon} color="#FFFFFF" size={24} />
+                  <AppSymbol name={fab.icon} color="#FFFFFF" size={22} />
                 </Pressable>
               </View>
             ) : null}
@@ -64,7 +64,7 @@ function BottomTabButton({ label, icon, active, onPress }: BottomTabItem) {
   const color = active ? BrandColors.primary : INACTIVE_COLOR;
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.navItem}>
-      <AppSymbol name={icon} color={color} size={25} />
+      <AppSymbol name={icon} color={color} size={22} />
       <AppText
         numberOfLines={1}
         adjustsFontSizeToFit
@@ -81,15 +81,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingHorizontal: 12,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: '#D9CFC5',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 4,
   },
   bottomNavShadow: {
     ...StyleSheet.absoluteFillObject,
@@ -103,9 +103,9 @@ const styles = StyleSheet.create({
   },
   navLabel: {
     fontFamily: Fonts.label,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
-    lineHeight: 15,
+    lineHeight: 13,
     includeFontPadding: false,
   },
   navLabelActive: {
@@ -113,16 +113,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   fabSlot: {
-    width: 56,
-    height: 24,
+    width: 50,
+    height: 20,
     alignItems: 'center',
   },
   fab: {
     position: 'absolute',
-    top: -38,
-    width: 64,
-    height: 64,
-    borderRadius: 38,
+    top: -32,
+    width: 56,
+    height: 56,
+    borderRadius: 30,
     borderWidth: 4,
     borderColor: BrandColors.tertiary,
     alignItems: 'center',
