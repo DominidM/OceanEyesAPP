@@ -14,10 +14,13 @@ import {
   FeaturesSection,
   HelpSection,
   TechnologySection,
+  ArbitrumSection,
 } from "../sections/inicio";
 
 export function LandingScreen() {
-  const [positions, setPositions] = useState<Partial<Record<LandingSectionKey, number>>>({});
+  const [positions, setPositions] = useState<
+    Partial<Record<LandingSectionKey, number>>
+  >({});
   const { scrollRef, toHowItWorks } = useLandingScroll(positions);
   const [scrolled, setScrolled] = useState(false);
 
@@ -35,10 +38,7 @@ export function LandingScreen() {
   return (
     <View style={styles.screen}>
       <PageTransition>
-        <LandingLayout
-          scrolled={scrolled}
-          scrollRef={scrollRef}
-        >
+        <LandingLayout scrolled={scrolled} scrollRef={scrollRef}>
           <ScrollView
             ref={scrollRef}
             style={styles.scroll}
@@ -47,16 +47,17 @@ export function LandingScreen() {
             scrollEventThrottle={16}
           >
             <HeroSection onFeaturesPress={toHowItWorks} />
-            <View onLayout={recordPosition('how-it-works')}>
+            <View onLayout={recordPosition("how-it-works")}>
               <FeaturesSection />
             </View>
-            <View onLayout={recordPosition('ayudar')}>
+            <View onLayout={recordPosition("ayudar")}>
               <HelpSection />
             </View>
             <TechnologySection />
-            <View onLayout={recordPosition('reportes')}>
+            <View onLayout={recordPosition("reportes")}>
               <ReportesSection />
             </View>
+            <ArbitrumSection />
 
             <LandingSubfooter />
             <LandingFooter />

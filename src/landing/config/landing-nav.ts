@@ -9,5 +9,6 @@ export const LANDING_NAV_LINKS: LandingNavLink[] = [
   { label: 'Municipalidades', href: '/municipio' },
   { label: 'Descubre tu Rol', href: '/descubre-tu-rol' },
   { label: 'Preguntas Frecuentes', href: '/faq' },
+  { label: 'Arbitrum', href: '/arbitrum' },
   { label: 'Contacto', href: '/contacto' },
 ];
