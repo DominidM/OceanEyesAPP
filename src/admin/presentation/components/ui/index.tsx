@@ -3,8 +3,11 @@ import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from '
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+import { AdminInlineLoader } from './AdminLoading';
 import { AppFonts as Fonts, Spacing } from '@/constants/theme';
 import { useAdminTheme } from '@admin/theme/context';
+
+export { AdminLoading, AdminInlineLoader } from './AdminLoading';
 
 export function Card({
   children,
@@ -177,9 +180,13 @@ export function PaginationFooter({
           color={currentPage <= 1 ? colors.contentTextMuted : colors.contentText}
           onPress={currentPage > 1 ? onPrev : undefined}
         />
-        <Text style={[styles.paginationCounter, { color: colors.contentTextMuted }]}>
-          {currentPage} / {totalPages}
-        </Text>
+        {loading ? (
+          <AdminInlineLoader label="Cargando..." />
+        ) : (
+          <Text style={[styles.paginationCounter, { color: colors.contentTextMuted }]}>
+            {currentPage} / {totalPages}
+          </Text>
+        )}
         <IconButton
           icon="chevron-right"
           label="Siguiente"
@@ -202,7 +209,7 @@ export function EmptyState({
 }) {
   const { colors } = useAdminTheme();
   return (
-    <View style={styles.emptyState}>
+    <View style={[styles.emptyState, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
       <MaterialCommunityIcons name={icon} size={40} color={colors.contentTextMuted} />
       <Text style={[styles.emptyStateTitle, { color: colors.contentTextMuted }]}>{title}</Text>
       <Text style={[styles.emptyStateDesc, { color: colors.contentTextMuted }]}>{description}</Text>
@@ -364,6 +371,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
     paddingVertical: Spacing.six,
+    borderWidth: 1,
+    borderRadius: 16,
   },
   emptyStateTitle: {
     fontFamily: Fonts.headline,

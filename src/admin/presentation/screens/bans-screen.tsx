@@ -8,7 +8,7 @@ import { getUserProfile, setUserStatus } from '@/shared/firebase/auth';
 import type { UserProfile } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, SectionHeader, LoadingState, EmptyState } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, SectionHeader, AdminLoading, EmptyState } from '@admin/presentation/components/ui';
 
 type BannedUser = Omit<UserProfile, 'uid'> & {
   uid: string;
@@ -73,12 +73,14 @@ export function BansScreen() {
   return (
     <AdminShell title="Baneos">
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        <SectionHeader
-          title="Usuarios baneados"
-          subtitle="Cuentas suspendidas de la plataforma."
-        />
+        {!(loading && bannedUsers.length === 0) && (
+          <SectionHeader
+            title="Usuarios baneados"
+            subtitle="Cuentas suspendidas de la plataforma."
+          />
+        )}
         {loading && bannedUsers.length === 0 && (
-          <LoadingState label="Cargando baneos..." />
+          <AdminLoading variant="list" />
         )}
         {!loading && bannedUsers.length === 0 && (
           <EmptyState

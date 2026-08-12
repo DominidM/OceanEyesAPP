@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, SectionHeader } from '@admin/presentation/components/ui';
+import { AdminLoading, Badge, Button, Card, SectionHeader } from '@admin/presentation/components/ui';
 import { ReportDataList } from '@admin/presentation/components/reports/report-data-list';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { getUserProfile } from '@/shared/firebase/auth';
@@ -64,59 +64,63 @@ export function UserProfileScreen() {
 
   return (
     <AdminShell title="Perfil de usuario" breadcrumb={[{ label: 'Usuarios', href: '/admin/users' }, { label: 'Perfil' }]}>
-      <SectionHeader
-        title={profile?.displayName ?? 'Usuario'}
-        subtitle="Detalle del perfil de la cuenta."
-        actions={[
-          <Button key="back" label="Volver" variant="secondary" onPress={() => router.push('/admin/users')} />,
-        ]}
-      />
+      {loading && <AdminLoading variant="list" />}
 
-      <Card style={styles.card}>
-        {loading && <Text style={{ color: colors.contentTextMuted }}>Cargando perfil...</Text>}
+      {!loading && (
+        <>
+          <SectionHeader
+            title={profile?.displayName ?? 'Usuario'}
+            subtitle="Detalle del perfil de la cuenta."
+            actions={[
+              <Button key="back" label="Volver" variant="secondary" onPress={() => router.push('/admin/users')} />,
+            ]}
+          />
 
-        {!loading && !profile && (
-          <View style={styles.notFound}>
-            <FontAwesome5 name="user-slash" size={28} color={colors.contentTextMuted} />
-            <Text style={[styles.notFoundText, { color: colors.contentTextMuted }]}>
-              No se encontró el usuario.
-            </Text>
-          </View>
-        )}
-
-        {!loading && profile && (
-          <>
-            <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
-              <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de usuario</Text>
-
-              <View style={styles.headingRow}>
-                {rc && <Badge label={rc.label} color={rc.color} bg={rc.bg} />}
-                {suspended && <Badge label="Baneado" color={colors.danger} bg={colors.dangerBg} />}
+          <Card style={styles.card}>
+            {!profile && (
+              <View style={styles.notFound}>
+                <FontAwesome5 name="user-slash" size={28} color={colors.contentTextMuted} />
+                <Text style={[styles.notFoundText, { color: colors.contentTextMuted }]}>
+                  No se encontró el usuario.
+                </Text>
               </View>
+            )}
 
-              <ReportDataList rows={rows} />
-            </View>
+            {profile && (
+              <>
+                <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+                  <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de usuario</Text>
 
-            {profile.banReason ? (
-              <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
-                <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Baneo</Text>
-                <View style={[styles.innerSubBlock, { borderColor: colors.cardBorder }]}>
-                  <Text style={[styles.subBlockHint, { color: colors.contentTextMuted }]}>Motivo de baneo</Text>
-                  <Text style={[styles.banText, { color: colors.contentText }]}>{profile.banReason}</Text>
+                  <View style={styles.headingRow}>
+                    {rc && <Badge label={rc.label} color={rc.color} bg={rc.bg} />}
+                    {suspended && <Badge label="Baneado" color={colors.danger} bg={colors.dangerBg} />}
+                  </View>
+
+                  <ReportDataList rows={rows} />
                 </View>
-              </View>
-            ) : null}
-          </>
-        )}
-      </Card>
 
-      {!loading && profile && (
-        <View style={styles.footerActions}>
-          <Pressable onPress={() => router.push('/admin/users')} style={styles.link}>
-            <FontAwesome5 name="arrow-left" size={13} color={colors.primary} />
-            <Text style={[styles.linkLabel, { color: colors.primary }]}>Volver a la lista de usuarios</Text>
-          </Pressable>
-        </View>
+                {profile.banReason ? (
+                  <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+                    <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Baneo</Text>
+                    <View style={[styles.innerSubBlock, { borderColor: colors.cardBorder }]}>
+                      <Text style={[styles.subBlockHint, { color: colors.contentTextMuted }]}>Motivo de baneo</Text>
+                      <Text style={[styles.banText, { color: colors.contentText }]}>{profile.banReason}</Text>
+                    </View>
+                  </View>
+                ) : null}
+              </>
+            )}
+          </Card>
+
+          {profile && (
+            <View style={styles.footerActions}>
+              <Pressable onPress={() => router.push('/admin/users')} style={styles.link}>
+                <FontAwesome5 name="arrow-left" size={13} color={colors.primary} />
+                <Text style={[styles.linkLabel, { color: colors.primary }]}>Volver a la lista de usuarios</Text>
+              </Pressable>
+            </View>
+          )}
+        </>
       )}
     </AdminShell>
   );

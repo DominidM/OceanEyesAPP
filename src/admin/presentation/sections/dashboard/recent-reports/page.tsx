@@ -7,7 +7,7 @@ import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { firestore } from '@/shared/firebase/app';
 import type { Report, ReportStatus } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Card, Badge } from '@admin/presentation/components/ui';
+import { AdminLoading, AdminInlineLoader, Card, Badge } from '@admin/presentation/components/ui';
 
 const PAGE_SIZE = 6;
 
@@ -16,8 +16,11 @@ export function RecentReportsSection() {
   const [reports, setReports] = useState<Report[]>([]);
   const [lastDoc, setLastDoc] = useState<any>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const load = useCallback(async (reset = false) => {
+    if (!reset) setLoadingMore(true);
     try {
       let q = query(collection(firestore, 'reports'), orderBy('createdAt', 'desc'), fireLimit(PAGE_SIZE));
       if (!reset && lastDoc) q = query(q, startAfter(lastDoc));
@@ -28,6 +31,9 @@ export function RecentReportsSection() {
       setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
       setHasMore(snap.docs.length === PAGE_SIZE);
     } catch {
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
   }, [lastDoc, reports]);
 
@@ -41,6 +47,8 @@ export function RecentReportsSection() {
       default: return { label: 'Pendiente', color: colors.warning, bg: colors.warningBg };
     }
   };
+
+  if (loading) return <AdminLoading variant="list" />;
 
   return (
     <Card style={styles.tableCard}>
@@ -91,9 +99,13 @@ export function RecentReportsSection() {
 
       {hasMore && (
         <View style={[styles.footer, { borderTopColor: colors.cardBorder }]}>
-          <Pressable onPress={() => load()} style={styles.loadMore}>
-            <Text style={[styles.loadMoreLabel, { color: colors.primary }]}>Cargar más</Text>
-          </Pressable>
+          {loadingMore ? (
+            <AdminInlineLoader label="Cargando..." />
+          ) : (
+            <Pressable onPress={() => load()} style={styles.loadMore}>
+              <Text style={[styles.loadMoreLabel, { color: colors.primary }]}>Cargar más</Text>
+            </Pressable>
+          )}
         </View>
       )}
     </Card>

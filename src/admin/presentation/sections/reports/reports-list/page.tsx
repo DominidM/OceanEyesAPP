@@ -14,7 +14,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { firestore } from '@/shared/firebase/app';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
-import { Badge, Card, EmptyState, IconButton, LoadingState, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Card, EmptyState, IconButton, AdminLoading, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
 import { useAdminTheme } from '@admin/theme/context';
 
 type AdminReport = {
@@ -112,13 +112,15 @@ export function ReportsList() {
 
   return (
     <View style={styles.content}>
-      <SectionHeader
-        title="Moderación de incidencias"
-        subtitle="Revisa reportes de pesca, basura marina y variaciones del mar."
-      />
+      {!(loading && reports.length === 0) && (
+        <SectionHeader
+          title="Moderación de incidencias"
+          subtitle="Revisa reportes de pesca, basura marina y variaciones del mar."
+        />
+      )}
 
       {loading && reports.length === 0 && (
-        <LoadingState label="Cargando reportes..." />
+        <AdminLoading variant="list" />
       )}
       {!loading && totalDocs === 0 && (
         <EmptyState

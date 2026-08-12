@@ -22,7 +22,7 @@ import {
   Button,
   Card,
   EmptyState,
-  LoadingState,
+  AdminLoading,
   SectionHeader,
 } from '@admin/presentation/components/ui';
 
@@ -143,18 +143,20 @@ export default function AlertsScreen() {
   return (
     <AdminShell title="Alertas">
       <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
-        <SectionHeader
-          title="Alertas"
-          subtitle="Envía notificaciones push a todos los usuarios"
-          actions={[
-            <Button
-              key="new"
-              label="Nueva alerta"
-              onPress={() => setCreating(true)}
-              variant={creating ? 'secondary' : 'primary'}
-            />,
-          ]}
-        />
+        {!loading && (
+          <SectionHeader
+            title="Alertas"
+            subtitle="Envía notificaciones push a todos los usuarios"
+            actions={[
+              <Button
+                key="new"
+                label="Nueva alerta"
+                onPress={() => setCreating(true)}
+                variant={creating ? 'secondary' : 'primary'}
+              />,
+            ]}
+          />
+        )}
 
         {creating && (
           <Card>
@@ -210,7 +212,7 @@ export default function AlertsScreen() {
           </Card>
         )}
 
-        {loading && <LoadingState />}
+        {loading && <AdminLoading variant="list" />}
 
         {!loading && alerts.length === 0 && !creating && (
           <EmptyState

@@ -6,7 +6,7 @@ import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import type { Alert, AlertSeverity, AlertSource } from '@/shared/firebase/types';
 import { subscribeAllAlerts } from '@/shared/firebase/alerts';
 import { useAdminTheme } from '@admin/theme/context';
-import { Card, Badge } from '@admin/presentation/components/ui';
+import { AdminLoading, Card, Badge } from '@admin/presentation/components/ui';
 
 const SOURCE_LABELS: Record<AlertSource, string> = {
   admin: 'Admin',
@@ -25,11 +25,17 @@ const SEVERITY_META: Record<AlertSeverity, { label: string; color: string; bg: s
 export function RecentAlertsSection() {
   const { colors } = useAdminTheme();
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = subscribeAllAlerts((list) => setAlerts(list));
+    const unsub = subscribeAllAlerts((list) => {
+      setAlerts(list);
+      setLoading(false);
+    });
     return unsub;
   }, []);
+
+  if (loading) return <AdminLoading variant="list" />;
 
   return (
     <Card style={styles.tableCard}>

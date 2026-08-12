@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, EmptyState, LoadingState, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, EmptyState, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { useAdminTheme } from '@admin/theme/context';
 import { createOrganization, deleteOrganization, subscribeOrganizations, updateOrganization } from '@/shared/firebase/organizations';
@@ -74,18 +74,20 @@ export function OrganizationsScreen() {
 
   return (
     <AdminShell title="ONGs" breadcrumb={[{ label: 'ONGs' }]}>
-      <SectionHeader
-        title="Catálogo de organizaciones"
-        subtitle="ONGs y entidades que colaboran con la vigilancia marina. Las verificadas son visibles para municipalidades."
-        actions={[
-          <Button
-            key="new"
-            label={creating ? 'Cancelar' : 'Nueva ONG'}
-            onPress={() => setCreating((v) => !v)}
-            variant={creating ? 'secondary' : 'primary'}
-          />,
-        ]}
-      />
+      {!loading && (
+        <SectionHeader
+          title="Catálogo de organizaciones"
+          subtitle="ONGs y entidades que colaboran con la vigilancia marina. Las verificadas son visibles para municipalidades."
+          actions={[
+            <Button
+              key="new"
+              label={creating ? 'Cancelar' : 'Nueva ONG'}
+              onPress={() => setCreating((v) => !v)}
+              variant={creating ? 'secondary' : 'primary'}
+            />,
+          ]}
+        />
+      )}
 
       {creating && (
         <Card>
@@ -161,7 +163,7 @@ export function OrganizationsScreen() {
         </Card>
       )}
 
-      {loading && <LoadingState label="Cargando organizaciones..." />}
+      {loading && <AdminLoading variant="list" />}
 
       {!loading && organizations.length === 0 && !creating && (
         <EmptyState

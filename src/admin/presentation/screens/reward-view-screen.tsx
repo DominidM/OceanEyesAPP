@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, SectionHeader, LoadingState } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, SectionHeader, AdminLoading } from '@admin/presentation/components/ui';
 import { ReportDataList } from '@admin/presentation/components/reports/report-data-list';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { getRewardById } from '@/shared/firebase/rewards';
@@ -43,15 +43,17 @@ export function RewardViewScreen() {
 
   return (
     <AdminShell title="Ver recompensa" breadcrumb={[{ label: 'Recompensas', href: '/admin/rewards' }, { label: 'Ver' }]}>
-      <SectionHeader
-        title={reward?.title ?? 'Recompensa'}
-        subtitle="Detalle de la recompensa del catálogo."
-        actions={[
-          <Button key="back" label="Volver" variant="secondary" onPress={() => router.push('/admin/rewards')} />,
-        ]}
-      />
+      {!loading && (
+        <SectionHeader
+          title={reward?.title ?? 'Recompensa'}
+          subtitle="Detalle de la recompensa del catálogo."
+          actions={[
+            <Button key="back" label="Volver" variant="secondary" onPress={() => router.push('/admin/rewards')} />,
+          ]}
+        />
+      )}
 
-      {loading && <LoadingState label="Cargando recompensa..." />}
+      {loading && <AdminLoading variant="list" />}
 
       {!loading && !reward && (
         <Text style={{ color: colors.contentTextMuted }}>No se encontró la recompensa.</Text>

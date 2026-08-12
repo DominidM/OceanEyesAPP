@@ -8,7 +8,7 @@ import { firebaseAuth, firestore } from '@/shared/firebase/app';
 import { setUserStatus } from '@/shared/firebase/auth';
 import type { UserProfile } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Badge, Card, Button, PaginationFooter, EmptyState, SectionHeader, LoadingState } from '@admin/presentation/components/ui';
+import { Badge, Card, Button, PaginationFooter, EmptyState, SectionHeader, AdminLoading } from '@admin/presentation/components/ui';
 import { BanModal } from './ban-modal';
 
 type UserRow = UserProfile & { id: string };
@@ -111,16 +111,18 @@ const roleConfig = (role: string) => {
 
   return (
     <View style={styles.content}>
-      <SectionHeader
-        title="Administración de usuarios"
-        subtitle="Gestiona roles, puntos y banea cuentas de la plataforma."
-        actions={[
-          <Button key="add" label="Agregar" onPress={() => router.push('/admin/users/new')} />,
-        ]}
-      />
+      {!(loading && users.length === 0) && (
+        <SectionHeader
+          title="Administración de usuarios"
+          subtitle="Gestiona roles, puntos y banea cuentas de la plataforma."
+          actions={[
+            <Button key="add" label="Agregar" onPress={() => router.push('/admin/users/new')} />,
+          ]}
+        />
+      )}
 
       {loading && users.length === 0 && (
-        <LoadingState label="Cargando usuarios..." />
+        <AdminLoading variant="list" />
       )}
       {!loading && totalDocs === 0 && (
         <EmptyState

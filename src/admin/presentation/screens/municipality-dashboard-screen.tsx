@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } fro
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, EmptyState, KpiStat, LoadingState, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, EmptyState, KpiStat, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
 import { BarChart } from '@admin/presentation/components/charts';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { useAdminTheme } from '@admin/theme/context';
@@ -212,17 +212,19 @@ export function MunicipalityDashboardScreen() {
 
   return (
     <AdminShell title="Mi municipio" breadcrumb={[{ label: 'Mi municipio' }]}>
-      <SectionHeader
-        title="Mi municipio"
-        subtitle={
-          municipality
-            ? `${municipality.name} · ${municipality.province}, ${municipality.region}`
-            : 'Municipalidad vinculada a esta cuenta'
-        }
-        actions={[<Badge key="status" label={config.label} color={config.color} bg={config.bg} />]}
-      />
+      {municipality !== undefined && (
+        <SectionHeader
+          title="Mi municipio"
+          subtitle={
+            municipality
+              ? `${municipality.name} · ${municipality.province}, ${municipality.region}`
+              : 'Municipalidad vinculada a esta cuenta'
+          }
+          actions={[<Badge key="status" label={config.label} color={config.color} bg={config.bg} />]}
+        />
+      )}
 
-      {municipality === undefined && <LoadingState label="Cargando municipalidad..." />}
+      {municipality === undefined && <AdminLoading variant="list" />}
 
       {municipality === null && (
         <Card>

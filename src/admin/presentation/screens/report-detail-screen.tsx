@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, EmptyState, LoadingState, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, EmptyState, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
 import { ReportDataList } from '@admin/presentation/components/reports/report-data-list';
 import { ReportGallery } from '@admin/presentation/components/reports/report-gallery';
 import { ReportMap } from '@admin/presentation/components/reports/report-map';
@@ -140,14 +140,16 @@ export function ReportDetailScreen() {
       title="Detalle de reporte"
       breadcrumb={[{ label: 'Reportes', href: '/admin/reports' }, { label: 'Detalle' }]}
     >
-      <SectionHeader
-        title="Detalles de reportes"
-        actions={[
-          <Button key="back" label="Volver" variant="secondary" onPress={() => router.push('/admin/reports')} />,
-        ]}
-      />
+      {!loading && (
+        <SectionHeader
+          title="Detalles de reportes"
+          actions={[
+            <Button key="back" label="Volver" variant="secondary" onPress={() => router.push('/admin/reports')} />,
+          ]}
+        />
+      )}
 
-      {loading && <LoadingState label="Cargando reporte..." />}
+      {loading && <AdminLoading variant="list" />}
 
       {!loading && !report && (
         <EmptyState

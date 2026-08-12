@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 
 import { AdminShell } from '@admin/layout/admin-shell';
 import { RewardForm, type RewardFormValues } from '@admin/presentation/components/rewards/reward-form';
-import { SectionHeader, LoadingState } from '@admin/presentation/components/ui';
+import { SectionHeader, AdminLoading } from '@admin/presentation/components/ui';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { getRewardById, updateReward } from '@/shared/firebase/rewards';
 import type { Reward } from '@/shared/firebase/types';
@@ -46,7 +46,7 @@ export function RewardsEditScreen() {
         subtitle="Modifica los datos de la recompensa y guarda los cambios."
       />
 
-      {loading && <LoadingState label="Cargando recompensa..." />}
+      {loading && <AdminLoading variant="form" />}
 
       {!loading && !reward && (
         <View style={{ gap: Spacing.three }}>

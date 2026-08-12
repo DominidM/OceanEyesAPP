@@ -7,7 +7,7 @@ import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { firestore } from '@/shared/firebase/app';
 import { useAdminTheme } from '@admin/theme/context';
 import { BarChart, DonutChart, DonutLegend, LineChart } from '@admin/presentation/components/charts';
-import { Card, SectionTitle } from '@admin/presentation/components/ui';
+import { AdminLoading, Card, SectionTitle } from '@admin/presentation/components/ui';
 
 const CATEGORY_COLORS: Record<string, string> = {
   pesca_ilegal: '#EF4444',
@@ -272,6 +272,8 @@ export function DashboardCharts() {
   ];
 
   const rangeLabel = RANGES.find((r) => r.key === range)?.label ?? '';
+
+  if (loading) return <AdminLoading variant="list" />;
 
   return (
     <View style={styles.grid}>

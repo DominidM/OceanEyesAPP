@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, EmptyState, LoadingState, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, EmptyState, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { useAdminTheme } from '@admin/theme/context';
 import { useAuth } from '@/shared/firebase/auth-context';
@@ -72,12 +72,14 @@ export function MunicipalitiesScreen() {
 
   return (
     <AdminShell title="Municipalidades" breadcrumb={[{ label: 'Municipalidades' }]}>
-      <SectionHeader
-        title="Adhesión municipal"
-        subtitle="Revisa las solicitudes de municipalidades y actívalas para que puedan emitir alertas oficiales."
-      />
+      {!loading && (
+        <SectionHeader
+          title="Adhesión municipal"
+          subtitle="Revisa las solicitudes de municipalidades y actívalas para que puedan emitir alertas oficiales."
+        />
+      )}
 
-      {loading && <LoadingState label="Cargando solicitudes..." />}
+      {loading && <AdminLoading variant="list" />}
 
       {!loading && pending.length === 0 && (
         <EmptyState
