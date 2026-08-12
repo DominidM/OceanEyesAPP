@@ -13,6 +13,7 @@
     "@reown/appkit-ethers-react-native": "^2.0.6",
     "@reown/appkit-react-native": "^2.0.6",
     "@walletconnect/react-native-compat": "^2.23.10",
+    "babel-preset-expo": "~54.0.10",
     "chart.js": "^4.5.1",
     "ethers": "^6.17.0",
     "expo": "^54.0.0",

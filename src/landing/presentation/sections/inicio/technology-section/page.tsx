@@ -8,6 +8,7 @@ import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
 const entornoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166245/entorno-sucio_qzywtp.png';
 const bajoMarImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166250/hero_m3t2al.jpg';
+const phoneImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786561491/login_dq63q4.jpg';
 
 const cards = [
   {
@@ -68,10 +69,8 @@ export function TechnologySection() {
         </View>
 
         <View style={[styles.phoneColumn, isMobile && styles.phoneColumnMobile]}>
-          <View style={styles.placeholder}>
-            <FontAwesome5 name="mobile-alt" size={64} color={BrandColors.secondary} />
-            <Text style={styles.placeholderTitle}>Próximamente</Text>
-            <Text style={styles.placeholderSubtitle}>App Móvil</Text>
+          <View style={styles.phoneWrap}>
+            <Image source={phoneImg} style={styles.phoneImage} contentFit="cover" />
           </View>
         </View>
       </View>
@@ -212,30 +211,19 @@ const styles = StyleSheet.create({
     height: 300,
     minHeight: 0,
   },
-  placeholder: {
-    width: '100%',
+  phoneWrap: {
+    width: '85%',
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(152,185,177,0.45)',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.three,
-    padding: Spacing.six,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(152,185,177,0.35)',
+    padding: Spacing.two,
   },
-  placeholderTitle: {
-    fontFamily: Fonts.headline,
-    fontSize: 24,
-    color: BrandColors.primary,
-    fontWeight: '700',
-    fontStyle: 'italic',
-  },
-  placeholderSubtitle: {
-    fontFamily: Fonts.body,
-    fontSize: 16,
-    color: BrandColors.neutral,
-    opacity: 0.6,
+  phoneImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
   },
 });

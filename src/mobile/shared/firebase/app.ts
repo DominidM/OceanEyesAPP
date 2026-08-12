@@ -11,3 +11,13 @@ export const firebaseAuth = isFirebaseConfigured() ? createFirebaseAuth(firebase
 
 export const firestore = getFirestore(firebaseApp);
 export const storage = getStorage(firebaseApp);
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    const msg = e.message ?? '';
+    if (msg.includes('Database is closing') || msg.includes('Database is hidden')) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    }
+  });
+}

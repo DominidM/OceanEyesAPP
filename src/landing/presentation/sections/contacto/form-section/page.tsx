@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
-
-const contactImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166250/hero_m3t2al.jpg';
 
 const SUBJECT_OPTIONS = [
   'Consulta general',
@@ -52,12 +49,6 @@ export function ContactoForm() {
   return (
     <View style={[styles.section, isMobile && styles.sectionMobile]}>
       <View style={[styles.row, isMobile && styles.rowMobile]}>
-        <View style={[styles.imageCol, isMobile && styles.imageColMobile]}>
-          <Image source={contactImg} style={[styles.image, isMobile && styles.imageMobile]} contentFit="cover" />
-        </View>
-
-        {isMobile && <View style={{ height: 128 }} />}
-
         <View style={[styles.formWrapper, isMobile && styles.formWrapperMobile]}>
           {sent ? (
             <View style={[styles.successCard, isMobile && styles.successCardMobile]}>
@@ -206,45 +197,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   row: {
-    flexDirection: 'row',
     gap: Spacing.six,
-    maxWidth: 1200,
+    maxWidth: 700,
     width: '100%',
-    alignItems: 'flex-start',
+    alignSelf: 'center',
   },
   rowMobile: {
     flexDirection: 'column',
     gap: 0,
   },
   formWrapper: {
-    flex: 1,
-    maxWidth: 700,
-    minWidth: 400,
+    width: '100%',
   },
   formWrapperMobile: {
     minWidth: 0,
     maxWidth: '100%',
     width: '100%',
-  },
-  imageCol: {
-    flex: 0.8,
-    minWidth: 280,
-    maxWidth: 400,
-  },
-  imageColMobile: {
-    flex: 0,
-    width: '100%',
-    maxWidth: '100%',
-    minWidth: 0,
-    height: 240,
-  },
-  image: {
-    width: '100%',
-    height: 500,
-    borderRadius: 20,
-  },
-  imageMobile: {
-    height: 240,
   },
   form: {
     backgroundColor: '#FFFFFF',
