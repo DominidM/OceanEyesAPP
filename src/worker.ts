@@ -1,3 +1,8 @@
+import {
+  handleAuthDelete,
+  handleAuthSignup,
+  handleMunicipalityApply,
+} from './shared/gateway/municipal-signup';
 import { getRolRecommendation, getRolReply } from './shared/rol/service';
 import {
   buildContactConfirmationHtml,
@@ -20,6 +25,8 @@ interface Env {
   BREVO_SENDER_EMAIL?: string;
   API_KEY_GEMINI?: string;
   GEMINI_MODEL?: string;
+  FIREBASE_API_KEY?: string;
+  FIREBASE_PROJECT_ID?: string;
 }
 
 function json(body: unknown, status: number): Response {
@@ -287,6 +294,18 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/send-push') {
       return handleSendPush(request);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/auth/signup') {
+      return handleAuthSignup(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/auth/delete') {
+      return handleAuthDelete(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/municipalities/apply') {
+      return handleMunicipalityApply(request, env);
     }
 
     return env.ASSETS.fetch(request);

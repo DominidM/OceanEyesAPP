@@ -5,10 +5,23 @@ import { router } from 'expo-router';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
-import { registerMunicipalUser } from '@/shared/firebase/auth';
-import { createMunicipalityApplication } from '@/shared/firebase/municipalities';
 import { SelectField } from './select-field';
 import { REGIONS, PROVINCES_BY_REGION } from './peru-data';
+
+async function apiPost<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error = new Error(String((data as { message?: string })?.message ?? 'Error al procesar la solicitud.'));
+    (error as { code?: string }).code = (data as { code?: string })?.code;
+    throw error;
+  }
+  return data as T;
+}
 
 const CONTACT_ROLES = [
   'Alcalde/sa',
@@ -53,25 +66,40 @@ export function MunicipalityApplicationForm() {
     }
     setLoading(true);
     try {
-      const user = await registerMunicipalUser({
+      const signup = await apiPost<{ idToken: string; localId: string }>('/api/auth/signup', {
         email: email.trim(),
         password,
-        displayName: name.trim(),
       });
-      await createMunicipalityApplication({
-        name: name.trim(),
-        province: province.trim(),
-        region: region.trim(),
-        address: address.trim() || undefined,
-        contactName: contactName.trim() || undefined,
-        contactEmail: email.trim(),
-        phone: phone.trim() || undefined,
-        ownerUid: user.uid,
-      });
+      try {
+        await apiPost('/api/municipalities/apply', {
+          idToken: signup.idToken,
+          name: name.trim(),
+          province: province.trim(),
+          region: region.trim(),
+          address: address.trim() || undefined,
+          contactName: contactName.trim() || undefined,
+          contactEmail: email.trim(),
+          phone: phone.trim() || undefined,
+          ownerUid: signup.localId,
+        });
+      } catch (err) {
+        try {
+          await apiPost('/api/auth/delete', { idToken: signup.idToken });
+        } catch {
+          // La cuenta queda sin perfil si el rollback falla; el error original se muestra.
+        }
+        throw err;
+      }
       setSent(true);
     } catch (e: any) {
       const raw = e?.code || e?.message || String(e);
-      setError(raw === 'auth/email-already-in-use' ? 'Ese correo ya está registrado. Inicia sesión.' : raw);
+      if (raw === 'auth/email-already-in-use') {
+        setError('Ese correo ya está registrado. Inicia sesión.');
+      } else if (raw === 'auth/weak-password') {
+        setError('La contraseña debe tener al menos 6 caracteres.');
+      } else {
+        setError(String(raw));
+      }
     } finally {
       setLoading(false);
     }

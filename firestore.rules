@@ -26,7 +26,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId)
-        && request.resource.data.role == 'user'
+        && request.resource.data.role in ['user', 'municipal']
         && request.resource.data.pointsBalance == 0;
       allow update: if isAdmin() || (isOwner(userId)
         && request.resource.data.role == resource.data.role
