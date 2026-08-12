@@ -64,6 +64,16 @@ export function ReportCreateScreen() {
               : 'Tu reporte se guardó en el dispositivo y se enviará automáticamente cuando sea posible.'
             : 'Gracias por colaborar con la vigilancia marítima. Tu reporte será revisado.'}
         </AppText>
+        {state.queued ? null : state.mediaWarning ? (
+          <View style={styles.successWarningBox}>
+            <AppSymbol
+              name={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
+              color={SC.successWarning}
+              size={18}
+            />
+            <AppText style={styles.successWarningText}>{state.mediaWarning}</AppText>
+          </View>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           onPress={vm.exit}
@@ -88,7 +98,7 @@ export function ReportCreateScreen() {
         />
       ) : state.step === 5 ? (
         <SummaryStep
-          photo={state.media}
+          media={state.media}
           location={state.location}
           incident={state.incident}
           audio={state.audio}
@@ -193,6 +203,24 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: 'center',
     opacity: 0.8,
+    includeFontPadding: false,
+  },
+  successWarningBox: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 12,
+    backgroundColor: SC.successWarningBg,
+    borderRadius: 10,
+  },
+  successWarningText: {
+    flex: 1,
+    color: SC.danger,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'left',
     includeFontPadding: false,
   },
   successButton: {

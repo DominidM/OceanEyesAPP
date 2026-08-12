@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View} from 'react-native';
+import {ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, TextInput, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -267,7 +267,14 @@ export function AlertReportScreen() {
                   style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}>
                   <AppText style={styles.retryButtonLabel}>Permitir ubicación</AppText>
                 </Pressable>
-              ) : null}
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => void Linking.openSettings()}
+                  style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}>
+                  <AppText style={styles.retryButtonLabel}>Abrir ajustes</AppText>
+                </Pressable>
+              )}
             </View>
           ) : position == null ? (
             <View style={styles.locationBox}>

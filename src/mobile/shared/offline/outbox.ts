@@ -7,10 +7,16 @@ export type PendingMedia = {
   kind: 'photo' | 'video';
 };
 
+export type PendingAudio = {
+  localUri: string;
+  durationMillis: number;
+};
+
 export type PendingReport = {
   id: string;
   input: ReportInput;
   media: PendingMedia[];
+  audio?: PendingAudio | null;
   remoteId?: string;
   createdAt: number;
   updatedAt: number;
@@ -52,12 +58,14 @@ async function persist(reports: PendingReport[]): Promise<void> {
 export async function enqueueReport(
   input: ReportInput,
   media: PendingMedia[],
+  audio?: PendingAudio | null,
 ): Promise<PendingReport> {
   const now = Date.now();
   const item: PendingReport = {
     id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
     input,
     media,
+    audio: audio ?? null,
     createdAt: now,
     updatedAt: now,
     attempts: 0,

@@ -16,7 +16,7 @@ import type { ReportLocation } from './location-step';
 import type { ReportAudio, IncidentSelection } from './incident-step';
 
 type SummaryStepProps = {
-  photo: CaptureMedia | null;
+  media: CaptureMedia[];
   location: ReportLocation | null;
   incident: IncidentSelection['incident'] | null;
   audio: ReportAudio | null;
@@ -44,7 +44,7 @@ function formatDate(date: Date): string {
   return `${day} ${month} ${year}, ${hours}:${minutes} ${meridiem}`;
 }
 
-export function SummaryStep({ photo, location, incident, audio, createdAt, onBack, onEdit, onSend, sending = false, sendError = '' }: SummaryStepProps) {
+export function SummaryStep({ media, location, incident, audio, createdAt, onBack, onEdit, onSend, sending = false, sendError = '' }: SummaryStepProps) {
   const insets = useSafeAreaInsets();
   const [verified, setVerified] = useState(false);
   const { online } = useConnectivity();
@@ -93,11 +93,17 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
         showsVerticalScrollIndicator={false}>
         <View style={styles.summaryCard}>
           <View style={styles.mediaArea}>
-            {photo ? (
-              <>
-                <Image source={{ uri: photo.uri }} style={styles.media} contentFit="cover" />
-                <View pointerEvents="none" style={styles.mediaOverlay} />
-              </>
+            {media.length > 0 ? (
+              <View style={styles.mediaGrid}>
+                {media.slice(0, 4).map((item, index) => (
+                  <Image
+                    key={`${item.uri}-${index}`}
+                    source={{ uri: item.uri }}
+                    style={[styles.media, media.length === 1 && { width: '100%', height: '100%' }]}
+                    contentFit="cover"
+                  />
+                ))}
+              </View>
             ) : (
               <View style={[styles.mediaFallback, styles.mediaOverlay]}>
                 <AppSymbol
@@ -107,13 +113,17 @@ export function SummaryStep({ photo, location, incident, audio, createdAt, onBac
                 />
               </View>
             )}
+            {media.length > 0 ? (
+              <View pointerEvents="none" style={styles.mediaCount}>
+                <AppText style={styles.mediaCountText}>
+                  {media.length} {media.length === 1 ? 'foto' : 'fotos'}
+                  {audio ? ' · audio' : ''}
+                </AppText>
+              </View>
+            ) : null}
             <View style={styles.mediaButton}>
               <AppSymbol
-                name={
-                  photo?.type === 'video'
-                    ? { ios: 'play.fill', android: 'play-arrow', web: 'play-arrow' }
-                    : { ios: 'photo.fill', android: 'photo', web: 'photo' }
-                }
+                name={{ ios: 'photo.fill', android: 'photo', web: 'photo' }}
                 color={C.accent}
                 size={30}
               />
@@ -355,8 +365,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
+  mediaGrid: {
+    width: '100%',
+    height: 190,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    padding: 4,
+    overflow: 'hidden',
+  },
   media: {
-    ...StyleSheet.absoluteFillObject,
+    width: '49%',
+    height: 88,
+    borderRadius: 8,
   },
   mediaOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -379,6 +400,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 15,
     elevation: 6,
+  },
+  mediaCount: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 9999,
+  },
+  mediaCountText: {
+    color: '#FFFFFF',
+    fontFamily: Fonts.body,
+    fontSize: 12,
+    fontWeight: '700',
+    includeFontPadding: false,
   },
   cardBody: {
     gap: 16,

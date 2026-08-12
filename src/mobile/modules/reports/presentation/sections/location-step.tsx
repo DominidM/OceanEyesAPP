@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useState } from 'react';
-import {ActivityIndicator, Pressable, StyleSheet, Switch, View} from 'react-native';
+import {ActivityIndicator, Linking, Pressable, StyleSheet, Switch, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -126,13 +126,20 @@ export function LocationStep({ onBack, onConfirm }: LocationStepProps) {
             ) : (
               <>
                 <AppText style={styles.permissionHint}>
-                  Habilita la ubicación en los ajustes del dispositivo para continuar.
+                  El permiso quedó bloqueado. Habilita la ubicación en los ajustes del dispositivo.
                 </AppText>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={onBack}
+                  onPress={() => void Linking.openSettings()}
                   style={({ pressed }) => [styles.permissionPrimary, pressed && styles.pressed]}>
-                  <AppText style={styles.permissionPrimaryLabel}>Volver</AppText>
+                  <AppText style={styles.permissionPrimaryLabel}>Abrir ajustes</AppText>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onBack}
+                  hitSlop={8}
+                  style={styles.permissionSecondary}>
+                  <AppText style={styles.permissionSecondaryLabel}>Volver</AppText>
                 </Pressable>
               </>
             )}

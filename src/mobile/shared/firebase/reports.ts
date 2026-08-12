@@ -20,6 +20,7 @@ import { REPORT_CATEGORIES, type Report, type ReportInput } from './types';
 
 import { getDeviceHash } from '@/shared/identity/device-id';
 import { isNetworkError } from '@/shared/offline/errors';
+import { uploadReportMedia } from '@/shared/offline/cloudinary';
 import { stageMedia, uploadMediaToStorage } from '@/shared/offline/media';
 import {
   enqueueReport,
@@ -27,9 +28,15 @@ import {
   type PendingReport,
   updatePendingReport,
 } from '@/shared/offline/outbox';
+
 import { awardPointsOnChain } from '@shared/blockchain/ledger';
 
 import type { Signer } from 'ethers';
+
+export type ReportAudioUpload = {
+  uri: string;
+  durationMillis: number;
+};
 
 export class AuthenticationRequiredError extends Error {
   constructor(message = 'Debes iniciar sesión para enviar el reporte.') {
@@ -52,6 +59,8 @@ function buildReportDocFields(
     deviceHash: deviceHash ?? null,
     location: input.location ?? null,
     photoURLs: input.photoURLs ?? [],
+    audioURL: input.audioURL ?? null,
+    audioDurationMillis: input.audioDurationMillis ?? null,
     status: 'pendiente',
     pointsAwarded: 0,
     customIcon: input.customIcon ?? null,
@@ -70,10 +79,17 @@ export async function createReport(input: ReportInput): Promise<string> {
   return ref.id;
 }
 
+export type PublishReportResult = {
+  id: string;
+  mediaAttached: boolean;
+  mediaWarning: string | null;
+};
+
 export async function publishReportOnline(
   input: ReportInput,
   media?: { uri: string; kind: 'photo' | 'video' }[],
-): Promise<{ id: string; mediaAttached: boolean }> {
+  audio?: ReportAudioUpload | null,
+): Promise<PublishReportResult> {
   const user = firebaseAuth?.currentUser;
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
@@ -81,33 +97,77 @@ export async function publishReportOnline(
   const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(input, user.uid, deviceHash));
 
   let mediaAttached = false;
+  const mediaFailed: string[] = [];
   const photoURLs: string[] = [];
   for (let index = 0; index < (media ?? []).length; index += 1) {
     const item = media![index];
     try {
-      const url = await uploadMediaToStorage({
-        localUri: item.uri,
-        kind: item.kind,
-        reportId: ref.id,
-        mediaId: `${ref.id}-${index}`,
-      });
+      const url =
+        item.kind === 'video'
+          ? await uploadMediaToStorage({
+              localUri: item.uri,
+              kind: 'video',
+              reportId: ref.id,
+              mediaId: `${ref.id}-${index}`,
+            })
+          : await uploadReportMedia({
+              localUri: item.uri,
+              kind: 'photo',
+              reportId: ref.id,
+              mediaId: `${ref.id}-${index}`,
+            });
       photoURLs.push(url);
       mediaAttached = true;
     } catch (error) {
       if (isNetworkError(error)) throw error;
       console.warn('No se pudo adjuntar el medio al reporte', ref.id, error);
+      mediaFailed.push(`foto ${index + 1}`);
     }
   }
-  if (photoURLs.length > 0) {
-    await updateDoc(doc(firestore, 'reports', ref.id), { photoURLs });
+
+  let audioURL: string | null = null;
+  let audioDurationMillis: number | null = null;
+  if (audio?.uri) {
+    audioDurationMillis = audio.durationMillis;
+    try {
+      audioURL = await uploadReportMedia({
+        localUri: audio.uri,
+        kind: 'audio',
+        reportId: ref.id,
+        mediaId: 'audio',
+      });
+      mediaAttached = true;
+    } catch (error) {
+      if (isNetworkError(error)) throw error;
+      console.warn('No se pudo adjuntar el audio al reporte', ref.id, error);
+      mediaFailed.push('audio');
+    }
   }
 
-  return { id: ref.id, mediaAttached };
+  if (photoURLs.length > 0 || audioURL) {
+    await updateDoc(doc(firestore, 'reports', ref.id), {
+      photoURLs,
+      audioURL,
+      audioDurationMillis,
+    });
+  }
+
+  let mediaWarning: string | null = null;
+  if (mediaFailed.length > 0) {
+    const total = (media?.length ?? 0) + (audio?.uri ? 1 : 0);
+    mediaWarning =
+      mediaFailed.length >= total
+        ? 'El reporte se guardó, pero no se pudieron subir las fotos ni el audio.'
+        : 'El reporte se guardó, pero algunos archivos (fotos/audio) no se subieron.';
+  }
+
+  return { id: ref.id, mediaAttached, mediaWarning };
 }
 
 export async function saveReportOfflineFirst(
   input: ReportInput,
   media?: { uri: string; kind: 'photo' | 'video' }[],
+  audio?: ReportAudioUpload | null,
 ): Promise<string> {
   const staged: PendingMedia[] = [];
   for (const item of media ?? []) {
@@ -117,9 +177,13 @@ export async function saveReportOfflineFirst(
       staged.push({ localUri: item.uri, kind: item.kind });
     }
   }
+  let stagedAudio: { localUri: string; durationMillis: number } | null = null;
+  if (audio?.uri) {
+    stagedAudio = { localUri: await stageMedia(audio.uri, 'video'), durationMillis: audio.durationMillis };
+  }
   const deviceHash = await getDeviceHash();
   const inputWithDevice = deviceHash ? { ...input, deviceHash } : input;
-  const pending = await enqueueReport(inputWithDevice, staged);
+  const pending = await enqueueReport(inputWithDevice, staged, stagedAudio);
   return pending.id;
 }
 
@@ -138,19 +202,48 @@ export async function publishPendingReport(pending: PendingReport): Promise<void
   for (let index = 0; index < pending.media.length; index += 1) {
     const media = pending.media[index];
     try {
-      const url = await uploadMediaToStorage({
-        localUri: media.localUri,
-        kind: media.kind,
-        reportId,
-        mediaId: `${pending.id}-${index}`,
-      });
+      const url =
+        media.kind === 'video'
+          ? await uploadMediaToStorage({
+              localUri: media.localUri,
+              kind: 'video',
+              reportId,
+              mediaId: `${pending.id}-${index}`,
+            })
+          : await uploadReportMedia({
+              localUri: media.localUri,
+              kind: 'photo',
+              reportId,
+              mediaId: `${pending.id}-${index}`,
+            });
       photoURLs.push(url);
     } catch (error) {
       if (isNetworkError(error)) throw error;
       console.warn('No se pudo adjuntar el medio del reporte pendiente', reportId, error);
     }
   }
-  await updateDoc(doc(firestore, 'reports', reportId), { photoURLs });
+
+  let audioURL: string | null = null;
+  if (pending.audio?.localUri) {
+    try {
+      audioURL = await uploadReportMedia({
+        localUri: pending.audio.localUri,
+        kind: 'audio',
+        reportId,
+        mediaId: 'audio',
+      });
+    } catch (error) {
+      if (isNetworkError(error)) throw error;
+      console.warn('No se pudo adjuntar el audio del reporte pendiente', reportId, error);
+    }
+  }
+
+  const updates: Record<string, unknown> = { photoURLs };
+  if (audioURL) {
+    updates.audioURL = audioURL;
+    updates.audioDurationMillis = pending.audio?.durationMillis ?? null;
+  }
+  await updateDoc(doc(firestore, 'reports', reportId), updates);
 }
 
 function reportTimeValue(value: unknown): number {

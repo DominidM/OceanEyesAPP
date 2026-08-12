@@ -9,7 +9,6 @@ export type AdminRoute =
   | '/admin/redemptions'
   | '/admin/alerts'
   | '/admin/municipalities'
-  | '/admin/organizations'
   | '/admin/municipio';
 
 export type AdminNavItem = {
@@ -33,13 +32,6 @@ export const ADMIN_NAV: AdminNavItem[] = [
     label: 'Municipalidades',
     icon: 'landmark',
     href: '/admin/municipalities',
-    roles: ['admin'],
-  },
-  {
-    key: 'organizations',
-    label: 'ONGs',
-    icon: 'hands-helping',
-    href: '/admin/organizations',
     roles: ['admin'],
   },
   { key: 'municipio', label: 'Mi municipio', icon: 'building', href: '/admin/municipio', roles: ['municipal'] },

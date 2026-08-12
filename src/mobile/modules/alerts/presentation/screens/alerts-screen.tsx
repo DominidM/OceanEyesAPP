@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import {ActivityIndicator, Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import {ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -124,7 +124,14 @@ export function AlertsScreen() {
                 style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
                 <AppText style={styles.actionButtonLabel}>Permitir acceso</AppText>
               </Pressable>
-            ) : null}
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void Linking.openSettings()}
+                style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
+                <AppText style={styles.actionButtonLabel}>Abrir ajustes</AppText>
+              </Pressable>
+            )}
           </StateBox>
         ) : position == null ? (
           <StateBox>

@@ -26,12 +26,13 @@ export type ReportCreateState = {
   dni: string;
   consent: boolean;
   anonymous: boolean;
-  media: CaptureMedia | null;
+  media: CaptureMedia[];
   location: ReportLocation | null;
   incident: IncidentSelection['incident'] | null;
   audio: ReportAudio | null;
   sending: boolean;
   sendError: string;
+  mediaWarning: string;
   queued: boolean;
   submitted: boolean;
   createdAt: Date;
@@ -43,12 +44,13 @@ function createInitialState(): ReportCreateState {
     dni: '',
     consent: false,
     anonymous: true,
-    media: null,
+    media: [],
     location: null,
     incident: null,
     audio: null,
     sending: false,
     sendError: '',
+    mediaWarning: '',
     queued: false,
     submitted: false,
     createdAt: new Date(),
@@ -114,7 +116,7 @@ export class ReportCreateViewModel extends ViewModel<ReportCreateState, ReportCr
     this.setState({ anonymous: !this.state.anonymous });
   };
 
-  setMedia = (media: CaptureMedia) => {
+  setMedia = (media: CaptureMedia[]) => {
     this.setState({ media });
   };
 
@@ -131,7 +133,7 @@ export class ReportCreateViewModel extends ViewModel<ReportCreateState, ReportCr
   };
 
   send = async () => {
-    const { incident, anonymous, location, media, sending } = this.state;
+    const { incident, anonymous, location, media, audio, sending } = this.state;
     if (!incident || sending) return;
     if (this.deps.verdict !== 'ok') {
       this.setState({ sendError: 'Tu cuenta o dispositivo está bloqueado para enviar reportes.' });
@@ -149,11 +151,14 @@ export class ReportCreateViewModel extends ViewModel<ReportCreateState, ReportCr
               ? { latitude: location.latitude, longitude: location.longitude, address: location.placeName ?? undefined }
               : undefined,
           customIcon: incident.iconKey,
-          media: media ? [{ uri: media.uri, kind: media.type }] : [],
+          media: media
+            .filter((item) => item.type === 'photo' || item.type === 'video')
+            .map((item) => ({ uri: item.uri, kind: item.type })),
+          audio: audio ? { uri: audio.uri, durationMillis: audio.durationMillis } : null,
         },
         { online: this.deps.online },
       );
-      this.setState({ queued: result.queued, submitted: true });
+      this.setState({ queued: result.queued, submitted: true, mediaWarning: result.mediaWarning ?? '' });
     } catch {
       this.setState({ sendError: 'No se pudo guardar el reporte. Revisa tu conexión e inténtalo nuevamente.' });
     } finally {

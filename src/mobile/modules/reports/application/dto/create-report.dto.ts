@@ -12,5 +12,6 @@ export type CreateReportCommand = {
     address?: string;
   };
   media?: SubmissionMedia[];
+  audio?: { uri: string; durationMillis: number } | null;
   customIcon?: string;
 };

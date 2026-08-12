@@ -25,6 +25,8 @@ export type Report = {
   readonly deviceHash: string | null;
   readonly location: GeoLocation | null;
   readonly photoURLs: readonly string[];
+  readonly audioURL: string | null;
+  readonly audioDurationMillis: number | null;
   readonly status: ReportStatus;
   readonly pointsAwarded: number;
   readonly txHash: string | null;

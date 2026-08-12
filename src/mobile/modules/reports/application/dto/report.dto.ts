@@ -11,6 +11,8 @@ export type ReportDto = {
   isAnonymous: boolean;
   location: { latitude: number; longitude: number; address?: string } | null;
   photoURLs: string[];
+  audioURL: string | null;
+  audioDurationMillis: number | null;
   status: ReportStatus;
   pointsAwarded: number;
   txHash: string | null;
@@ -24,6 +26,7 @@ export type ReportDto = {
 export type CreateReportResultDto = {
   reportId: string;
   queued: boolean;
+  mediaWarning?: string | null;
 };
 
 export function mapReportToDto(report: Report): ReportDto {
@@ -36,6 +39,8 @@ export function mapReportToDto(report: Report): ReportDto {
     isAnonymous: report.isAnonymous,
     location: report.location,
     photoURLs: [...report.photoURLs],
+    audioURL: report.audioURL,
+    audioDurationMillis: report.audioDurationMillis,
     status: report.status,
     pointsAwarded: report.pointsAwarded,
     txHash: report.txHash,

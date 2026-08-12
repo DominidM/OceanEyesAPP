@@ -5,7 +5,7 @@ import { storage } from '@/shared/firebase/app';
 
 export type StagedMedia = {
   localUri: string;
-  kind: 'photo' | 'video';
+  kind: 'photo' | 'video' | 'audio';
 };
 
 function outboxDirectory(): Directory {
@@ -16,17 +16,18 @@ function outboxDirectory(): Directory {
   return dir;
 }
 
-function extensionFor(uri: string, kind: 'photo' | 'video'): string {
+function extensionFor(uri: string, kind: 'photo' | 'video' | 'audio'): string {
   try {
     const extension = new File(uri).extension;
     if (extension) return extension;
   } catch {
     /* ignore */
   }
+  if (kind === 'audio') return '.m4a';
   return kind === 'video' ? '.mp4' : '.jpg';
 }
 
-function mimeFromExtension(ext: string, kind: 'photo' | 'video'): string {
+function mimeFromExtension(ext: string, kind: 'photo' | 'video' | 'audio'): string {
   switch (ext.toLowerCase()) {
     case '.jpg':
     case '.jpeg':
@@ -43,12 +44,23 @@ function mimeFromExtension(ext: string, kind: 'photo' | 'video'): string {
       return 'video/x-m4v';
     case '.mp4':
       return 'video/mp4';
+    case '.m4a':
+      return 'audio/mp4';
+    case '.caf':
+      return 'audio/x-caf';
+    case '.mp3':
+      return 'audio/mpeg';
+    case '.wav':
+      return 'audio/wav';
+    case '.aac':
+      return 'audio/aac';
     default:
+      if (kind === 'audio') return 'audio/mp4';
       return kind === 'video' ? 'video/mp4' : 'image/jpeg';
   }
 }
 
-export async function stageMedia(uri: string, kind: 'photo' | 'video'): Promise<string> {
+export async function stageMedia(uri: string, kind: 'photo' | 'video' | 'audio'): Promise<string> {
   const extension = extensionFor(uri, kind);
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${extension}`;
   const destination = new File(outboxDirectory(), name);
@@ -76,6 +88,21 @@ export async function removeAllStagedMedia(): Promise<void> {
   }
 }
 
+async function localFileToBlob(localUri: string, contentType: string): Promise<Blob> {
+  const fromFileUri = async () => {
+    const response = await fetch(localUri);
+    if (!response.ok) throw new Error(`No se pudo leer el archivo (${response.status})`);
+    return response.blob();
+  };
+  try {
+    return await fromFileUri();
+  } catch {
+    const base64 = await new File(localUri).base64();
+    const response = await fetch(`data:${contentType};base64,${base64}`);
+    return response.blob();
+  }
+}
+
 export async function uploadMediaToStorage(options: {
   localUri: string;
   kind: 'photo' | 'video';
@@ -90,7 +117,7 @@ export async function uploadMediaToStorage(options: {
   if (!file.exists) {
     throw new Error(`No se encontró el archivo multimedia: ${options.localUri}`);
   }
-  const bytes = await file.bytes();
-  await uploadBytes(storageRef, bytes, { contentType });
+  const blob = await localFileToBlob(options.localUri, contentType);
+  await uploadBytes(storageRef, blob, { contentType });
   return getDownloadURL(storageRef);
 }

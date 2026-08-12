@@ -9,11 +9,10 @@ import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { useAdminTheme } from '@admin/theme/context';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { subscribeMunicipalityByOwner } from '@/shared/firebase/municipalities';
-import { subscribeOrganizations } from '@/shared/firebase/organizations';
 import { createAlert, deactivateAlert, deleteAlert, subscribeAlertReports, subscribeOwnAlerts } from '@/shared/firebase/alerts';
 import { createCampaign, deleteCampaign, subscribeMunicipalityCampaigns, updateCampaign } from '@/shared/firebase/campaigns';
 import { updateMunicipality } from '@/shared/firebase/municipalities';
-import type { Campaign, Municipality, Organization, GeoBounds } from '@/shared/firebase/types';
+import type { Campaign, Municipality, GeoBounds } from '@/shared/firebase/types';
 
 function statusCfg(status: string | undefined) {
   switch (status) {
@@ -41,7 +40,6 @@ export function MunicipalityDashboardScreen() {
   const inputBg = isDark ? '#0F172A' : '#F8FAFC';
 
   const [municipality, setMunicipality] = useState<Municipality | null | undefined>(undefined);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [alertReports, setAlertReports] = useState<any[]>([]);
   const [ownAlerts, setOwnAlerts] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -70,12 +68,10 @@ export function MunicipalityDashboardScreen() {
   useEffect(() => {
     if (!user) return;
     const unsubMunicipality = subscribeMunicipalityByOwner(user.uid, (m) => setMunicipality(m));
-    const unsubOrgs = subscribeOrganizations((list) => setOrganizations(list));
     const unsubReports = subscribeAlertReports((reports) => setAlertReports(reports));
     const unsubOwn = subscribeOwnAlerts(user.uid, (alerts) => setOwnAlerts(alerts));
     return () => {
       unsubMunicipality();
-      unsubOrgs();
       unsubReports();
       unsubOwn();
     };
@@ -534,31 +530,6 @@ export function MunicipalityDashboardScreen() {
           description="Cuando emitas alertas oficiales aparecerán aquí y para tu comunidad."
         />
       )}
-
-      {organizations.length > 0 && (
-        <Card>
-          <Text style={[styles.cardTitle, { color: colors.primary }]}>ONGs aliadas</Text>
-          <Text style={[styles.body, { color: muted }]}>
-            Organizaciones verificadas que colaboran con la vigilancia marina en tu región.
-          </Text>
-          <View style={styles.orgList}>
-            {organizations
-              .filter((o) => o.verified)
-              .map((o) => (
-                <View key={o.id} style={[styles.orgItem, { borderColor }]}>
-                  <View style={styles.orgText}>
-                    <Text style={[styles.orgName, { color: colors.primary }]}>{o.name}</Text>
-                    <Text style={[styles.orgCategory, { color: muted }]}>{o.category}</Text>
-                    {o.website ? (
-                      <Text style={[styles.orgWebsite, { color: colors.accent }]}>{o.website}</Text>
-                    ) : null}
-                  </View>
-                  <Badge label="Verificada" color="#10B981" bg="rgba(16,185,129,0.15)" />
-                </View>
-              ))}
-          </View>
-        </Card>
-      )}
     </AdminShell>
   );
 }
@@ -597,20 +568,6 @@ const styles = StyleSheet.create({
   alertActions: { gap: Spacing.two, alignItems: 'center' },
   actionBtn: { alignItems: 'center', gap: 2 },
   actionLabel: { fontFamily: Fonts.body, fontSize: 10 },
-  orgList: { gap: Spacing.two, marginTop: Spacing.two },
-  orgItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: Spacing.three,
-  },
-  orgText: { gap: Spacing.half, flex: 1 },
-  orgName: { fontFamily: Fonts.headline, fontSize: 15, fontWeight: '700' },
-  orgCategory: { fontFamily: Fonts.body, fontSize: 13 },
-  orgWebsite: { fontFamily: Fonts.body, fontSize: 12 },
   campaignItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',

@@ -3,6 +3,7 @@ import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'fir
 import React, { useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { AdminShell } from '@admin/layout/admin-shell';
@@ -191,6 +192,13 @@ export function ReportDetailScreen() {
             </View>
           </View>
 
+          {report.audioURL ? (
+            <View style={[styles.subBlock, { borderColor: colors.cardBorder, marginTop: Spacing.two }]}>
+              <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Audio del reporte</Text>
+              <AudioPlayer uri={report.audioURL} />
+            </View>
+          ) : null}
+
           <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
             <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de reporte</Text>
 
@@ -281,7 +289,76 @@ export function ReportDetailScreen() {
 
 export default ReportDetailScreen;
 
+function formatAudioDuration(ms: number): string {
+  const total = Math.floor(ms / 1000);
+  const minutes = Math.floor(total / 60);
+  const seconds = String(total % 60).padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+function AudioPlayer({ uri }: { uri: string }) {
+  const { colors } = useAdminTheme();
+  const player = useAudioPlayer(uri);
+  const status = useAudioPlayerStatus(player);
+  const playing = status.playing;
+
+  const toggle = () => {
+    try {
+      if (playing) {
+        player.pause();
+      } else {
+        player.play();
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={toggle}
+      style={({ hovered }) => [
+        styles.audioRow,
+        hovered && { opacity: 0.7 },
+      ]}>
+      <MaterialCommunityIcons
+        name={playing ? 'pause-circle' : 'play-circle'}
+        size={34}
+        color="#0D9488"
+      />
+      <View style={styles.audioTextBlock}>
+        <Text style={[styles.audioActionLabel, { color: colors.accent }]}>
+          {playing ? 'Pausar audio' : 'Escuchar audio'}
+        </Text>
+        {status.duration > 0 ? (
+          <Text style={[styles.audioDurationLabel, { color: colors.contentTextMuted }]}>
+            {formatAudioDuration(status.duration)}
+          </Text>
+        ) : null}
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  audioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
+  },
+  audioTextBlock: {
+    gap: 2,
+  },
+  audioActionLabel: {
+    fontFamily: Fonts.label,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  audioDurationLabel: {
+    fontFamily: Fonts.body,
+    fontSize: 12,
+  },
   card: { gap: Spacing.three },
   subBlock: {
     borderWidth: 1,

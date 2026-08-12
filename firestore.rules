@@ -82,12 +82,6 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /organizations/{organizationId} {
-      allow read: if signedIn();
-      allow create: if isAdmin();
-      allow update, delete: if isAdmin();
-    }
-
     match /campaigns/{campaignId} {
       allow read: if signedIn() || resource.data.active == true;
       allow create: if isPrivileged()
