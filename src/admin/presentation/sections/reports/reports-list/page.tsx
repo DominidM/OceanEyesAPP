@@ -10,11 +10,12 @@ import {
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { firestore } from '@/shared/firebase/app';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
-import { Badge, Card, EmptyState, IconButton, AdminLoading, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Card, EmptyState, AdminLoading, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
 import { useAdminTheme } from '@admin/theme/context';
 
 type AdminReport = {
@@ -167,12 +168,13 @@ export function ReportsList() {
                     <Badge label={st.label} color={st.color} bg={st.bg} />
                   </View>
                   <View style={styles.cellActions}>
-                    <IconButton
-                      icon="file-document-outline"
-                      label="Detalles"
-                      color={colors.accent}
+                    <Pressable
+                      style={[styles.detailsBtn, { borderColor: colors.cardBorder }]}
                       onPress={() => router.push({ pathname: '/admin/reports/[id]', params: { id: report.id } })}
-                    />
+                    >
+                      <MaterialCommunityIcons name="file-document-outline" size={14} color={colors.contentText} />
+                      <Text style={[styles.detailsBtnText, { color: colors.contentText }]}>Detalles</Text>
+                    </Pressable>
                   </View>
                 </View>
               );
@@ -227,4 +229,15 @@ const styles = StyleSheet.create({
   cellCategory: { width: 128, fontFamily: Fonts.body, fontSize: 12, textTransform: 'capitalize' },
   cellStatus: { width: 108, alignItems: 'center' },
   cellActions: { width: 120, flexDirection: 'row', justifyContent: 'center' },
+  detailsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 6,
+    cursor: 'pointer',
+  },
+  detailsBtnText: { fontFamily: Fonts.body, fontSize: 12, fontWeight: '600' },
 });

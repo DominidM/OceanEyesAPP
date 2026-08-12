@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Report, ReportStatus } from '@/shared/firebase/types';
+import { REPORT_CATEGORIES, type Report, type ReportStatus } from '@/shared/firebase/types';
 
 type Props = {
   reports: Report[];
@@ -16,6 +16,41 @@ const STATUS_COLOR: Record<ReportStatus, string> = {
   verificado: '#10B981',
   descartado: '#64748B',
 };
+
+const STATUS_LABEL: Record<ReportStatus, string> = {
+  pendiente: 'Pendiente',
+  en_revision: 'En revisión',
+  verificado: 'Verificado',
+  descartado: 'Descartado',
+};
+
+function buildReportHtml(report: Report, reportId: string): string {
+  const categoryLabel = REPORT_CATEGORIES[report.category]?.label ?? report.category;
+  const color = STATUS_COLOR[report.status];
+  const created = report.createdAt?.toDate?.();
+  const dateText = created
+    ? created.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '';
+  const description = report.description
+    ? report.description.length > 140
+      ? `${report.description.slice(0, 140)}…`
+      : report.description
+    : '';
+
+  return `
+    <div style="font-family: Inter, system-ui, sans-serif; max-width: 260px; padding: 4px;">
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${color};"></span>
+        <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#64748B;">${categoryLabel} · ${STATUS_LABEL[report.status]}</span>
+      </div>
+      <div style="font-weight:700; font-size:14px; color:#134E5E;">${report.title}</div>
+      ${description ? `<div style="font-size:12.5px; color:#475569; margin-top:4px; line-height:1.45;">${description}</div>` : ''}
+      ${dateText ? `<div style="font-size:11.5px; color:#94A3B8; margin-top:6px;">${dateText}</div>` : ''}
+      ${report.location?.address ? `<div style="font-size:11.5px; color:#94A3B8; margin-top:2px;">${report.location.address}</div>` : ''}
+      <a href="/admin/reports/${reportId}" style="display:inline-block; margin-top:8px; font-size:12px; color:#0F766E; font-weight:600; text-decoration:none; cursor:pointer;">Ver detalle →</a>
+    </div>
+  `;
+}
 
 function loadGoogleMaps(apiKey: string): Promise<any> {
   const browserWindow = window as any;
@@ -42,14 +77,49 @@ function loadGoogleMaps(apiKey: string): Promise<any> {
   });
 }
 
-export function RealTimeReportsMap({ reports, onSelectReport, height = 560 }: Props) {
+export function RealTimeReportsMap({ reports, onSelectReport, height = 640 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const infoWindowRef = useRef<any>(null);
+  const fittedRef = useRef(false);
+  const pinnedRef = useRef(false);
   const selectRef = useRef(onSelectReport);
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
   selectRef.current = onSelectReport;
+
+  useEffect(() => {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'oe-map-styles';
+    styleEl.textContent = [
+      'button.gm-ui-hack { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; }',
+      '.gm-style-iw-c button { display: none !important; visibility: hidden !important; }',
+      '.gm-style-iw > button { display: none !important; visibility: hidden !important; }',
+      '.gm-style-iw::-webkit-scrollbar { display: none !important; }',
+      '.gm-style-iw { scrollbar-width: none !important; overflow: hidden !important; }',
+      '.gm-style { overflow: hidden !important; }',
+      '.gm-style > div { overflow: hidden !important; }',
+      '.gm-style-iw-c { overflow: hidden !important; }',
+      '.gm-style-iw-d { overflow: hidden !important; }',
+    ].join(' ');
+    document.head.appendChild(styleEl);
+
+    const observer = new MutationObserver(() => {
+      document.querySelectorAll('.gm-style-iw-c button, .gm-style-iw > button, .gm-style-iw-c .gm-ui-hack').forEach((el) => {
+        (el as HTMLElement).style.display = 'none';
+        (el as HTMLElement).style.visibility = 'hidden';
+        (el as HTMLElement).style.width = '0';
+        (el as HTMLElement).style.height = '0';
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      styleEl.remove();
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
@@ -62,11 +132,12 @@ export function RealTimeReportsMap({ reports, onSelectReport, height = 560 }: Pr
       .then((maps) => {
         if (cancelled || !containerRef.current) return;
         mapRef.current = new maps.Map(containerRef.current, {
-          center: { lat: -9.19, lng: -75.0152 },
-          zoom: 5,
+          center: { lat: -12.0464, lng: -77.0428 },
+          zoom: 12,
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: true,
+          scrollwheel: true,
         });
         setReady(true);
       })
@@ -86,6 +157,13 @@ export function RealTimeReportsMap({ reports, onSelectReport, height = 560 }: Pr
 
     markersRef.current.forEach((marker) => marker.setMap(null));
     markersRef.current = [];
+    if (!infoWindowRef.current) {
+      infoWindowRef.current = new maps.InfoWindow();
+      infoWindowRef.current.addListener('closeclick', () => {
+        pinnedRef.current = false;
+      });
+    }
+    const infoWindow = infoWindowRef.current;
     const bounds = new maps.LatLngBounds();
     reports.forEach((report) => {
       if (!report.location) return;
@@ -93,7 +171,6 @@ export function RealTimeReportsMap({ reports, onSelectReport, height = 560 }: Pr
       const marker = new maps.Marker({
         map,
         position,
-        title: report.title,
         icon: {
           path: maps.SymbolPath.CIRCLE,
           fillColor: STATUS_COLOR[report.status],
@@ -103,15 +180,35 @@ export function RealTimeReportsMap({ reports, onSelectReport, height = 560 }: Pr
           scale: 10,
         },
       });
-      marker.addListener('click', () => selectRef.current(report));
+      marker.addListener('click', () => {
+        pinnedRef.current = true;
+        map.panTo(position);
+        map.setZoom(Math.max(map.getZoom(), 14));
+        infoWindow.setContent(buildReportHtml(report, report.id));
+        infoWindow.open(map, marker);
+      });
+      marker.addListener('mouseover', () => {
+        if (!pinnedRef.current) {
+          infoWindow.setContent(buildReportHtml(report, report.id));
+          infoWindow.open(map, marker);
+        }
+      });
+      marker.addListener('mouseout', () => {
+        if (!pinnedRef.current) {
+          infoWindow.close();
+        }
+      });
       markersRef.current.push(marker);
       bounds.extend(position);
     });
-    if (markersRef.current.length === 1) {
-      map.setCenter(bounds.getCenter());
-      map.setZoom(15);
-    } else if (markersRef.current.length > 1) {
-      map.fitBounds(bounds, 52);
+    if (!fittedRef.current) {
+      if (markersRef.current.length === 1) {
+        map.setCenter(bounds.getCenter());
+        map.setZoom(15);
+      } else if (markersRef.current.length > 1) {
+        map.fitBounds(bounds, 52);
+      }
+      fittedRef.current = true;
     }
   }, [reports, ready]);
 
@@ -125,7 +222,7 @@ export function RealTimeReportsMap({ reports, onSelectReport, height = 560 }: Pr
 
 const styles = StyleSheet.create({
   wrapper: { width: '100%', overflow: 'hidden', borderRadius: 16, position: 'relative' },
-  container: { width: '100%', height: '100%' },
+  container: { width: '100%', height: '100%', overflow: 'hidden' },
   error: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF7ED' },
   errorText: { color: '#C2410C', fontSize: 14 },
 });

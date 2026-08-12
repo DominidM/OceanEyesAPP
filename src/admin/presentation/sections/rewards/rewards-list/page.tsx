@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { firestore } from '@/shared/firebase/app';
@@ -151,15 +152,13 @@ export function RewardsList() {
                     />
                   </View>
                   <View style={styles.cellActions}>
-                    <Button
-                      label="Ver"
-                      variant="secondary"
+                    <Pressable
+                      style={[styles.detailsBtn, { borderColor: colors.cardBorder }]}
                       onPress={() => router.push(`/admin/rewards/${reward.id}`)}
-                    />
-                    <Button
-                      label="Editar"
-                      onPress={() => router.push(`/admin/rewards/${reward.id}/edit`)}
-                    />
+                    >
+                      <MaterialCommunityIcons name="information-outline" size={14} color={colors.contentText} />
+                      <Text style={[styles.detailsBtnText, { color: colors.contentText }]}>Detalles</Text>
+                    </Pressable>
                   </View>
                 </Pressable>
               );
@@ -197,7 +196,7 @@ const styles = StyleSheet.create({
   thMain: { flex: 1 },
   thNum: { width: 80, textAlign: 'center' },
   thState: { width: 96, textAlign: 'center' },
-  thActions: { width: 168, textAlign: 'center' },
+  thActions: { width: 120, textAlign: 'center' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -212,5 +211,16 @@ const styles = StyleSheet.create({
   rowMeta: { fontFamily: Fonts.body, fontSize: 12 },
   cellNum: { width: 80, fontFamily: Fonts.label, fontSize: 14, fontWeight: '700', textAlign: 'center' },
   cellState: { width: 96, alignItems: 'center' },
-  cellActions: { width: 168, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  cellActions: { width: 120, alignItems: 'center' },
+  detailsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 6,
+    cursor: 'pointer',
+  },
+  detailsBtnText: { fontFamily: Fonts.body, fontSize: 12, fontWeight: '600' },
 });
