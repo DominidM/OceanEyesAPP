@@ -34,7 +34,6 @@ export function HomeScreen() {
       <TabTransition section={section}>
         {section === 'inicio' && (
           <HomeSection
-            onReportPress={openReportFlow}
             onExpandMap={openRealTimeMap}
             onAlertsPress={openAlerts}
             onAlertReportPress={openAlertReport}

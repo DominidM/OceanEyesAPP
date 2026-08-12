@@ -20,14 +20,13 @@ import { isMapReport, toMapReport, type MapReport } from '../components/map-repo
 import { TopBar } from '../components/top-bar';
 
 type HomeSectionProps = {
-  onReportPress?: () => void;
   onExpandMap?: () => void;
   onAlertsPress?: () => void;
   onAlertReportPress?: () => void;
   onPendingPress?: () => void;
 };
 
-export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onAlertReportPress, onPendingPress }: HomeSectionProps) {
+export function HomeSection({ onExpandMap, onAlertsPress, onAlertReportPress, onPendingPress }: HomeSectionProps) {
   const insets = useSafeAreaInsets();
   const { profile, user } = useAuth();
   const guest = useGuestStatus();
@@ -78,16 +77,9 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onAlert
           />
         </View>
 
-        <View style={styles.actionsStack}>
-          <ActionCard
-            title="REPORTAR UN INCIDENTE"
-            subtitle="Captura foto y envia"
-            color={BrandColors.primary}
-            onPress={onReportPress}
-            helperIcon={{ ios: 'camera.fill', android: 'photo-camera', web: 'photo-camera' }}
-            icon={{ ios: 'exclamationmark.triangle.fill', android: 'emergency', web: 'emergency' }}
-          />
+        <MapPreview reports={reports} onExpand={onExpandMap} />
 
+        <View style={styles.actionsStack}>
           <ActionCard
             title="VER ALERTAS EN MI ZONA"
             subtitle="Reportes verificados cerca de ti"
@@ -105,7 +97,7 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onAlert
           <ActionCard
             title="ALERTAR A MI ZONA"
             subtitle="Envía una señal rápida de peligro"
-            color="#B45309"
+            color={BrandColors.primary}
             height={147}
             onPress={onAlertReportPress}
             helperIcon={{
@@ -113,13 +105,12 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onAlert
               android: 'campaign',
               web: 'campaign',
             }}
-            icon={{ ios: 'exclamationmark.triangle.fill', android: 'emergency', web: 'emergency' }}
+            icon={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
           />
         </View>
 
         <AppText style={styles.sectionTitle}>Tu Actividad</AppText>
         <ActivityCard stats={activityStats} />
-        <MapPreview reports={reports} onExpand={onExpandMap} />
       </ScrollView>
     </>
   );
@@ -150,6 +141,7 @@ const styles = StyleSheet.create({
   },
   actionsStack: {
     gap: 16,
+    marginTop: 20,
   },
   sectionTitle: {
     color: BrandColors.neutral,
