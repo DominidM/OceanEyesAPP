@@ -26,10 +26,10 @@ import {
   SectionHeader,
 } from '@admin/presentation/components/ui';
 
-const SEVERITIES: { key: AlertSeverity; label: string; color: string; bg: string }[] = [
-  { key: 'info', label: 'Informativa', color: '#0891B2', bg: 'rgba(8,145,178,0.15)' },
-  { key: 'warning', label: 'Precaución', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
-  { key: 'danger', label: 'Peligro', color: '#EF4444', bg: 'rgba(239,68,68,0.15)' },
+const SEVERITIES: { key: AlertSeverity; label: string; color: string; bg: string; icon: string }[] = [
+  { key: 'info', label: 'Informativa', color: '#0891B2', bg: 'rgba(8,145,178,0.15)', icon: 'info-circle' },
+  { key: 'warning', label: 'Precaución', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)', icon: 'exclamation-circle' },
+  { key: 'danger', label: 'Peligro', color: '#EF4444', bg: 'rgba(239,68,68,0.15)', icon: 'exclamation-triangle' },
 ];
 
 function severityCfg(s: AlertSeverity) {
@@ -61,7 +61,7 @@ function formatTime(ts: any) {
 
 export default function AlertsScreen() {
   const { user } = useAuth();
-  const { mode } = useAdminTheme();
+  const { colors, mode } = useAdminTheme();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -228,77 +228,100 @@ export default function AlertsScreen() {
               title="Por revisar"
               subtitle={`${pendingReview.length} alerta(s) de peligro ciudadano esperando tu confirmación`}
             />
-            {pendingReview.map((a) => {
-              const s = severityCfg(a.severity);
-              return (
-                <Card key={a.id}>
-                  <View style={styles.alertRow}>
-                    <View style={styles.alertBody}>
-                      <View style={styles.alertTop}>
+            <View style={styles.alertGrid}>
+              {pendingReview.map((a) => {
+                const s = severityCfg(a.severity);
+                return (
+                  <Card key={a.id} style={styles.alertCard}>
+                    <View style={styles.alertHead}>
+                      <View style={styles.alertHeadLeft}>
+                        <View style={[styles.alertIconWrap, { backgroundColor: s.bg }]}>
+                          <FontAwesome5 name={s.icon} size={16} color={s.color} />
+                        </View>
+                        <View style={styles.alertHeadText}>
+                          <Text style={[styles.alertTitle, { color: BrandColors.primary }]} numberOfLines={1}>
+                            {a.title}
+                          </Text>
+                          <Text style={[styles.alertDate, { color: colors.contentTextMuted }]}>{formatTime(a.createdAt)}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.alertHeadBadges}>
                         <Badge label={s.label} color={s.color} bg={s.bg} />
                         <Badge label="Comunidad" color="#7C3AED" bg="rgba(124,58,237,0.12)" />
                         <Badge label="Requiere revisión" color="#EF4444" bg="rgba(239,68,68,0.15)" />
                       </View>
-                      <Text style={[styles.alertTitle, { color: BrandColors.primary }]}>{a.title}</Text>
-                      <Text style={[styles.alertMsg, { color: muted }]}>{a.message}</Text>
-                      {a.coordinates && (
-                        <Text style={styles.alertDate}>
-                          📍 {a.coordinates.latitude.toFixed(4)}, {a.coordinates.longitude.toFixed(4)}
-                        </Text>
-                      )}
-                      <Text style={[styles.alertDate, { color: muted }]}>{formatTime(a.createdAt)}</Text>
                     </View>
-                    <View style={styles.alertActions}>
+                    <Text style={[styles.alertMsg, { color: colors.cardText }]} numberOfLines={3}>
+                      {a.message}
+                    </Text>
+                    {a.coordinates && (
+                      <Text style={[styles.alertCoords, { color: colors.contentTextMuted }]} numberOfLines={1}>
+                        📍 {a.coordinates.latitude.toFixed(4)}, {a.coordinates.longitude.toFixed(4)}
+                      </Text>
+                    )}
+                    <View style={[styles.alertFooter, { borderTopColor: colors.cardBorder }]}>
                       <Pressable style={styles.actionBtn} onPress={() => approve(a.id)}>
-                        <FontAwesome5 name="check-circle" size={20} color="#22C55E" />
+                        <FontAwesome5 name="check-circle" size={15} color="#22C55E" />
                         <Text style={[styles.actionLabel, { color: '#22C55E' }]}>Aprobar</Text>
                       </Pressable>
                       <Pressable style={styles.actionBtn} onPress={() => reject(a.id)}>
-                        <FontAwesome5 name="times-circle" size={20} color="#EF4444" />
+                        <FontAwesome5 name="times-circle" size={15} color="#EF4444" />
                         <Text style={[styles.actionLabel, { color: '#EF4444' }]}>Rechazar</Text>
                       </Pressable>
                     </View>
-                  </View>
-                </Card>
-              );
-            })}
+                  </Card>
+                );
+              })}
+            </View>
           </>
         )}
 
-        {!loading &&
-          alerts
-            .filter((a) => !a.pendingReview)
-            .map((a) => {
-            const s = severityCfg(a.severity);
-            return (
-              <Card key={a.id}>
-                <View style={styles.alertRow}>
-                  <View style={styles.alertBody}>
-                    <View style={styles.alertTop}>
+        {!loading && (
+          <View style={styles.alertGrid}>
+            {alerts
+              .filter((a) => !a.pendingReview)
+              .map((a) => {
+              const s = severityCfg(a.severity);
+              return (
+                <Card key={a.id} style={styles.alertCard}>
+                  <View style={styles.alertHead}>
+                    <View style={styles.alertHeadLeft}>
+                      <View style={[styles.alertIconWrap, { backgroundColor: s.bg }]}>
+                        <FontAwesome5 name={s.icon} size={16} color={s.color} />
+                      </View>
+                      <View style={styles.alertHeadText}>
+                        <Text style={[styles.alertTitle, { color: BrandColors.primary }]} numberOfLines={1}>
+                          {a.title}
+                        </Text>
+                        <Text style={[styles.alertDate, { color: colors.contentTextMuted }]}>{formatTime(a.createdAt)}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.alertHeadBadges}>
                       <Badge label={s.label} color={s.color} bg={s.bg} />
-                      <Badge label={a.source} color={muted} bg={inputBg} />
+                      <Badge label={a.source} color={colors.contentTextMuted} bg={inputBg} />
                       {a.active && <Badge label="Activa" color="#22C55E" bg="rgba(34,197,94,0.15)" />}
                     </View>
-                    <Text style={[styles.alertTitle, { color: BrandColors.primary }]}>{a.title}</Text>
-                    <Text style={[styles.alertMsg, { color: muted }]}>{a.message}</Text>
-                    <Text style={[styles.alertDate, { color: muted }]}>{formatTime(a.createdAt)}</Text>
                   </View>
-                  <View style={styles.alertActions}>
+                  <Text style={[styles.alertMsg, { color: colors.cardText }]} numberOfLines={3}>
+                    {a.message}
+                  </Text>
+                  <View style={[styles.alertFooter, { borderTopColor: colors.cardBorder }]}>
                     {a.active && (
                       <Pressable style={styles.actionBtn} onPress={() => deactivate(a.id)}>
-                        <FontAwesome5 name="pause-circle" size={18} color="#F59E0B" />
+                        <FontAwesome5 name="pause-circle" size={14} color="#F59E0B" />
                         <Text style={[styles.actionLabel, { color: '#F59E0B' }]}>Pausar</Text>
                       </Pressable>
                     )}
                     <Pressable style={styles.actionBtn} onPress={() => remove(a.id)}>
-                      <FontAwesome5 name="trash-alt" size={16} color="#EF4444" />
+                      <FontAwesome5 name="trash-alt" size={13} color="#EF4444" />
                       <Text style={[styles.actionLabel, { color: '#EF4444' }]}>Eliminar</Text>
                     </Pressable>
                   </View>
-                </View>
-              </Card>
-            );
-          })}
+                </Card>
+              );
+            })}
+          </View>
+        )}
       </View>
     </AdminShell>
   );
@@ -327,13 +350,36 @@ const styles = StyleSheet.create({
   },
   severityLabel: { fontFamily: Fonts.body, fontSize: 13, fontWeight: '600' },
   formActions: { flexDirection: 'row', gap: Spacing.three, justifyContent: 'flex-end' },
-  alertRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: Spacing.three },
-  alertBody: { flex: 1, gap: Spacing.one },
-  alertTop: { flexDirection: 'row', gap: Spacing.one, alignItems: 'center' },
+  alertGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three },
+  alertCard: { width: '30%', gap: Spacing.two },
+  alertIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertHead: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  alertHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flex: 1, minWidth: 0 },
+  alertHeadText: { flex: 1, minWidth: 0 },
   alertTitle: { fontFamily: Fonts.headline, fontSize: 16, fontWeight: '700' },
-  alertMsg: { fontFamily: Fonts.body, fontSize: 13, lineHeight: 20 },
   alertDate: { fontFamily: Fonts.body, fontSize: 11 },
-  alertActions: { gap: Spacing.two, alignItems: 'center' },
-  actionBtn: { alignItems: 'center', gap: 2 },
-  actionLabel: { fontFamily: Fonts.body, fontSize: 10 },
+  alertHeadBadges: { alignItems: 'flex-end', gap: Spacing.one, flexShrink: 0 },
+  alertMsg: { fontFamily: Fonts.body, fontSize: 13, lineHeight: 20 },
+  alertCoords: { fontFamily: Fonts.body, fontSize: 11 },
+  alertFooter: {
+    marginTop: 'auto',
+    paddingTop: Spacing.two,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: Spacing.two,
+  },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 8, cursor: 'pointer' },
+  actionLabel: { fontFamily: Fonts.body, fontSize: 12, fontWeight: '600' },
 });

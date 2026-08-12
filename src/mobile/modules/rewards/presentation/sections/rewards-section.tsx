@@ -8,6 +8,7 @@ import { AppFonts as Fonts, BottomBarHeight, BrandColors, Spacing } from '@/cons
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { SectionHeader } from '@/shared/components/section-header';
 import { useAuth } from '@/shared/firebase/auth-context';
+import { redeemReward } from '@/shared/firebase/rewards';
 
 import { PointsCard } from '../components/points-card';
 import { RecentFooter } from '../components/recent-footer';
@@ -22,13 +23,29 @@ import { RewardsColors } from '../theme';
 export function RewardsSection() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { profile } = useAuth();
-  const { rewards, claims, guest } = useRewardsData();
+  const { profile, user } = useAuth();
+  const { rewards, claims, guest, refresh } = useRewardsData();
   const { transactions } = usePointTransactions();
   const [tab, setTab] = useState<RewardsTab>('recompensas');
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [redeemingId, setRedeemingId] = useState<string | null>(null);
+  const [redeemError, setRedeemError] = useState<string | null>(null);
 
   const items = tab === 'recompensas' ? rewards : claims;
+
+  const handleRedeem = async (rewardId: string) => {
+    if (!user) return;
+    setRedeemingId(rewardId);
+    setRedeemError(null);
+    try {
+      await redeemReward(user.uid, rewardId);
+      refresh();
+    } catch (e: any) {
+      setRedeemError(e?.message || 'No se pudo canjear la recompensa.');
+    } finally {
+      setRedeemingId(null);
+    }
+  };
 
   const rewardTitleById = useMemo(
     () => new Map(rewards.map((reward) => [reward.id, reward.title])),
@@ -81,10 +98,22 @@ export function RewardsSection() {
 
         <SectionTabs active={tab} onChange={setTab} />
 
+        {redeemError && (
+          <View style={styles.errorCard}>
+            <AppText style={styles.errorText}>{redeemError}</AppText>
+          </View>
+        )}
+
         <View style={styles.list}>
           {items.length > 0 ? (
             items.map((reward) => (
-              <RewardItem key={reward.id} reward={reward} claimed={tab === 'recientes'} />
+              <RewardItem
+                key={reward.id}
+                reward={reward}
+                claimed={tab === 'recientes'}
+                busy={redeemingId === reward.id}
+                onPress={tab === 'recompensas' ? () => handleRedeem(reward.id) : undefined}
+              />
             ))
           ) : tab === 'recientes' ? (
             <View style={styles.emptyCard}>
@@ -144,6 +173,20 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 16,
+  },
+  errorCard: {
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: 'rgba(239,68,68,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.25)',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontFamily: Fonts.label,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   emptyCard: {
     alignItems: 'center',

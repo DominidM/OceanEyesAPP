@@ -35,7 +35,7 @@ export function ReportGallery({ photoURLs }: ReportGalleryProps) {
   return (
     <View style={styles.container}>
       <View style={styles.mainBox}>
-        <Image source={{ uri: main }} style={styles.mainImg} contentFit="cover" />
+        <Image source={{ uri: main }} style={styles.mainImg} contentFit="contain" />
         {count > 1 && (
           <>
             <Pressable style={[styles.bigArrow, styles.bigArrowLeft]} onPress={() => go(-1)}>
@@ -49,6 +49,10 @@ export function ReportGallery({ photoURLs }: ReportGalleryProps) {
         <View style={styles.counterPill}>
           <Text style={styles.counterText}>{current + 1} / {count}</Text>
         </View>
+        <Pressable style={styles.expandBtn} onPress={() => setExpanded(true)}>
+          <MaterialCommunityIcons name="fullscreen" size={14} color="#FFFFFF" />
+          <Text style={styles.expandLabel}>Agrandar</Text>
+        </Pressable>
       </View>
 
       {count > 1 && (
@@ -81,11 +85,6 @@ export function ReportGallery({ photoURLs }: ReportGalleryProps) {
           </Pressable>
         </View>
       )}
-
-      <Pressable style={styles.expandBtn} onPress={() => setExpanded(true)}>
-        <MaterialCommunityIcons name="fullscreen" size={14} color={colors.primary} />
-        <Text style={[styles.expandLabel, { color: colors.primary }]}>Agrandar</Text>
-      </Pressable>
 
       <Modal
         visible={expanded}
@@ -134,9 +133,11 @@ const styles = StyleSheet.create({
   container: {
     gap: Spacing.two,
     width: '100%',
+    flex: 1,
   },
   mainBox: {
-    height: 220,
+    flex: 1,
+    minHeight: 220,
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: 'rgba(19,78,94,0.08)',
@@ -205,18 +206,23 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   expandBtn: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
     gap: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.55)',
     cursor: 'pointer',
   },
   expandLabel: {
     fontFamily: Fonts.label,
     fontSize: 12,
     fontWeight: '600',
+    color: '#FFFFFF',
   },
   modalBackdrop: {
     flex: 1,

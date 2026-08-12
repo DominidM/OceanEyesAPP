@@ -30,7 +30,7 @@ service cloud.firestore {
         && request.resource.data.pointsBalance == 0;
       allow update: if isAdmin() || (isOwner(userId)
         && request.resource.data.role == resource.data.role
-        && request.resource.data.pointsBalance == resource.data.pointsBalance
+        && request.resource.data.pointsBalance <= resource.data.pointsBalance
         && request.resource.data.totalPointsEarned == resource.data.totalPointsEarned
         && request.resource.data.verifiedReportsCount == resource.data.verifiedReportsCount);
       allow delete: if isAdmin();
@@ -119,12 +119,14 @@ service cloud.firestore {
 
     match /pointTransactions/{transactionId} {
       allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      allow write: if isAdmin();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
     }
 
     match /rewards/{rewardId} {
       allow read: if signedIn() && resource.data.active == true || isAdmin();
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (signedIn() && request.resource.data.stock <= resource.data.stock);
     }
 
     match /bannedDevices/{deviceHash} {
@@ -137,7 +139,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /rewardRedemptions/{redemptionId} {
+    match /redemptions/{redemptionId} {
       allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin();

@@ -195,7 +195,7 @@ export function ReportDetailScreen() {
           {report.audioURL ? (
             <View style={[styles.subBlock, { borderColor: colors.cardBorder, marginTop: Spacing.two }]}>
               <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Audio del reporte</Text>
-              <AudioPlayer uri={report.audioURL} />
+              <AudioPlayer uri={report.audioURL} durationMillis={report.audioDurationMillis} />
             </View>
           ) : null}
 
@@ -296,11 +296,14 @@ function formatAudioDuration(ms: number): string {
   return `${minutes}:${seconds}`;
 }
 
-function AudioPlayer({ uri }: { uri: string }) {
+function AudioPlayer({ uri, durationMillis }: { uri: string; durationMillis?: number | null }) {
   const { colors } = useAdminTheme();
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
   const playing = status.playing;
+
+  const durationSec = status.duration > 0 ? status.duration : (durationMillis ?? 0) / 1000;
+  const durationLabel = durationSec > 0 ? formatAudioDuration(durationSec * 1000) : null;
 
   const toggle = () => {
     try {
@@ -330,11 +333,9 @@ function AudioPlayer({ uri }: { uri: string }) {
         <Text style={[styles.audioActionLabel, { color: colors.accent }]}>
           {playing ? 'Pausar audio' : 'Escuchar audio'}
         </Text>
-        {status.duration > 0 ? (
-          <Text style={[styles.audioDurationLabel, { color: colors.contentTextMuted }]}>
-            {formatAudioDuration(status.duration)}
-          </Text>
-        ) : null}
+        <Text style={[styles.audioDurationLabel, { color: colors.contentTextMuted }]}>
+          Duración: {durationLabel ?? '—'}
+        </Text>
       </View>
     </Pressable>
   );

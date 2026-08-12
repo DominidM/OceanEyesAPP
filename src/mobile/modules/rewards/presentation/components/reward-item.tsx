@@ -11,12 +11,14 @@ import { shadow } from '@/shared/utils/shadows';
 type RewardItemProps = {
   reward: Reward;
   claimed?: boolean;
+  busy?: boolean;
+  onPress?: () => void;
 };
 
-export function RewardItem({ reward, claimed }: RewardItemProps) {
-  const subdued = Boolean(reward.locked) || Boolean(claimed);
+export function RewardItem({ reward, claimed, busy, onPress }: RewardItemProps) {
+  const subdued = Boolean(reward.locked) || Boolean(claimed) || Boolean(busy);
   const iconColor = subdued ? RewardsColors.textMuted : RewardsColors.accent;
-  const buttonLabel = reward.locked ? 'Bloqueado' : claimed ? 'Cobrado' : 'Canjear';
+  const buttonLabel = reward.locked ? 'Bloqueado' : claimed ? 'Cobrado' : busy ? '...' : 'Canjear';
 
   return (
     <View style={[styles.card, subdued && styles.cardSubdued]}>
@@ -37,6 +39,7 @@ export function RewardItem({ reward, claimed }: RewardItemProps) {
       <Pressable
         accessibilityRole="button"
         disabled={subdued}
+        onPress={onPress}
         style={[styles.button, subdued && styles.buttonSubdued]}>
         <AppText style={[styles.buttonText, subdued && styles.buttonTextSubdued]}>
           {buttonLabel}

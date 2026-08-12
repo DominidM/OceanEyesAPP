@@ -20,9 +20,11 @@ import type { PointTransaction, Redemption, RedemptionStatus, Reward } from './t
 
 export async function getAllRewards(): Promise<Reward[]> {
   const snapshot = await getDocs(
-    query(collection(firestore, 'rewards'), where('active', '==', true), orderBy('pointsCost', 'asc')),
+    query(collection(firestore, 'rewards'), where('active', '==', true)),
   );
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Reward);
+  return snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as Reward)
+    .sort((a, b) => a.pointsCost - b.pointsCost);
 }
 
 export async function getRewardById(rewardId: string): Promise<Reward | null> {
@@ -107,13 +109,15 @@ export async function redeemReward(userId: string, rewardId: string): Promise<st
 
 export async function getUserRedemptions(userId: string): Promise<Redemption[]> {
   const snapshot = await getDocs(
-    query(
-      collection(firestore, 'redemptions'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
-    ),
+    query(collection(firestore, 'redemptions'), where('userId', '==', userId)),
   );
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Redemption);
+  return snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as Redemption)
+    .sort((a, b) => {
+      const ta = a.createdAt?.toMillis?.() ?? 0;
+      const tb = b.createdAt?.toMillis?.() ?? 0;
+      return tb - ta; // desc
+    });
 }
 
 export async function getAllRedemptions(): Promise<Redemption[]> {
