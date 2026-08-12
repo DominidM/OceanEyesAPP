@@ -73,6 +73,8 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
 export async function registerPushToken(userId: string): Promise<string | null> {
   if (!canRegisterPushToken()) return null;
+  await ensureNotificationChannel();
+  await ensureAlertChannel();
   const granted = await requestNotificationPermission();
   if (!granted) return null;
   const projectId =
@@ -88,29 +90,23 @@ export async function registerPushToken(userId: string): Promise<string | null> 
   }
 }
 
-const ALARM_BURST_DELAYS = [0, 2, 4, 6, 8, 10];
-
 function alertMessageFor(alert: { title?: string; message?: string }): string {
   return alert.message ?? 'Nueva alerta oficial en tu zona';
 }
 
 async function scheduleDangerAlarm(alert: { id?: string; title?: string; message?: string }): Promise<void> {
-  for (const delay of ALARM_BURST_DELAYS) {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: `⚠ ALERTA DE PELIGRO${alert.title ? `: ${alert.title}` : ''}`,
-        body: alertMessageFor(alert),
-        data: { kind: 'official-alert', alertId: alert.id ?? null, severity: 'danger' },
-        sound: 'default',
-        interruptionLevel: 'timeSensitive',
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date: new Date(Date.now() + delay * 1000),
-        channelId: ALERT_CHANNEL_ID,
-      },
-    });
-  }
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: `⚠ ALERTA DE PELIGRO${alert.title ? `: ${alert.title}` : ''}`,
+      body: alertMessageFor(alert),
+      data: { kind: 'official-alert', alertId: alert.id ?? null, severity: 'danger' },
+      sound: 'alarma_peligro.wav',
+      priority: Notifications.AndroidNotificationPriority.MAX,
+      interruptionLevel: 'timeSensitive',
+      vibrate: [0, 500, 250, 500, 250, 500],
+    },
+    trigger: { channelId: ALERT_CHANNEL_ID },
+  });
 }
 
 async function scheduleNormalAlert(alert: { id?: string; title?: string; message?: string }): Promise<void> {
@@ -131,6 +127,8 @@ async function scheduleNormalAlert(alert: { id?: string; title?: string; message
 
 export function useOfficialAlertSound(): void {
   const seen = useRef<Set<string>>(new Set());
+  const receivedPush = useRef<Set<string>>(new Set());
+  const fallbackTimers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
   const primed = useRef(false);
 
   useEffect(() => {
@@ -141,13 +139,25 @@ export function useOfficialAlertSound(): void {
     if (Platform.OS === 'web') return;
     void requestNotificationPermission().catch(() => undefined);
 
+    const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
+      const alertId = notification.request.content.data?.alertId;
+      if (typeof alertId === 'string') receivedPush.current.add(alertId);
+    });
+
     const unsubscribe = subscribeActiveAlerts((alerts) => {
       for (const alert of alerts) {
         if (!alert.id || seen.current.has(alert.id)) continue;
-        seen.current.add(alert.id);
+        const alertId = alert.id;
+        seen.current.add(alertId);
         if (!primed.current) continue;
         if (alert.severity === 'danger') {
-          void scheduleDangerAlarm(alert).catch(() => undefined);
+          const timer = setTimeout(() => {
+            fallbackTimers.current.delete(timer);
+            if (!receivedPush.current.has(alertId)) {
+              void scheduleDangerAlarm(alert).catch(() => undefined);
+            }
+          }, 1500);
+          fallbackTimers.current.add(timer);
         } else {
           void scheduleNormalAlert(alert).catch(() => undefined);
         }
@@ -155,7 +165,12 @@ export function useOfficialAlertSound(): void {
       primed.current = true;
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      receivedSubscription.remove();
+      fallbackTimers.current.forEach(clearTimeout);
+      fallbackTimers.current.clear();
+    };
   }, []);
 }
 

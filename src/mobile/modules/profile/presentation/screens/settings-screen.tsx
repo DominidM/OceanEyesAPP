@@ -1,8 +1,14 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
+import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from 'expo-audio';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  AppState,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -27,6 +33,10 @@ const editIcon: SymbolName = { ios: 'square.and.pencil', android: 'edit', web: '
 const linkIcon: SymbolName = { ios: 'link.circle.fill', android: 'link', web: 'link' };
 const lockIcon: SymbolName = { ios: 'lock.fill', android: 'lock', web: 'lock' };
 const bellIcon: SymbolName = { ios: 'bell.fill', android: 'notifications', web: 'notifications' };
+const locationIcon: SymbolName = { ios: 'location.fill', android: 'location-on', web: 'location-on' };
+const cameraIcon: SymbolName = { ios: 'camera.fill', android: 'camera-alt', web: 'camera-alt' };
+const microphoneIcon: SymbolName = { ios: 'mic.fill', android: 'mic', web: 'mic' };
+const galleryIcon: SymbolName = { ios: 'photo.fill', android: 'photo-library', web: 'photo-library' };
 const textSizeIcon: SymbolName = { ios: 'textformat.size', android: 'format-size', web: 'format-size' };
 const fontIcon: SymbolName = { ios: 'textformat', android: 'font-download', web: 'font-download' };
 const motionIcon: SymbolName = { ios: 'slowmo', android: 'slow-motion-video', web: 'slow-motion-video' };
@@ -144,6 +154,17 @@ const FONT_FAMILY_OPTIONS: readonly { value: string; label: string }[] = [
   { value: 'mono', label: 'Mono' },
 ];
 
+type AppPermission = 'notifications' | 'location' | 'camera' | 'microphone' | 'gallery';
+type PermissionState = { granted: boolean; canAskAgain: boolean };
+
+const PERMISSION_LABELS: Record<AppPermission, string> = {
+  notifications: 'Notificaciones y alarmas',
+  location: 'Ubicación',
+  camera: 'Cámara',
+  microphone: 'Micrófono y audio',
+  gallery: 'Fotos y galería',
+};
+
 export function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -158,6 +179,27 @@ export function SettingsScreen() {
   } = usePreferences();
   const { syncing, pendingCount, lastError, requestSync } = useSync();
   const [clearing, setClearing] = useState(false);
+  const [permissions, setPermissions] = useState<Partial<Record<AppPermission, PermissionState>>>({});
+  const [permissionBusy, setPermissionBusy] = useState<AppPermission | null>(null);
+
+  const refreshPermissions = useCallback(async () => {
+    const [notifications, location, camera, microphone, gallery] = await Promise.all([
+      Notifications.getPermissionsAsync(),
+      Location.getForegroundPermissionsAsync(),
+      ImagePicker.getCameraPermissionsAsync(),
+      getRecordingPermissionsAsync(),
+      ImagePicker.getMediaLibraryPermissionsAsync(),
+    ]);
+    setPermissions({ notifications, location, camera, microphone, gallery });
+  }, []);
+
+  useEffect(() => {
+    void refreshPermissions();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refreshPermissions();
+    });
+    return () => subscription.remove();
+  }, [refreshPermissions]);
 
   const switchTone = { trackColor: { false: '#D9CFC5', true: BrandColors.primary }, thumbColor: '#FFFFFF' };
 
@@ -209,6 +251,25 @@ export function SettingsScreen() {
     await setPreference(key, value);
   };
 
+  const requestPermission = async (permission: AppPermission) => {
+    const current = permissions[permission];
+    if (current?.granted || current?.canAskAgain === false) {
+      await Linking.openSettings();
+      return;
+    }
+    setPermissionBusy(permission);
+    try {
+      if (permission === 'notifications') await Notifications.requestPermissionsAsync();
+      if (permission === 'location') await Location.requestForegroundPermissionsAsync();
+      if (permission === 'camera') await ImagePicker.requestCameraPermissionsAsync();
+      if (permission === 'microphone') await requestRecordingPermissionsAsync();
+      if (permission === 'gallery') await ImagePicker.requestMediaLibraryPermissionsAsync();
+      await refreshPermissions();
+    } finally {
+      setPermissionBusy(null);
+    }
+  };
+
   return (
     <View style={styles.root}>
       <View style={[styles.topBar, { paddingTop: insets.top }]}>
@@ -239,6 +300,33 @@ export function SettingsScreen() {
             />
           ) : null}
           <SettingRow icon={lockIcon} label="Cambiar contraseña" onPress={handleChangePassword} />
+
+          <GroupLabel title="Permisos del dispositivo" />
+          {([
+            ['notifications', bellIcon],
+            ['location', locationIcon],
+            ['camera', cameraIcon],
+            ['microphone', microphoneIcon],
+            ['gallery', galleryIcon],
+          ] as const).map(([permission, icon]) => {
+            const state = permissions[permission];
+            const value = permissionBusy === permission
+              ? 'Comprobando...'
+              : state?.granted
+                ? 'Permitido'
+                : state?.canAskAgain === false
+                  ? 'Abrir ajustes'
+                  : 'Activar';
+            return (
+              <SettingRow
+                key={permission}
+                icon={icon}
+                label={PERMISSION_LABELS[permission]}
+                value={value}
+                onPress={() => void requestPermission(permission)}
+              />
+            );
+          })}
 
           <GroupLabel title="Notificaciones" />
           <SettingRow

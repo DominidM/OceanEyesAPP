@@ -3,6 +3,7 @@ import type { UserRole } from '@/shared/firebase/types';
 export type AdminRoute =
   | '/admin'
   | '/admin/reports'
+  | '/admin/mapa'
   | '/admin/users'
   | '/admin/bans'
   | '/admin/rewards'
@@ -25,6 +26,7 @@ export type AdminNavItem = {
 export const ADMIN_NAV: AdminNavItem[] = [
   { key: 'dashboard', label: 'Dashboard', icon: 'tachometer-alt', href: '/admin', roles: ['admin'] },
   { key: 'reports', label: 'Reportes', icon: 'clipboard-list', href: '/admin/reports', roles: ['admin'] },
+  { key: 'map', label: 'Mapa en tiempo real', icon: 'map-marked-alt', href: '/admin/mapa', roles: ['admin'] },
   { key: 'users', label: 'Usuarios', icon: 'users', href: '/admin/users', roles: ['admin'] },
   { key: 'bans', label: 'Baneos', icon: 'ban', href: '/admin/bans', roles: ['admin'] },
   { key: 'rewards', label: 'Recompensas', icon: 'award', href: '/admin/rewards', roles: ['admin'] },

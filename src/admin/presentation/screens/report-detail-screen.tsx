@@ -60,6 +60,9 @@ export function ReportDetailScreen({ readOnly = false }: { readOnly?: boolean })
         if (!currentSigner && installed) {
           currentSigner = await connect();
         }
+        if (!currentSigner) {
+          throw new Error('Conecta la wallet administradora antes de verificar. El reporte seguirá pendiente.');
+        }
         const outcome = await verifyReport(report.id, firebaseAuth?.currentUser?.uid ?? 'admin', currentSigner ?? undefined);
         if (outcome.kind === 'skipped_no_signer') {
           setOnChainNotice(

@@ -32,7 +32,7 @@ import {
 
 import { awardPointsOnChain } from '@shared/blockchain/ledger';
 
-import type { Signer } from 'ethers';
+import { isAddress, type Signer } from 'ethers';
 
 export type ReportAudioUpload = {
   uri: string;
@@ -364,6 +364,9 @@ export async function verifyReport(
   adminUid: string,
   signer?: Signer,
 ): Promise<OnChainOutcome> {
+  if (!signer) {
+    throw new Error('Conecta la wallet administradora antes de verificar el reporte. No se modificó su estado.');
+  }
   const reportRef = doc(firestore, 'reports', reportId);
   let pointTxId: string | undefined;
   let reporterWallet: string | undefined;
@@ -382,14 +385,7 @@ export async function verifyReport(
     const userRef = doc(firestore, 'users', report.userId);
     const userSnap = await tx.get(userRef);
 
-    tx.update(reportRef, {
-      status: 'verificado',
-      pointsAwarded: categoryPoints,
-      reviewedAt: serverTimestamp(),
-      reviewedBy: adminUid,
-    });
-
-    if (!userSnap.exists()) return;
+    if (!userSnap.exists()) throw new Error('El reportante no tiene un perfil válido. No se modificó el reporte.');
 
     const user = userSnap.data() as {
       pointsBalance: number;
@@ -398,7 +394,17 @@ export async function verifyReport(
       walletAddress?: string;
     };
     reporterWallet = user.walletAddress;
+    if (!reporterWallet || !isAddress(reporterWallet)) {
+      throw new Error('El reportante no tiene una wallet válida. No se modificó el reporte.');
+    }
     const newBalance = (user.pointsBalance ?? 0) + categoryPoints;
+
+    tx.update(reportRef, {
+      status: 'verificado',
+      pointsAwarded: categoryPoints,
+      reviewedAt: serverTimestamp(),
+      reviewedBy: adminUid,
+    });
 
     tx.update(userRef, {
       pointsBalance: increment(categoryPoints),
@@ -419,19 +425,10 @@ export async function verifyReport(
     });
   });
 
-  if (!signer) {
-    await updateDoc(reportRef, { onChainStatus: 'skipped_no_signer' });
-    return { kind: 'skipped_no_signer' };
-  }
-  if (!reporterWallet) {
-    await updateDoc(reportRef, { onChainStatus: 'skipped_no_wallet' });
-    return { kind: 'skipped_no_wallet' };
-  }
-
   try {
     const txHash = await awardPointsOnChain({
       signer,
-      reporter: reporterWallet,
+      reporter: reporterWallet!,
       reportId,
       category,
     });

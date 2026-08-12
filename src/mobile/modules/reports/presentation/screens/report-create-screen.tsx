@@ -40,6 +40,35 @@ export function ReportCreateScreen() {
   // if (!user) return <Redirect href="/mobile/login" />;
   // TODO: reactivar el guard cuando Firebase Auth esté configurado y se quiera forzar login.
 
+  if (!user || !profile?.walletAddress) {
+    return (
+      <View style={styles.walletRequiredScreen}>
+        <View style={styles.walletRequiredCard}>
+          <AppSymbol
+            name={{ ios: 'wallet.pass.fill', android: 'account-balance-wallet', web: 'account-balance-wallet' }}
+            color={SC.accent}
+            size={42}
+          />
+          <AppText style={styles.successTitle}>Vincula una wallet para reportar</AppText>
+          <AppText style={styles.successBody}>
+            La wallet es obligatoria porque los puntos de un reporte verificado se registran en el contrato blockchain.
+          </AppText>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => user
+              ? router.replace({ pathname: '/mobile', params: { section: 'perfil' } })
+              : router.replace('/mobile/login')}
+            style={({ pressed }) => [styles.successButton, pressed && styles.pressed]}>
+            <AppText style={styles.successButtonLabel}>{user ? 'Configurar wallet' : 'Iniciar sesión'}</AppText>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.cancelWalletButton}>
+            <AppText style={styles.cancelWalletLabel}>Cancelar</AppText>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   if (state.submitted) {
     return (
       <View style={styles.successScreen}>
@@ -243,4 +272,23 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.78,
   },
+  walletRequiredScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: C.background,
+  },
+  walletRequiredCard: {
+    width: '100%',
+    maxWidth: 380,
+    alignItems: 'center',
+    gap: 16,
+    padding: 28,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    ...shadow('lift'),
+  },
+  cancelWalletButton: { padding: 10 },
+  cancelWalletLabel: { color: SC.textBody, fontFamily: Fonts.label, fontSize: 14, fontWeight: '600' },
 });
