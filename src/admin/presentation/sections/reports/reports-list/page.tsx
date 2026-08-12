@@ -14,7 +14,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { firestore } from '@/shared/firebase/app';
 import type { ReportStatus } from '@/shared/firebase/types';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
-import { Badge, Card, EmptyState, IconButton, LoadingState, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Card, EmptyState, IconButton, AdminLoading, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
 import { useAdminTheme } from '@admin/theme/context';
 
 type AdminReport = {
@@ -112,13 +112,15 @@ export function ReportsList() {
 
   return (
     <View style={styles.content}>
-      <SectionHeader
-        title="Moderación de incidencias"
-        subtitle="Revisa reportes de pesca, basura marina y variaciones del mar."
-      />
+      {!(loading && reports.length === 0) && (
+        <SectionHeader
+          title="Moderación de incidencias"
+          subtitle="Revisa reportes de pesca, basura marina y variaciones del mar."
+        />
+      )}
 
       {loading && reports.length === 0 && (
-        <LoadingState label="Cargando reportes..." />
+        <AdminLoading variant="list" />
       )}
       {!loading && totalDocs === 0 && (
         <EmptyState
@@ -206,7 +208,7 @@ const styles = StyleSheet.create({
   },
   th: { fontFamily: Fonts.label, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
   thMain: { flex: 1 },
-  thDate: { width: 76 },
+  thDate: { width: 60 },
   thCategory: { width: 128 },
   thStatus: { width: 108, textAlign: 'center' },
   thActions: { width: 120, textAlign: 'center' },
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
   cellMain: { flex: 1, gap: 2, minWidth: 0 },
   rowTitle: { fontFamily: Fonts.body, fontSize: 14, fontWeight: '600' },
   rowMeta: { fontFamily: Fonts.body, fontSize: 12 },
-  cellDate: { width: 76, fontFamily: Fonts.body, fontSize: 12 },
+  cellDate: { width: 60, fontFamily: Fonts.body, fontSize: 12 },
   cellCategory: { width: 128, fontFamily: Fonts.body, fontSize: 12, textTransform: 'capitalize' },
   cellStatus: { width: 108, alignItems: 'center' },
   cellActions: { width: 120, flexDirection: 'row', justifyContent: 'center' },

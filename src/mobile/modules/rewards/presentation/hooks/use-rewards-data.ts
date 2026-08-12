@@ -11,13 +11,16 @@ export function useRewardsData() {
   const guest = !user;
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [claims, setClaims] = useState<Reward[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = () => setRefreshKey((k) => k + 1);
 
   useEffect(() => {
     if (!isFirebaseConfigured()) return;
     getAllRewards()
       .then((catalog) => setRewards(catalog.map(toRewardCard)))
-      .catch(() => undefined);
-  }, []);
+      .catch((e) => console.error('[Rewards] No se pudieron cargar:', e));
+  }, [refreshKey]);
 
   useEffect(() => {
     if (!isFirebaseConfigured() || guest || !user) {
@@ -26,8 +29,8 @@ export function useRewardsData() {
     }
     getUserRedemptions(user.uid)
       .then((redemptions) => setClaims(redemptions.map(toClaimCard)))
-      .catch(() => undefined);
-  }, [guest, user]);
+      .catch((e) => console.error('[Rewards] No se pudieron cargar los canjes:', e));
+  }, [guest, user, refreshKey]);
 
-  return { rewards, claims, guest };
+  return { rewards, claims, guest, refresh };
 }

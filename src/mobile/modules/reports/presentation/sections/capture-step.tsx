@@ -20,10 +20,11 @@ type CaptureMode = 'picture' | 'video';
 type CaptureStepProps = {
   onClose: () => void;
   onContinue: () => void;
-  onMedia: (media: CaptureMedia) => void;
+  onMedia: (media: CaptureMedia[]) => void;
 };
 
 const MAX_DURATION_SECONDS = 60;
+const MAX_MEDIA = 6;
 
 export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) {
   const insets = useSafeAreaInsets();
@@ -32,10 +33,17 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
   const [facing, setFacing] = useState<'front' | 'back'>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
   const [mode, setMode] = useState<CaptureMode>('picture');
-  const [media, setMedia] = useState<CaptureMedia | null>(null);
+  const [mediaList, setMediaList] = useState<CaptureMedia[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [previewVisible, setPreviewVisible] = useState(false);
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [galleryThumb, setGalleryThumb] = useState<string | null>(null);
+
+  useEffect(() => {
+    onMedia(mediaList);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaList]);
 
   useEffect(() => {
     let active = true;
@@ -80,17 +88,24 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
     return () => clearTimeout(id);
   }, [recording, seconds]);
 
+  const addCaptured = (item: CaptureMedia) => {
+    setMediaList((prev) => {
+      if (prev.length >= MAX_MEDIA) return prev;
+      return [...prev, item];
+    });
+    setCurrent(Math.min(mediaList.length, MAX_MEDIA - 1));
+    setPreviewVisible(true);
+  };
+
   const takePhoto = async () => {
     if (!cameraRef.current) return;
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
       if (photo?.uri) {
-        const media: CaptureMedia = { type: 'photo', uri: photo.uri };
-        setMedia(media);
-        onMedia(media);
+        addCaptured({ type: 'photo', uri: photo.uri });
       }
     } catch {
-      setMedia(null);
+      /* ignore */
     }
   };
 
@@ -101,12 +116,10 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
     try {
       const video = await cameraRef.current.recordAsync({ maxDuration: MAX_DURATION_SECONDS });
       if (video?.uri) {
-        const media: CaptureMedia = { type: 'video', uri: video.uri };
-        setMedia(media);
-        onMedia(media);
+        addCaptured({ type: 'video', uri: video.uri });
       }
     } catch {
-      setMedia(null);
+      /* ignore */
     } finally {
       setRecording(false);
     }
@@ -136,22 +149,42 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        allowsEditing: true,
+        allowsMultipleSelection: true,
+        selectionLimit: MAX_MEDIA,
         quality: 0.8,
       });
-      if (result.canceled || !result.assets[0]?.uri) return;
-      const picked: CaptureMedia = { type: 'photo', uri: result.assets[0].uri };
-      setGalleryThumb(picked.uri);
-      setMedia(picked);
-      onMedia(picked);
+      if (result.canceled || !result.assets?.length) return;
+      const picked: CaptureMedia[] = result.assets
+        .filter((asset) => Boolean(asset.uri))
+        .map((asset) => ({ type: 'photo', uri: asset.uri }));
+      if (picked.length === 0) return;
+      setMediaList((prev) => [...prev, ...picked].slice(0, MAX_MEDIA));
+      setGalleryThumb(picked[0].uri);
+      setCurrent(Math.min(mediaList.length, MAX_MEDIA - 1));
+      setPreviewVisible(true);
     } catch {
       /* ignore */
     }
   };
 
-  if (media != null && !recording) {
+  const removeAt = (index: number) => {
+    const next = mediaList.filter((_, i) => i !== index);
+    setMediaList(next);
+    setCurrent((c) => (next.length === 0 ? 0 : Math.min(c, next.length - 1)));
+    if (next.length === 0) setPreviewVisible(false);
+  };
+
+  if (previewVisible && mediaList.length > 0 && !recording) {
     return (
-      <MediaPreview media={media} onRetake={() => setMedia(null)} onContinue={onContinue} onClose={onClose} />
+      <MediaPreview
+        media={mediaList}
+        current={Math.min(current, mediaList.length - 1)}
+        onSelect={setCurrent}
+        onRemove={removeAt}
+        onAddMore={() => setPreviewVisible(false)}
+        onContinue={onContinue}
+        onClose={onClose}
+      />
     );
   }
 
@@ -290,6 +323,11 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
                 size={22}
               />
             )}
+            {mediaList.length > 0 ? (
+              <View pointerEvents="none" style={styles.galleryBadge}>
+                <AppText style={styles.galleryBadgeText}>{mediaList.length}</AppText>
+              </View>
+            ) : null}
           </Pressable>
 
           <Pressable
@@ -589,6 +627,25 @@ const styles = StyleSheet.create({
   galleryThumb: {
     width: '100%',
     height: '100%',
+  },
+  galleryBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+    backgroundColor: C.accent,
+    borderRadius: 9999,
+  },
+  galleryBadgeText: {
+    color: '#FFFFFF',
+    fontFamily: Fonts.body,
+    fontSize: 11,
+    fontWeight: '800',
+    includeFontPadding: false,
   },
   shutter: {
     width: 96,

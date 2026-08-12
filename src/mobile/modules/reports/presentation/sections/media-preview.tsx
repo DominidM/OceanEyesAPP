@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useMemo } from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,23 +14,37 @@ import { CaptureColors as C } from '../theme';
 export type CaptureMedia = { type: 'photo' | 'video'; uri: string };
 
 type MediaPreviewProps = {
-  media: CaptureMedia;
-  onRetake: () => void;
+  media: CaptureMedia[];
+  current: number;
+  onSelect: (index: number) => void;
+  onRemove: (index: number) => void;
+  onAddMore: () => void;
   onContinue: () => void;
   onClose: () => void;
 };
 
-export function MediaPreview({ media, onRetake, onContinue, onClose }: MediaPreviewProps) {
+export function MediaPreview({
+  media,
+  current,
+  onSelect,
+  onRemove,
+  onAddMore,
+  onContinue,
+  onClose,
+}: MediaPreviewProps) {
   const insets = useSafeAreaInsets();
+  const selected = media[current];
 
   return (
     <View style={styles.screen}>
       <View style={styles.mediaArea}>
-        {media.type === 'photo' ? (
-          <Image source={{ uri: media.uri }} style={styles.media} contentFit="contain" />
-        ) : (
-          <VideoPreview uri={media.uri} />
-        )}
+        {selected ? (
+          selected.type === 'photo' ? (
+            <Image source={{ uri: selected.uri }} style={styles.media} contentFit="contain" />
+          ) : (
+            <VideoPreview uri={selected.uri} />
+          )
+        ) : null}
       </View>
 
       <LinearGradient
@@ -41,25 +55,68 @@ export function MediaPreview({ media, onRetake, onContinue, onClose }: MediaPrev
         pointerEvents="none"
       />
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Cerrar"
-        onPress={onClose}
-        style={({ pressed }) => [styles.closeButton, { top: insets.top + 16 }, pressed && styles.pressed]}>
-        <AppSymbol name={{ ios: 'xmark', android: 'close', web: 'close' }} color={C.whiteText} size={20} />
-      </Pressable>
+      <View style={[styles.topBar, { paddingTop: insets.top + 16 }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Cerrar"
+          onPress={onClose}
+          style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}>
+          <AppSymbol name={{ ios: 'xmark', android: 'close', web: 'close' }} color={C.whiteText} size={20} />
+        </Pressable>
+        <AppText style={styles.counter}>
+          {media.length > 0 ? `${current + 1} de ${media.length}` : ''}
+        </AppText>
+      </View>
+
+      {media.length > 1 ? (
+        <ScrollView
+          horizontal
+          style={styles.thumbnails}
+          contentContainerStyle={styles.thumbnailsContent}
+          showsHorizontalScrollIndicator={false}>
+          {media.map((item, index) => (
+            <View key={`${item.uri}-${index}`} style={styles.thumbWrap}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Ver medio ${index + 1}`}
+                onPress={() => onSelect(index)}
+                style={[styles.thumb, index === current && styles.thumbSelected]}>
+                {item.type === 'photo' ? (
+                  <Image source={{ uri: item.uri }} style={styles.thumbImage} contentFit="cover" />
+                ) : (
+                  <View style={styles.thumbVideo}>
+                    <AppSymbol
+                      name={{ ios: 'play.fill', android: 'play-arrow', web: 'play-arrow' }}
+                      color={C.whiteText}
+                      size={18}
+                    />
+                  </View>
+                )}
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Quitar medio"
+                onPress={() => onRemove(index)}
+                style={styles.removeBadge}>
+                <AppSymbol name={{ ios: 'xmark', android: 'close', web: 'close' }} color="#FFFFFF" size={10} />
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
+      ) : null}
 
       <View style={[styles.bottomBar, { paddingBottom: 24 + insets.bottom }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Rehacer"
-          onPress={onRetake}
-          style={({ pressed }) => [styles.retakeButton, pressed && styles.pressed]}>
+          accessibilityLabel="Agregar más"
+          onPress={onAddMore}
+          style={({ pressed }) => [styles.addMoreButton, pressed && styles.pressed]}>
           <AppSymbol
-            name={{ ios: 'arrow.counterclockwise', android: 'replay', web: 'replay' }}
+            name={{ ios: 'plus', android: 'add', web: 'add' }}
             color={C.whiteText}
             size={22}
           />
+          <AppText style={styles.addMoreLabel}>Agregar</AppText>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -106,9 +163,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: 180,
   },
-  closeButton: {
+  topBar: {
     position: 'absolute',
-    left: 24,
+    left: 0,
+    right: 0,
+    top: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingBottom: 8,
+  },
+  closeButton: {
     width: 48,
     height: 48,
     alignItems: 'center',
@@ -116,6 +182,60 @@ const styles = StyleSheet.create({
     backgroundColor: C.pillBg,
     borderWidth: 1,
     borderColor: C.pillBorder,
+    borderRadius: 9999,
+  },
+  counter: {
+    color: C.whiteText,
+    fontFamily: Fonts.body,
+    fontSize: 14,
+    fontWeight: '700',
+    includeFontPadding: false,
+  },
+  thumbnails: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 108,
+    flexGrow: 0,
+  },
+  thumbnailsContent: {
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  thumbWrap: {
+    position: 'relative',
+  },
+  thumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  thumbSelected: {
+    borderColor: C.accent,
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  thumbVideo: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000000',
+  },
+  removeBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EF4444',
     borderRadius: 9999,
   },
   bottomBar: {
@@ -129,15 +249,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 24,
   },
-  retakeButton: {
-    width: 56,
+  addMoreButton: {
     height: 56,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
     backgroundColor: C.pillBg,
     borderWidth: 1,
     borderColor: C.pillBorder,
     borderRadius: 9999,
+  },
+  addMoreLabel: {
+    color: C.whiteText,
+    fontFamily: Fonts.body,
+    fontSize: 15,
+    fontWeight: '600',
+    includeFontPadding: false,
   },
   continueButton: {
     height: 56,

@@ -249,10 +249,9 @@ type LoggedInCardProps = {
   fallbackName?: string;
   activity?: ActivityItem[];
   extraStats?: { redeemed?: number; activeDays?: number };
-  onLogout: () => void;
 };
 
-function LoggedInCard({ profile, fallbackName, activity = [], extraStats, onLogout }: LoggedInCardProps) {
+function LoggedInCard({ profile, fallbackName, activity = [], extraStats }: LoggedInCardProps) {
   const name = profile?.displayName || fallbackName || 'Usuario';
   const typeLabel = profile ? PROFILE_TYPE_LABELS[profile.profileType] : undefined;
   const balance = profile?.pointsBalance ?? 0;
@@ -310,13 +309,18 @@ function LoggedInCard({ profile, fallbackName, activity = [], extraStats, onLogo
         </>
       ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={onLogout}
-        style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
-        <AppText style={styles.logoutButtonLabel}>Cerrar sesión</AppText>
-      </Pressable>
     </View>
+  );
+}
+
+function LogoutButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
+      <AppText style={styles.logoutButtonLabel}>Cerrar sesión</AppText>
+    </Pressable>
   );
 }
 
@@ -417,6 +421,15 @@ export function ProfileSection() {
     await saveWallet(value);
   };
 
+  const handleOpenMetaMask = async () => {
+    setError('');
+    try {
+      await Linking.openURL('https://metamask.app.link/');
+    } catch {
+      setError('No se pudo abrir MetaMask. Instálalo y vuelve a intentarlo.');
+    }
+  };
+
   const handleRemove = async () => {
     if (!user) return;
     setSaving(true);
@@ -455,13 +468,15 @@ export function ProfileSection() {
         contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + BottomBarHeight + 24 }]}>
         {guest ? (
           showDevPreview && __DEV__ ? (
-            <LoggedInCard
-              profile={DEV_PREVIEW_PROFILE}
-              fallbackName={DEV_PREVIEW_PROFILE.displayName}
-              activity={DEV_PREVIEW_ACTIVITY}
-              extraStats={{ redeemed: 3, activeDays: 214 }}
-              onLogout={() => setShowDevPreview(false)}
-            />
+            <>
+              <LoggedInCard
+                profile={DEV_PREVIEW_PROFILE}
+                fallbackName={DEV_PREVIEW_PROFILE.displayName}
+                activity={DEV_PREVIEW_ACTIVITY}
+                extraStats={{ redeemed: 3, activeDays: 214 }}
+              />
+              <LogoutButton onPress={() => setShowDevPreview(false)} />
+            </>
           ) : (
             <>
               <View style={styles.placeholderCard}>
@@ -506,7 +521,7 @@ export function ProfileSection() {
                 </Pressable>
               </View>
             ) : null}
-            <LoggedInCard profile={profile} fallbackName={user?.displayName ?? undefined} onLogout={handleLogout} />
+            <LoggedInCard profile={profile} fallbackName={user?.displayName ?? undefined} />
 
             <View style={styles.walletCard}>
               <View style={styles.walletHeader}>
@@ -562,10 +577,20 @@ export function ProfileSection() {
                     </Pressable>
                   )}
                   {!isWeb && (
-                    <Text style={styles.nativeHint}>
-                      En tu celular, pega la dirección de tu wallet (por ejemplo, la de MetaMask).
-                    </Text>
+                    <>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={saving}
+                        onPress={() => void handleOpenMetaMask()}
+                        style={({ pressed }) => [styles.primaryButton, saving && styles.disabled, pressed && styles.pressed]}>
+                        <Text style={styles.primaryButtonLabel}>Abrir MetaMask</Text>
+                      </Pressable>
+                      <Text style={styles.nativeHint}>
+                        Abre tu cuenta en MetaMask, copia la dirección pública y vuelve a OceanEyes. Nunca compartas tu frase secreta.
+                      </Text>
+                    </>
                   )}
+                  <Text style={styles.walletInputLabel}>O ingresa tu dirección pública</Text>
                   <View style={styles.inputRow}>
                     <TextInput
                       autoCapitalize="none"
@@ -593,6 +618,8 @@ export function ProfileSection() {
               {!!saved && <Text style={styles.success}>Wallet guardada correctamente.</Text>}
               {!!error && <Text style={styles.error}>{error}</Text>}
             </View>
+
+            <LogoutButton onPress={handleLogout} />
           </>
         )}
       </KeyboardScrollView>
@@ -839,6 +866,12 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19,
     includeFontPadding: false,
+  },
+  walletInputLabel: {
+    color: 'rgba(44, 44, 44, 0.55)',
+    fontFamily: Fonts.label,
+    fontSize: 12,
+    fontWeight: '600',
   },
   success: {
     color: '#1B7F3B',

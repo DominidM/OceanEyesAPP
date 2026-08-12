@@ -7,7 +7,7 @@ import { getAllRedemptions, updateRedemptionStatus } from '@/shared/firebase/rew
 import type { Redemption, RedemptionStatus } from '@/shared/firebase/types';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, EmptyState, LoadingState, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, EmptyState, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
 import { useAdminTheme } from '@admin/theme/context';
 
 type RedemptionRow = Redemption & {
@@ -113,12 +113,14 @@ export function RedemptionsScreen() {
 
   return (
     <AdminShell title="Canjes" breadcrumb={[{ label: 'Canjes' }]}>
-      <SectionHeader
-        title="Gestión de canjes"
-        subtitle="Administra los canjes de recompensas. Avanza cada pedido por su flujo: Confirmar → Preparar → Enviar → Entregar."
-      />
+      {!(loading && redemptions.length === 0) && (
+        <SectionHeader
+          title="Gestión de canjes"
+          subtitle="Administra los canjes de recompensas. Avanza cada pedido por su flujo: Confirmar → Preparar → Enviar → Entregar."
+        />
+      )}
 
-      {loading && redemptions.length === 0 && <LoadingState label="Cargando canjes..." />}
+      {loading && redemptions.length === 0 && <AdminLoading variant="list" />}
 
       {!loading && redemptions.length === 0 && (
         <EmptyState

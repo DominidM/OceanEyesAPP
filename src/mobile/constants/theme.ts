@@ -12,6 +12,6 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomBarHeight = 64;
+export const BottomBarHeight = 58;
 
 export const MaxPhoneWidth = 430;

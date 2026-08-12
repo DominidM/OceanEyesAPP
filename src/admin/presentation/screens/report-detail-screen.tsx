@@ -3,10 +3,11 @@ import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'fir
 import React, { useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { AdminShell } from '@admin/layout/admin-shell';
-import { Badge, Button, Card, EmptyState, LoadingState, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, EmptyState, AdminLoading, SectionHeader } from '@admin/presentation/components/ui';
 import { ReportDataList } from '@admin/presentation/components/reports/report-data-list';
 import { ReportGallery } from '@admin/presentation/components/reports/report-gallery';
 import { ReportMap } from '@admin/presentation/components/reports/report-map';
@@ -30,7 +31,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   otro: 'Otro incidente',
 };
 
-export function ReportDetailScreen() {
+export function ReportDetailScreen({ readOnly = false }: { readOnly?: boolean }) {
   const { colors } = useAdminTheme();
   const { signer, connect, installed } = useWallet();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -58,6 +59,9 @@ export function ReportDetailScreen() {
         let currentSigner = signer;
         if (!currentSigner && installed) {
           currentSigner = await connect();
+        }
+        if (!currentSigner) {
+          throw new Error('Conecta la wallet administradora antes de verificar. El reporte seguirá pendiente.');
         }
         const outcome = await verifyReport(report.id, firebaseAuth?.currentUser?.uid ?? 'admin', currentSigner ?? undefined);
         if (outcome.kind === 'skipped_no_signer') {
@@ -138,16 +142,18 @@ export function ReportDetailScreen() {
   return (
     <AdminShell
       title="Detalle de reporte"
-      breadcrumb={[{ label: 'Reportes', href: '/admin/reports' }, { label: 'Detalle' }]}
+      breadcrumb={[{ label: readOnly ? 'Reportes y auditoría' : 'Reportes', href: readOnly ? '/admin/municipio/reportes' : '/admin/reports' }, { label: 'Detalle' }]}
     >
-      <SectionHeader
-        title="Detalles de reportes"
-        actions={[
-          <Button key="back" label="Volver" variant="secondary" onPress={() => router.push('/admin/reports')} />,
-        ]}
-      />
+      {!loading && (
+        <SectionHeader
+          title="Detalles de reportes"
+          actions={[
+            <Button key="back" label="Volver" variant="secondary" onPress={() => router.push(readOnly ? '/admin/municipio/reportes' : '/admin/reports')} />,
+          ]}
+        />
+      )}
 
-      {loading && <LoadingState label="Cargando reporte..." />}
+      {loading && <AdminLoading variant="detail" />}
 
       {!loading && !report && (
         <EmptyState
@@ -189,6 +195,13 @@ export function ReportDetailScreen() {
             </View>
           </View>
 
+          {report.audioURL ? (
+            <View style={[styles.subBlock, { borderColor: colors.cardBorder, marginTop: Spacing.two }]}>
+              <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Audio del reporte</Text>
+              <AudioPlayer uri={report.audioURL} durationMillis={report.audioDurationMillis} />
+            </View>
+          ) : null}
+
           <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
             <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Datos de reporte</Text>
 
@@ -214,7 +227,7 @@ export function ReportDetailScreen() {
             <ReportDataList rows={rows} />
           </View>
 
-          <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+          {!readOnly && <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
             <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Moderación</Text>
 
             {onChainNotice && (
@@ -270,7 +283,7 @@ export function ReportDetailScreen() {
                 </View>
               </View>
             )}
-          </View>
+          </View>}
         </Card>
       )}
     </AdminShell>
@@ -279,7 +292,77 @@ export function ReportDetailScreen() {
 
 export default ReportDetailScreen;
 
+function formatAudioDuration(ms: number): string {
+  const total = Math.floor(ms / 1000);
+  const minutes = Math.floor(total / 60);
+  const seconds = String(total % 60).padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+function AudioPlayer({ uri, durationMillis }: { uri: string; durationMillis?: number | null }) {
+  const { colors } = useAdminTheme();
+  const player = useAudioPlayer(uri);
+  const status = useAudioPlayerStatus(player);
+  const playing = status.playing;
+
+  const durationSec = status.duration > 0 ? status.duration : (durationMillis ?? 0) / 1000;
+  const durationLabel = durationSec > 0 ? formatAudioDuration(durationSec * 1000) : null;
+
+  const toggle = () => {
+    try {
+      if (playing) {
+        player.pause();
+      } else {
+        player.play();
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={toggle}
+      style={({ hovered }) => [
+        styles.audioRow,
+        hovered && { opacity: 0.7 },
+      ]}>
+      <MaterialCommunityIcons
+        name={playing ? 'pause-circle' : 'play-circle'}
+        size={34}
+        color="#0D9488"
+      />
+      <View style={styles.audioTextBlock}>
+        <Text style={[styles.audioActionLabel, { color: colors.accent }]}>
+          {playing ? 'Pausar audio' : 'Escuchar audio'}
+        </Text>
+        <Text style={[styles.audioDurationLabel, { color: colors.contentTextMuted }]}>
+          Duración: {durationLabel ?? '—'}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  audioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
+  },
+  audioTextBlock: {
+    gap: 2,
+  },
+  audioActionLabel: {
+    fontFamily: Fonts.label,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  audioDurationLabel: {
+    fontFamily: Fonts.body,
+    fontSize: 12,
+  },
   card: { gap: Spacing.three },
   subBlock: {
     borderWidth: 1,

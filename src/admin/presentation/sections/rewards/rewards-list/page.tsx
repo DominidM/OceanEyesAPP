@@ -15,7 +15,7 @@ import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { firestore } from '@/shared/firebase/app';
 import type { Reward } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
-import { Badge, Button, Card, EmptyState, LoadingState, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
+import { Badge, Button, Card, EmptyState, AdminLoading, PaginationFooter, SectionHeader } from '@admin/presentation/components/ui';
 
 type RewardRow = Reward & { id: string };
 
@@ -83,16 +83,18 @@ export function RewardsList() {
 
   return (
     <View style={styles.content}>
-      <SectionHeader
-        title="Catálogo de recompensas"
-        subtitle="Recompensas que los usuarios canjean con los puntos acumulados."
-        actions={[
-          <Button key="add" label="Agregar" onPress={() => router.push('/admin/rewards/new')} />,
-        ]}
-      />
+      {!(loading && rewards.length === 0) && (
+        <SectionHeader
+          title="Catálogo de recompensas"
+          subtitle="Recompensas que los usuarios canjean con los puntos acumulados."
+          actions={[
+            <Button key="add" label="Agregar" onPress={() => router.push('/admin/rewards/new')} />,
+          ]}
+        />
+      )}
 
       {loading && rewards.length === 0 && (
-        <LoadingState label="Cargando catálogo..." />
+        <AdminLoading variant="list" />
       )}
       {!loading && totalDocs === 0 && (
         <EmptyState

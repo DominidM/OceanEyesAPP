@@ -74,6 +74,8 @@ export type ReportInput = {
     address?: string;
   };
   photoURLs?: string[];
+  audioURL?: string | null;
+  audioDurationMillis?: number | null;
   customIcon?: string;
 };
 
@@ -87,6 +89,8 @@ export type Report = {
   deviceHash?: string;
   location?: { latitude: number; longitude: number; address?: string };
   photoURLs: string[];
+  audioURL?: string | null;
+  audioDurationMillis?: number | null;
   status: ReportStatus;
   pointsAwarded: number;
   txHash?: string;
@@ -232,20 +236,6 @@ export type Municipality = {
   updatedAt: Timestamp;
 };
 
-/* ── Organizaciones / ONGs (Fase 2E) ── */
-
-export type Organization = {
-  id: string;
-  name: string;
-  category: string;
-  description?: string;
-  website?: string;
-  contactEmail?: string;
-  verified: boolean;
-  logoURL?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-};
 
 /* ── Campañas municipales (Fase 2E) ── */
 

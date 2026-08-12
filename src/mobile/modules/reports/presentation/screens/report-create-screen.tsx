@@ -41,6 +41,35 @@ export function ReportCreateScreen() {
   // if (!user) return <Redirect href="/mobile/login" />;
   // TODO: reactivar el guard cuando Firebase Auth esté configurado y se quiera forzar login.
 
+  if (!user || !profile?.walletAddress) {
+    return (
+      <View style={styles.walletRequiredScreen}>
+        <View style={styles.walletRequiredCard}>
+          <AppSymbol
+            name={{ ios: 'wallet.pass.fill', android: 'account-balance-wallet', web: 'account-balance-wallet' }}
+            color={SC.accent}
+            size={42}
+          />
+          <AppText style={styles.successTitle}>Vincula una wallet para reportar</AppText>
+          <AppText style={styles.successBody}>
+            La wallet es obligatoria porque los puntos de un reporte verificado se registran en el contrato blockchain.
+          </AppText>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => user
+              ? router.replace({ pathname: '/mobile', params: { section: 'perfil' } })
+              : router.replace('/mobile/login')}
+            style={({ pressed }) => [styles.successButton, pressed && styles.pressed]}>
+            <AppText style={styles.successButtonLabel}>{user ? 'Configurar wallet' : 'Iniciar sesión'}</AppText>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.cancelWalletButton}>
+            <AppText style={styles.cancelWalletLabel}>Cancelar</AppText>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   if (state.submitted) {
     return (
       <View style={styles.successScreen}>
@@ -65,6 +94,16 @@ export function ReportCreateScreen() {
               : 'Tu reporte se guardó en el dispositivo y se enviará automáticamente cuando sea posible.'
             : 'Gracias por colaborar con la vigilancia marítima. Tu reporte será revisado.'}
         </AppText>
+        {state.queued ? null : state.mediaWarning ? (
+          <View style={styles.successWarningBox}>
+            <AppSymbol
+              name={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
+              color={SC.successWarning}
+              size={18}
+            />
+            <AppText style={styles.successWarningText}>{state.mediaWarning}</AppText>
+          </View>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           onPress={vm.exit}
@@ -89,7 +128,7 @@ export function ReportCreateScreen() {
         />
       ) : state.step === 5 ? (
         <SummaryStep
-          photo={state.media}
+          media={state.media}
           location={state.location}
           incident={state.incident}
           audio={state.audio}
@@ -194,6 +233,24 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     includeFontPadding: false,
   },
+  successWarningBox: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 12,
+    backgroundColor: SC.successWarningBg,
+    borderRadius: 10,
+  },
+  successWarningText: {
+    flex: 1,
+    color: SC.danger,
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'left',
+    includeFontPadding: false,
+  },
   successButton: {
     width: '100%',
     height: 56,
@@ -214,4 +271,23 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.78,
   },
+  walletRequiredScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: C.background,
+  },
+  walletRequiredCard: {
+    width: '100%',
+    maxWidth: 380,
+    alignItems: 'center',
+    gap: 16,
+    padding: 28,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    ...shadow('lift'),
+  },
+  cancelWalletButton: { padding: 10 },
+  cancelWalletLabel: { color: SC.textBody, fontFamily: Fonts.label, fontSize: 14, fontWeight: '600' },
 });

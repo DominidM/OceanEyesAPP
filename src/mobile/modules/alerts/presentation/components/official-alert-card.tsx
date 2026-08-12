@@ -98,7 +98,7 @@ export function OfficialAlertCard({ alert }: { alert: OfficialAlert }) {
                 color={BrandColors.primary}
                 size={13}
               />
-              <AppText style={styles.shareLabel}>Compartir con ONG</AppText>
+              <AppText style={styles.shareLabel}>Compartir</AppText>
             </Pressable>
           ) : null}
         </View>

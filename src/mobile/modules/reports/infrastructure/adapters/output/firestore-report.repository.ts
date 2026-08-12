@@ -11,7 +11,7 @@ import type { Report as FirestoreReport } from '@/shared/firebase/types';
 import { isNetworkError } from '@/shared/offline/errors';
 
 import type { NewReport, Report, ReportId } from '@/modules/reports/domain/entities/report';
-import type { ReportMediaPort, SubmissionMedia } from '@/modules/reports/domain/ports/report-media';
+import type { ReportMediaPort, SubmissionAudio, SubmissionMedia } from '@/modules/reports/domain/ports/report-media';
 import type { ReportOutboxPort } from '@/modules/reports/domain/ports/report-outbox';
 import type {
   InsertReportOptions,
@@ -31,17 +31,26 @@ export class FirestoreReportRepository implements ReportRepository {
     newReport: NewReport,
     media?: SubmissionMedia[],
     options?: InsertReportOptions,
+    audio?: SubmissionAudio | null,
   ): Promise<InsertReportResult> {
     const online = options?.online ?? true;
     if (online) {
       try {
-        const result = await publishReportOnline(newReportToInput(newReport), media ?? []);
-        return { reportId: result.id, queued: false };
+        const result = await publishReportOnline(
+          newReportToInput(newReport),
+          media ?? [],
+          audio ?? null,
+        );
+        return {
+          reportId: result.id,
+          queued: false,
+          mediaWarning: result.mediaWarning ?? null,
+        };
       } catch (error) {
         if (!isNetworkError(error)) throw error;
       }
     }
-    return this.queue(newReport, media ?? []);
+    return this.queue(newReport, media ?? [], audio ?? null);
   }
 
   async findById(reportId: ReportId): Promise<Report | null> {
@@ -70,9 +79,14 @@ export class FirestoreReportRepository implements ReportRepository {
     );
   }
 
-  private async queue(newReport: NewReport, media: SubmissionMedia[]): Promise<InsertReportResult> {
+  private async queue(
+    newReport: NewReport,
+    media: SubmissionMedia[],
+    audio: SubmissionAudio | null,
+  ): Promise<InsertReportResult> {
     const staged = await this.media.stageAll(media);
-    const pending = await this.outbox.enqueue(newReport, staged);
+    const stagedAudio = audio ? await this.media.stageAudio(audio) : null;
+    const pending = await this.outbox.enqueue(newReport, staged, stagedAudio);
     return { reportId: pending.id, queued: true };
   }
 }

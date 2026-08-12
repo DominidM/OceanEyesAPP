@@ -1,3 +1,8 @@
+import {
+  handleAuthDelete,
+  handleAuthSignup,
+  handleMunicipalityApply,
+} from './shared/gateway/municipal-signup';
 import { getRolRecommendation, getRolReply } from './shared/rol/service';
 import {
   buildContactConfirmationHtml,
@@ -20,6 +25,8 @@ interface Env {
   BREVO_SENDER_EMAIL?: string;
   API_KEY_GEMINI?: string;
   GEMINI_MODEL?: string;
+  FIREBASE_API_KEY?: string;
+  FIREBASE_PROJECT_ID?: string;
 }
 
 function json(body: unknown, status: number): Response {
@@ -48,6 +55,7 @@ interface SendPushBody {
   tokens?: string[];
   title?: string;
   message?: string;
+  severity?: string;
   data?: Record<string, unknown>;
 }
 
@@ -63,9 +71,10 @@ async function handleSendPush(request: Request): Promise<Response> {
   const { tokens, title, message } = body;
   const safeTokens = (tokens ?? [])
     .map((t) => String(t ?? '').trim())
-    .filter((t) => t.length > 0 && t.startsWith('ExponentPushToken'));
+    .filter((t) => /^Expo(nent)?PushToken\[.+\]$/.test(t));
   const safeTitle = String(title ?? 'OceanEyes').trim();
   const safeMessage = String(message ?? '').trim();
+  const isDanger = body.severity === 'danger';
 
   if (safeTokens.length === 0) {
     return json({ success: true, sent: 0, skipped: 0 }, 200);
@@ -88,10 +97,14 @@ async function handleSendPush(request: Request): Promise<Response> {
         body: JSON.stringify(
           chunk.map((to) => ({
             to,
-            title: safeTitle,
+            title: isDanger ? `⚠ ALERTA DE PELIGRO: ${safeTitle}` : safeTitle,
             body: safeMessage,
-            sound: 'default',
-            data: { kind: 'alert', ...(body.data ?? {}) } as Record<string, unknown>,
+            sound: isDanger ? 'alarma_peligro.wav' : 'default',
+            priority: isDanger ? 'high' : 'default',
+            ttl: isDanger ? 300 : 3600,
+            channelId: isDanger ? 'official-alerts' : 'oceaneyes',
+            interruptionLevel: isDanger ? 'time-sensitive' : 'active',
+            data: { kind: 'official-alert', severity: body.severity ?? 'info', ...(body.data ?? {}) } as Record<string, unknown>,
           })),
         ),
       });
@@ -287,6 +300,18 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/api/send-push') {
       return handleSendPush(request);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/auth/signup') {
+      return handleAuthSignup(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/auth/delete') {
+      return handleAuthDelete(request, env);
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/municipalities/apply') {
+      return handleMunicipalityApply(request, env);
     }
 
     return env.ASSETS.fetch(request);

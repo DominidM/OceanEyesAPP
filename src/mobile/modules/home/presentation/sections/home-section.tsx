@@ -20,14 +20,13 @@ import { isMapReport, toMapReport, type MapReport } from '../components/map-repo
 import { TopBar } from '../components/top-bar';
 
 type HomeSectionProps = {
-  onReportPress?: () => void;
   onExpandMap?: () => void;
   onAlertsPress?: () => void;
   onAlertReportPress?: () => void;
   onPendingPress?: () => void;
 };
 
-export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onAlertReportPress, onPendingPress }: HomeSectionProps) {
+export function HomeSection({ onExpandMap, onAlertsPress, onAlertReportPress, onPendingPress }: HomeSectionProps) {
   const insets = useSafeAreaInsets();
   const { profile, user } = useAuth();
   const guest = useGuestStatus();
@@ -78,21 +77,17 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onAlert
           />
         </View>
 
-        <View style={styles.actionsStack}>
-          <ActionCard
-            title="REPORTAR UN INCIDENTE"
-            subtitle="Captura foto y envia"
-            color={BrandColors.primary}
-            onPress={onReportPress}
-            helperIcon={{ ios: 'camera.fill', android: 'photo-camera', web: 'photo-camera' }}
-            icon={{ ios: 'exclamationmark.triangle.fill', android: 'emergency', web: 'emergency' }}
-          />
+        <AppText style={styles.sectionTitle}>Tu Actividad</AppText>
+        <ActivityCard stats={activityStats} />
 
+        <MapPreview reports={reports} onExpand={onExpandMap} />
+
+        <View style={styles.actionsStack}>
           <ActionCard
             title="VER ALERTAS EN MI ZONA"
             subtitle="Reportes verificados cerca de ti"
             color={BrandColors.secondary}
-            height={147}
+            height={104}
             onPress={onAlertsPress}
             helperIcon={{
               ios: 'location.fill',
@@ -105,21 +100,18 @@ export function HomeSection({ onReportPress, onExpandMap, onAlertsPress, onAlert
           <ActionCard
             title="ALERTAR A MI ZONA"
             subtitle="Envía una señal rápida de peligro"
-            color="#B45309"
-            height={147}
+            color={BrandColors.primary}
+            height={104}
             onPress={onAlertReportPress}
             helperIcon={{
               ios: 'megaphone.fill',
               android: 'campaign',
               web: 'campaign',
             }}
-            icon={{ ios: 'exclamationmark.triangle.fill', android: 'emergency', web: 'emergency' }}
+            icon={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
           />
         </View>
 
-        <AppText style={styles.sectionTitle}>Tu Actividad</AppText>
-        <ActivityCard stats={activityStats} />
-        <MapPreview reports={reports} onExpand={onExpandMap} />
       </ScrollView>
     </>
   );
@@ -137,7 +129,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    marginBottom: 25,
+    marginBottom: 12,
   },
   headline: {
     flexShrink: 1,
@@ -149,17 +141,18 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   actionsStack: {
-    gap: 16,
+    gap: 10,
+    marginTop: 12,
   },
   sectionTitle: {
     color: BrandColors.neutral,
     fontFamily: Fonts.headline,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     lineHeight: 22,
     letterSpacing: -0.27,
     includeFontPadding: false,
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 0,
+    marginBottom: 8,
   },
 });

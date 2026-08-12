@@ -21,6 +21,8 @@ export function toDomainReport(raw: FirestoreReport): Report {
     deviceHash: raw.deviceHash ?? null,
     location: raw.location ?? null,
     photoURLs: raw.photoURLs ?? [],
+    audioURL: raw.audioURL ?? null,
+    audioDurationMillis: raw.audioDurationMillis ?? null,
     status: raw.status,
     pointsAwarded: raw.pointsAwarded ?? 0,
     txHash: raw.txHash ?? null,

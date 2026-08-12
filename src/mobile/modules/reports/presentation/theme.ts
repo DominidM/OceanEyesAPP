@@ -107,6 +107,9 @@ export const SummaryColors = {
   secondaryBorder: 'rgba(19, 78, 94, 0.18)',
   secondaryText: 'rgba(44, 44, 44, 0.7)',
   termsText: 'rgba(44, 44, 44, 0.7)',
+  danger: '#B42318',
+  successWarning: '#B45309',
+  successWarningBg: 'rgba(180, 83, 9, 0.12)',
 } as const;
 
 export const CaptureColors = {

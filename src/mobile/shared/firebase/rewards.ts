@@ -5,6 +5,7 @@ import {
   getDoc,
   getDocs,
   increment,
+  onSnapshot,
   orderBy,
   query,
   runTransaction,
@@ -20,9 +21,11 @@ import type { PointTransaction, Redemption, RedemptionStatus, Reward } from './t
 
 export async function getAllRewards(): Promise<Reward[]> {
   const snapshot = await getDocs(
-    query(collection(firestore, 'rewards'), where('active', '==', true), orderBy('pointsCost', 'asc')),
+    query(collection(firestore, 'rewards'), where('active', '==', true)),
   );
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Reward);
+  return snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as Reward)
+    .sort((a, b) => a.pointsCost - b.pointsCost);
 }
 
 export async function getRewardById(rewardId: string): Promise<Reward | null> {
@@ -107,13 +110,15 @@ export async function redeemReward(userId: string, rewardId: string): Promise<st
 
 export async function getUserRedemptions(userId: string): Promise<Redemption[]> {
   const snapshot = await getDocs(
-    query(
-      collection(firestore, 'redemptions'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
-    ),
+    query(collection(firestore, 'redemptions'), where('userId', '==', userId)),
   );
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Redemption);
+  return snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as Redemption)
+    .sort((a, b) => {
+      const ta = a.createdAt?.toMillis?.() ?? 0;
+      const tb = b.createdAt?.toMillis?.() ?? 0;
+      return tb - ta; // desc
+    });
 }
 
 export async function getAllRedemptions(): Promise<Redemption[]> {
@@ -160,4 +165,31 @@ export async function getUserPointTransactions(userId: string): Promise<PointTra
     ),
   );
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as PointTransaction);
+}
+
+export function subscribeReportPointTransactions(
+  reportIds: string[],
+  callback: (transactions: PointTransaction[]) => void,
+): () => void {
+  if (reportIds.length === 0) {
+    callback([]);
+    return () => undefined;
+  }
+
+  const byReport = new Map<string, PointTransaction[]>();
+  const publish = () => callback(
+    [...byReport.values()]
+      .flat()
+      .filter((tx) => tx.type === 'report_verified')
+      .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)),
+  );
+  const unsubscribes = reportIds.map((reportId) => onSnapshot(
+    query(collection(firestore, 'pointTransactions'), where('reportId', '==', reportId)),
+    (snapshot) => {
+      byReport.set(reportId, snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as PointTransaction));
+      publish();
+    },
+    (error) => console.warn(`No se pudieron cargar las transacciones del reporte ${reportId}`, error),
+  ));
+  return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
 }

@@ -18,7 +18,11 @@ export class ReportCommandService implements ReportCommands {
     const signedIn = await this.identity.ensureSignedIn();
     const result = await this.repository.insert(reportWithDevice, command.media ?? [], {
       online: signedIn && options.online,
-    });
-    return { reportId: result.reportId, queued: result.queued };
+    }, command.audio ?? null);
+    return {
+      reportId: result.reportId,
+      queued: result.queued,
+      mediaWarning: result.mediaWarning ?? null,
+    };
   }
 }

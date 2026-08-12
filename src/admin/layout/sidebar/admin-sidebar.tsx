@@ -34,7 +34,7 @@ export function AdminSidebar() {
           <NavItem
             key={item.key}
             item={item}
-            active={!!item.href && pathname === item.href}
+            active={!!item.href && (pathname === item.href || (item.href !== '/admin/municipio' && pathname.startsWith(`${item.href}/`)))}
           />
         ))}
       </View>
