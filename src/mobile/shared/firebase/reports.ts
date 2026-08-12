@@ -4,6 +4,7 @@ import {
   doc,
   getDocs,
   increment,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -16,7 +17,7 @@ import {
 import { isFirebaseConfigured } from './config';
 
 import { firebaseAuth, firestore } from './app';
-import { REPORT_CATEGORIES, type Report, type ReportInput } from './types';
+import { REPORT_CATEGORIES, type GeoBounds, type Report, type ReportInput } from './types';
 
 import { getDeviceHash } from '@/shared/identity/device-id';
 import { isNetworkError } from '@/shared/offline/errors';
@@ -287,6 +288,31 @@ export async function getAllReports(): Promise<Report[]> {
     query(collection(firestore, 'reports'), orderBy('createdAt', 'desc')),
   );
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report);
+}
+
+export function subscribeAllReports(
+  callback: (reports: Report[]) => void,
+  bounds?: GeoBounds,
+): () => void {
+  if (!isFirebaseConfigured()) return () => undefined;
+
+  const constraints = bounds
+    ? [
+        where('location.latitude', '>=', bounds.south),
+        where('location.latitude', '<=', bounds.north),
+        where('location.longitude', '>=', bounds.west),
+        where('location.longitude', '<=', bounds.east),
+        orderBy('location.latitude'),
+        orderBy('location.longitude'),
+        limit(200),
+      ]
+    : [orderBy('createdAt', 'desc'), limit(200)];
+
+  return onSnapshot(
+    query(collection(firestore, 'reports'), ...constraints),
+    (snapshot) => callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report)),
+    (error) => console.warn('No se pudieron cargar los reportes territoriales', error),
+  );
 }
 
 export function subscribeReports(callback: (reports: Report[]) => void): () => void {

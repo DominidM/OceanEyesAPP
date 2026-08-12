@@ -139,7 +139,7 @@ export function subscribeOwnAlerts(uid: string, callback: (alerts: Alert[]) => v
 
 /* ── AlertReports (reportes ciudadanos de alerta) ── */
 
-const CLUSTER_TITLES: Record<AlertReportType, string> = {
+export const ALERT_REPORT_TITLES: Record<AlertReportType, string> = {
   retroceso_mar: 'Posible tsunami: retroceso del mar',
   oleaje_extremo: 'Oleaje extremo cerca de la costa',
   contaminacion: 'Mancha de contaminación marina',
@@ -298,9 +298,9 @@ export async function evaluateAlertClusters(): Promise<{ promoted: boolean; repo
       const lng = cluster.reduce((acc, c) => acc + c.location.longitude, 0) / cluster.length;
 
       await createAlert({
-        title: CLUSTER_TITLES[cluster[0].type] ?? 'Alerta ciudadana confirmada',
+        title: ALERT_REPORT_TITLES[cluster[0].type] ?? 'Alerta ciudadana confirmada',
         message:
-          `${uniqueUsers.length} vecino(s) confirmaron un "${CLUSTER_TITLES[cluster[0].type]}" a ${CLUSTER_RADIUS_KM} km a la redonda en los últimos ${CLUSTER_WINDOW_MIN} min. ` +
+          `${uniqueUsers.length} vecino(s) confirmaron un "${ALERT_REPORT_TITLES[cluster[0].type]}" a ${CLUSTER_RADIUS_KM} km a la redonda en los últimos ${CLUSTER_WINDOW_MIN} min. ` +
           `Severidad: ${severity}. Verificado por la comunidad.`,
         severity,
         source: 'user_cluster',

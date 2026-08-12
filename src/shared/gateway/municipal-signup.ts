@@ -185,8 +185,8 @@ export async function handleMunicipalityApply(request: Request, env: GatewayEnv)
     if (text) municipalityFields[key] = { stringValue: text };
   }
 
-  const municipalityRes = await fetch(`${base}/municipalities`, {
-    method: 'POST',
+  const municipalityRes = await fetch(`${base}/municipalities/${encodeURIComponent(ownerUid)}`, {
+    method: 'PATCH',
     headers: authHeaders,
     body: JSON.stringify({ fields: municipalityFields }),
   });

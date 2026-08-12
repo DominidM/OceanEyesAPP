@@ -7,13 +7,8 @@ import { AdminLayout } from '@admin/layout/admin-layout';
 import { AdminThemeProvider } from '@admin/theme/context';
 import { WalletProvider } from '@admin/presentation/hooks/useWallet';
 
-const MUNICIPAL_PATHS = new Set([
-  '/admin/municipio',
-  '/admin/login',
-]);
-
 export default function AdminRouteLayout() {
-  const { user, profile, loading } = useAuth();
+  const { profile, loading } = useAuth();
   const pathname = usePathname();
 
   if (Platform.OS !== 'web') return <Redirect href="/mobile" />;
@@ -40,7 +35,7 @@ export default function AdminRouteLayout() {
     return <Redirect href="/admin/login" />;
   }
 
-  if (isMunicipal && !MUNICIPAL_PATHS.has(pathname)) {
+  if (isMunicipal && pathname !== '/admin/login' && !pathname.startsWith('/admin/municipio')) {
     return <Redirect href="/admin/municipio" />;
   }
 

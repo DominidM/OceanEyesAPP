@@ -9,7 +9,10 @@ export type AdminRoute =
   | '/admin/redemptions'
   | '/admin/alerts'
   | '/admin/municipalities'
-  | '/admin/municipio';
+  | '/admin/municipio'
+  | '/admin/municipio/reportes'
+  | '/admin/municipio/alertas'
+  | '/admin/municipio/campanas';
 
 export type AdminNavItem = {
   key: string;
@@ -34,7 +37,10 @@ export const ADMIN_NAV: AdminNavItem[] = [
     href: '/admin/municipalities',
     roles: ['admin'],
   },
-  { key: 'municipio', label: 'Mi municipio', icon: 'building', href: '/admin/municipio', roles: ['municipal'] },
+  { key: 'municipio', label: 'Resumen municipal', icon: 'building', href: '/admin/municipio', roles: ['municipal'] },
+  { key: 'municipio-reportes', label: 'Reportes y auditoría', icon: 'clipboard-check', href: '/admin/municipio/reportes', roles: ['municipal'] },
+  { key: 'municipio-alertas', label: 'Señales y alertas', icon: 'bell', href: '/admin/municipio/alertas', roles: ['municipal'] },
+  { key: 'municipio-campanas', label: 'Campañas', icon: 'bullhorn', href: '/admin/municipio/campanas', roles: ['municipal'] },
 ];
 
 export function getAdminNav(role: UserRole | undefined): AdminNavItem[] {

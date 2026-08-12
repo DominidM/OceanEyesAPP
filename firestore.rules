@@ -19,6 +19,22 @@ service cloud.firestore {
       return isRole('admin') || isRole('municipal');
     }
 
+    function isActiveMunicipality() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/municipalities/$(request.auth.uid))
+        && get(/databases/$(database)/documents/municipalities/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isInMunicipalityBounds(location) {
+      let bounds = get(/databases/$(database)/documents/municipalities/$(request.auth.uid)).data.bounds;
+      return location != null
+        && bounds != null
+        && location.latitude >= bounds.south
+        && location.latitude <= bounds.north
+        && location.longitude >= bounds.west
+        && location.longitude <= bounds.east;
+    }
+
     function isOwner(userId) {
       return signedIn() && request.auth.uid == userId;
     }
@@ -40,7 +56,8 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid)
-        || (resource.data.status == 'verificado');
+        || (resource.data.status == 'verificado')
+        || (isActiveMunicipality() && isInMunicipalityBounds(resource.data.location));
       allow update: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid
           && request.resource.data.userId == resource.data.userId
@@ -49,7 +66,10 @@ service cloud.firestore {
 
       match /private/{privateId} {
         allow read: if isAdmin()
-          || (signedIn() && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid);
+          || (signedIn() && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid)
+          || get(/databases/$(database)/documents/reports/$(reportId)).data.status == 'verificado'
+          || (isActiveMunicipality()
+            && isInMunicipalityBounds(get(/databases/$(database)/documents/reports/$(reportId)).data.location));
         allow create: if isAdmin()
           || (signedIn()
             && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid
@@ -73,10 +93,12 @@ service cloud.firestore {
     match /municipalities/{municipalityId} {
       allow read: if isAdmin() || (signedIn() && resource.data.ownerUid == request.auth.uid);
       allow create: if signedIn()
+        && municipalityId == request.auth.uid
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.status == 'pending';
-      allow update: if isPrivileged()
-        || (signedIn() && resource.data.ownerUid == request.auth.uid
+      allow update: if isAdmin()
+        || (signedIn() && municipalityId == request.auth.uid
+          && resource.data.ownerUid == request.auth.uid
           && request.resource.data.status == resource.data.status
           && request.resource.data.ownerUid == resource.data.ownerUid);
       allow delete: if isAdmin();
@@ -106,7 +128,8 @@ service cloud.firestore {
     match /alertReports/{reportId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid)
-        || (resource.data.status == 'verified');
+        || (resource.data.status == 'verified')
+        || isActiveMunicipality();
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'pending';
@@ -118,7 +141,13 @@ service cloud.firestore {
     }
 
     match /pointTransactions/{transactionId} {
-      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid)
+        || (isActiveMunicipality()
+          && resource.data.reportId != null
+          && isInMunicipalityBounds(
+            get(/databases/$(database)/documents/reports/$(resource.data.reportId)).data.location
+          ));
       allow write: if isAdmin();
     }
 

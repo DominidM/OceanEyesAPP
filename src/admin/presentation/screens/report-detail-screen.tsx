@@ -31,7 +31,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   otro: 'Otro incidente',
 };
 
-export function ReportDetailScreen() {
+export function ReportDetailScreen({ readOnly = false }: { readOnly?: boolean }) {
   const { colors } = useAdminTheme();
   const { signer, connect, installed } = useWallet();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -139,13 +139,13 @@ export function ReportDetailScreen() {
   return (
     <AdminShell
       title="Detalle de reporte"
-      breadcrumb={[{ label: 'Reportes', href: '/admin/reports' }, { label: 'Detalle' }]}
+      breadcrumb={[{ label: readOnly ? 'Reportes y auditoría' : 'Reportes', href: readOnly ? '/admin/municipio/reportes' : '/admin/reports' }, { label: 'Detalle' }]}
     >
       {!loading && (
         <SectionHeader
           title="Detalles de reportes"
           actions={[
-            <Button key="back" label="Volver" variant="secondary" onPress={() => router.push('/admin/reports')} />,
+            <Button key="back" label="Volver" variant="secondary" onPress={() => router.push(readOnly ? '/admin/municipio/reportes' : '/admin/reports')} />,
           ]}
         />
       )}
@@ -224,7 +224,7 @@ export function ReportDetailScreen() {
             <ReportDataList rows={rows} />
           </View>
 
-          <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
+          {!readOnly && <View style={[styles.subBlock, { borderColor: colors.cardBorder }]}>
             <Text style={[styles.subBlockTitle, { color: colors.cardText }]}>Moderación</Text>
 
             {onChainNotice && (
@@ -280,7 +280,7 @@ export function ReportDetailScreen() {
                 </View>
               </View>
             )}
-          </View>
+          </View>}
         </Card>
       )}
     </AdminShell>

@@ -5,6 +5,7 @@ import {
   getDoc,
   getDocs,
   increment,
+  onSnapshot,
   orderBy,
   query,
   runTransaction,
@@ -160,4 +161,31 @@ export async function getUserPointTransactions(userId: string): Promise<PointTra
     ),
   );
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as PointTransaction);
+}
+
+export function subscribeReportPointTransactions(
+  reportIds: string[],
+  callback: (transactions: PointTransaction[]) => void,
+): () => void {
+  if (reportIds.length === 0) {
+    callback([]);
+    return () => undefined;
+  }
+
+  const byReport = new Map<string, PointTransaction[]>();
+  const publish = () => callback(
+    [...byReport.values()]
+      .flat()
+      .filter((tx) => tx.type === 'report_verified')
+      .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)),
+  );
+  const unsubscribes = reportIds.map((reportId) => onSnapshot(
+    query(collection(firestore, 'pointTransactions'), where('reportId', '==', reportId)),
+    (snapshot) => {
+      byReport.set(reportId, snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as PointTransaction));
+      publish();
+    },
+    (error) => console.warn(`No se pudieron cargar las transacciones del reporte ${reportId}`, error),
+  ));
+  return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
 }

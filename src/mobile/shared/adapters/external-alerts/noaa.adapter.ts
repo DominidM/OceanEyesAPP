@@ -1,6 +1,6 @@
 import type { ExternalAlertDTO, ExternalAlertSource } from './types';
 
-const NOAA_ALERTS_URL = 'https://api.weather.gov/alerts/active?event=Tsunami%20Warning&status=actual&message_type=Alert&limit=20';
+const NOAA_ALERTS_URL = 'https://api.weather.gov/alerts/active?event=Tsunami%20Warning&limit=20';
 
 const PACIFIC_KEYWORDS = ['pacific', 'pacifico', 'peru', 'chile', 'ecuador', 'south america', 'america del sur', 'hawaii', 'guam', 'samoa'];
 
