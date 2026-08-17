@@ -12,12 +12,11 @@ import { buildClusters, buildHeatCells, heatColor } from './map-layers';
 type RealTimeMapProps = {
   reports: MapReport[];
   activeCategories?: Set<string> | null;
-  showFilters?: boolean;
 };
 
 type LMapModule = typeof import('leaflet');
 
-export function RealTimeMap({ reports, showFilters = true }: RealTimeMapProps) {
+export function RealTimeMap({ reports, activeCategories }: RealTimeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
@@ -108,28 +107,6 @@ export function RealTimeMap({ reports, showFilters = true }: RealTimeMapProps) {
   return (
     <View style={styles.container}>
       <div ref={containerRef} style={styles.map} />
-      {showFilters && <View style={styles.filterBar} pointerEvents="box-none">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterContent}>
-          {Object.entries(REPORT_CATEGORY_LABELS).map(([category, label]) => {
-            const active = !activeCategories || activeCategories.has(category);
-            const color = CATEGORY_COLORS[category as ReportCategory] ?? BrandColors.primary;
-            return (
-              <Pressable
-                key={category}
-                accessibilityRole="button"
-                onPress={() => toggleCategory(category)}
-                style={[styles.filterChip, active && { backgroundColor: color }]}>
-                <AppText style={[styles.filterChipLabel, { color: active ? '#FFFFFF' : 'rgba(44,44,44,0.75)' }]}>
-                  {label}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>}
     </View>
   );
 }
@@ -146,31 +123,5 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  filterBar: {
-    position: 'absolute' as const,
-    top: 64,
-    left: 0,
-    right: 0,
-  },
-  filterContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-    flexDirection: 'row' as const,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderWidth: 1,
-    borderColor: 'rgba(19,78,94,0.2)',
-  },
-  filterChipLabel: {
-    fontFamily: Fonts.label,
-    fontSize: 12,
-    fontWeight: '600',
-    includeFontPadding: false,
   },
 });

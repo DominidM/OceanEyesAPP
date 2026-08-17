@@ -37,10 +37,10 @@ const FOCUS_REGION: Region = {
 
 type RealTimeMapProps = {
   reports: MapReport[];
-  showFilters?: boolean;
+  activeCategories?: Set<string> | null;
 };
 
-export function RealTimeMap({ reports, showFilters = true }: RealTimeMapProps) {
+export function RealTimeMap({ reports, activeCategories }: RealTimeMapProps) {
   const { permission, requestPermission, position, loading } = useCurrentLocation();
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
   const [selected, setSelected] = useState<MapReport | null>(null);
@@ -182,29 +182,6 @@ export function RealTimeMap({ reports, showFilters = true }: RealTimeMapProps) {
           ) : null}
         </View>
       ) : null}
-
-      {showFilters && <View style={styles.filterBar} pointerEvents="box-none">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterContent}>
-          {Object.entries(REPORT_CATEGORY_LABELS).map(([category, label]) => {
-            const active = !activeCategories || activeCategories.has(category);
-            const color = CATEGORY_COLORS[category as ReportCategory] ?? BrandColors.primary;
-            return (
-              <Pressable
-                key={category}
-                accessibilityRole="button"
-                onPress={() => toggleCategory(category)}
-                style={[styles.filterChip, active && { backgroundColor: color }]}>
-                <AppText style={[styles.filterChipLabel, { color: active ? '#FFFFFF' : 'rgba(44,44,44,0.75)' }]}>
-                  {label}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>}
 
       <ReportDetailSheet report={selected} onClose={() => setSelected(null)} />
     </View>
