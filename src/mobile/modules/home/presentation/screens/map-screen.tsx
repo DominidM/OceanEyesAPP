@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import React, { useState } from 'react';
+import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,51 +8,71 @@ import { AppFonts as Fonts, BrandColors } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { useLiveReports } from '@/shared/hooks/use-live-reports';
 import { shadow } from '@/shared/utils/shadows';
+import type { ReportCategory } from '@/shared/firebase/types';
 
 import { RealTimeMap } from '../components/real-time-map';
-import { isMapReport, toMapReport, type MapReport } from '../components/map-report';
+import { CATEGORY_COLORS, isMapReport, REPORT_CATEGORY_LABELS, toMapReport, type MapReport } from '../components/map-report';
 
 export function MapScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { reports } = useLiveReports<MapReport>((items) => items.map(toMapReport).filter(isMapReport));
+  const [activeCategories, setActiveCategories] = useState<Set<string> | null>(null);
+
+  const toggleCategory = (category: string) => {
+    setActiveCategories((prev) => {
+      const next = new Set(prev ?? (Object.keys(REPORT_CATEGORY_LABELS) as ReportCategory[]));
+      if (next.has(category) && next.size === 1) return next;
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
+      return next;
+    });
+  };
 
   return (
     <View style={styles.screen}>
       <View style={styles.frame}>
-        <RealTimeMap reports={reports} />
+        <RealTimeMap reports={reports} activeCategories={activeCategories} />
 
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Volver"
-            onPress={() => router.back()}
-            style={({ pressed }) => [styles.headerButton, pressed && styles.pressed]}>
-            <AppSymbol
-              name={{ ios: 'chevron.left', android: 'arrow-back', web: 'arrow-back' }}
-              color={BrandColors.neutral}
-              size={20}
-            />
-          </Pressable>
-          <AppText style={styles.headerTitle}>Mapa en Tiempo Real</AppText>
-          <View style={styles.headerSpacer} />
-        </View>
-
-        <View style={[styles.legend, { bottom: Math.max(insets.bottom, 12) }]}>
-          <LegendItem color="#C0392B" label="Pesca ilegal" />
-          <LegendItem color="#F59E0B" label="Basura marina" />
-          <LegendItem color="#2563EB" label="Variación del mar" />
+          <View style={styles.headerRow}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Volver"
+              onPress={() => router.back()}
+              style={({ pressed }) => [styles.headerButton, pressed && styles.pressed]}>
+              <AppSymbol
+                name={{ ios: 'chevron.left', android: 'arrow-back', web: 'arrow-back' }}
+                color={BrandColors.neutral}
+                size={20}
+              />
+            </Pressable>
+            <AppText style={styles.headerTitle}>Mapa en Tiempo Real</AppText>
+            <View style={styles.headerSpacer} />
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterContent}>
+            {Object.entries(REPORT_CATEGORY_LABELS).map(([category, label]) => {
+              const active = !activeCategories || activeCategories.has(category);
+              const color = CATEGORY_COLORS[category as ReportCategory] ?? BrandColors.primary;
+              return (
+                <Pressable
+                  key={category}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  onPress={() => toggleCategory(category)}
+                  style={[styles.filterChip, active && { backgroundColor: color }]}>
+                  <AppText style={[styles.filterChipLabel, { color: active ? '#FFFFFF' : 'rgba(44,44,44,0.75)' }]}>
+                    {label}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
       </View>
-    </View>
-  );
-}
-
-function LegendItem({ color, label }: { color: string; label: string }) {
-  return (
-    <View style={styles.legendItem}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <AppText style={styles.legendLabel}>{label}</AppText>
     </View>
   );
 }
@@ -78,11 +98,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: 'rgba(239, 235, 227, 0.96)',
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: 'rgba(239, 235, 227, 0.96)',
+    paddingBottom: 4,
   },
   headerButton: {
     width: 40,
@@ -104,35 +127,22 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-  legend: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
+  filterContent: {
+    paddingVertical: 4,
     gap: 8,
-    paddingVertical: 8,
+  },
+  filterChip: {
     paddingHorizontal: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderRadius: 9999,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(19,78,94,0.2)',
   },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendLabel: {
-    color: BrandColors.neutral,
-    fontFamily: Fonts.body,
+  filterChipLabel: {
+    fontFamily: Fonts.label,
     fontSize: 12,
-    fontWeight: '500',
-    lineHeight: 16,
+    fontWeight: '600',
     includeFontPadding: false,
   },
   pressed: {

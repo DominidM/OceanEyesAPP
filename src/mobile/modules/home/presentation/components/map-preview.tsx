@@ -15,7 +15,7 @@ type MapPreviewProps = {
 export function MapPreview({ reports, onExpand }: MapPreviewProps) {
   return (
     <View style={styles.mapCard}>
-      <RealTimeMap reports={reports} showFilters={false} />
+      <RealTimeMap reports={reports} />
 
       <View style={styles.mapOverlay}>
         <Pressable

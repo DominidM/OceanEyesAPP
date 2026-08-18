@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OceanEyes - Arquitectura</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root{--bg:#0A0F1D;--surface:#111827;--text:#E2E8F0;--accent:#208AEF;--secondary:#0891B2;--border:#1E293B}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;padding:2rem}
+h1{text-align:center;font-size:2rem;color:var(--accent);margin-bottom:.5rem}
+.subtitle{text-align:center;color:var(--secondary);margin-bottom:2rem}
+.section{max-width:1100px;margin:2rem auto;padding:2rem;background:var(--surface);border-radius:16px;border:1px solid var(--border)}
+.section h2{color:var(--accent);margin-bottom:1.5rem;font-size:1.3rem}
+.mermaid{display:flex;justify-content:center;overflow-x:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}
+.card{background:var(--bg);border-radius:12px;padding:1.5rem;border:1px solid var(--border)}
+.card h3{color:var(--secondary);margin-bottom:.75rem}
+.card ul{list-style:none;padding:0}
+.card li{padding:.3rem 0;font-size:.85rem;opacity:.85}
+.card li::before{content:'\25B8 ';color:var(--accent)}
+.tag{display:inline-block;padding:.15rem .5rem;border-radius:6px;font-size:.7rem;font-weight:700;margin-right:.3rem}
+.tag-ts{background:var(--accent);color:#fff}
+.tag-js{background:#F7DF1E;color:#000}
+.tag-sol{background:#6C63FF;color:#fff}
+</style>
+</head>
+<body>
+<h1>OceanEyes</h1>
+<p class="subtitle">Arquitectura del Sistema — App de Proteccion Marina</p>
+
+<div class="section">
+  <h2>Vista Panoramica</h2>
+  <div class="mermaid">
+graph TB
+  subgraph UI["Frontend"]
+    Web["Web Landing (Cloudflare)"]
+    Admin["Panel Admin (Web SPA)"]
+    Mobile["App Movil (APK/iOS)"]
+  end
+  subgraph Router["Expo Router"]
+    Landing["/(landing) Inicio - Descargas - FAQ - Contacto"]
+    AdminR["/admin Dashboard - Reportes - Users - Rewards - Bans"]
+    MobileR["/mobile Home - Login - Reports - Mapa - Alerts - Profile"]
+  end
+  subgraph State["Estado"]
+    AuthCtx["AuthContext user + profile"]
+    BanCtx["BanContext suspensiones + device bans"]
+    SyncCtx["SyncContext cola offline + sync"]
+    VMs["ViewModels login - reports - alerts"]
+  end
+  subgraph Firebase["Firebase Serverless"]
+    Auth["Auth Email - Google - Anonymous"]
+    FS["Firestore 9 colecciones"]
+    Storage["Storage fotos/videos"]
+    FCM["Cloud Messaging push"]
+  end
+  subgraph BC["Arbitrum Sepolia"]
+    PL["PointLedger.sol awardPoints - getBalance"]
+    WB["MetaMask Wallet admin"]
+  end
+  subgraph Ext["APIs Externas"]
+    USGS["USGS Earthquakes"]
+    NOAA["NOAA PTWC tsunami"]
+    Brevo["Brevo emails"]
+    Cld["Cloudinary CDN"]
+  end
+  Web-->Landing
+  Admin-->AdminR
+  Mobile-->MobileR
+  Landing-->State
+  AdminR-->State
+  MobileR-->State
+  State-->Auth
+  State-->FS
+  State-->FCM
+  State-->BC
+  State-->Ext
+  </div>
+</div>
+
+<div class="section">
+  <h2>Flujo de Datos - Sistema de Reportes</h2>
+  <div class="mermaid">
+sequenceDiagram
+  actor U as Usuario
+  participant App as OceanEyes App
+  participant VM as ReportCreateVM
+  participant DB as Firestore
+  participant Box as AsyncStorage
+  participant Sync as SyncEngine
+  participant BC as PointLedger
+  participant Push as FCM
+  Note over U,Push: Online
+  U->>App: Crea reporte (5 pasos)
+  App->>VM: submit()
+  VM->>DB: set({status:'submitted'})
+  DB-->>VM: OK
+  Note over U,Push: Admin verifica
+  actor A as Admin
+  A->>DB: verifyReport(id)
+  DB->>BC: awardPointsOnChain(wallet,N)
+  BC-->>DB: txHash
+  DB->>DB: status='verified', pointsAwarded=N
+  DB->>Push: notificar
+  Push-->>App: Reporte verificado +N pts
+  Note over U,Push: Offline
+  U->>App: Reporte sin internet
+  App->>Box: guardar pendiente
+  Box->>Sync: queue()
+  Sync->>DB: publishReportOnline()
+  DB-->>Sync: OK
+  Sync-->>App: sincronizado
+  </div>
+</div>
+
+<div class="section">
+  <h2>Modulos de la App</h2>
+  <div class="mermaid">
+graph LR
+  subgraph Mobile["Mobile"]
+    A1["Auth"]
+    A2["Home + Mapa"]
+    A3["Reports (wizard)"]
+    A4["Rewards"]
+    A5["Profile + Wallet"]
+    A6["Alerts"]
+  end
+  subgraph AdminPanel["Admin"]
+    B1["Dashboard"]
+    B2["Reports (revision)"]
+    B3["Users + Bans"]
+    B4["Rewards + Canjes"]
+    B5["Alerts (push)"]
+  end
+  subgraph LandingWeb["Landing"]
+    C1["Inicio"]
+    C2["Descargas"]
+    C3["FAQ - Contacto"]
+  end
+  subgraph Shared["Capa Compartida"]
+    D1["Firebase SDK"]
+    D2["Blockchain (ethers.js)"]
+    D3["Offline (outbox+sync)"]
+    D4["ViewModels"]
+    D5["Notifications"]
+  end
+  A1-->D1
+  A3-->D3
+  A5-->D2
+  B1-->D1
+  B2-->D1
+  B5-->D5
+  C1-->C2
+  </div>
+</div>
+
+<div class="section">
+  <h2>Infraestructura y Despliegue</h2>
+  <div class="mermaid">
+graph TB
+  subgraph Dev["Desarrollo"]
+    Metro["Metro Bundler (HMR)"]
+    Gradle["Gradle (assembleRelease)"]
+    Emul["Firebase Emulators"]
+  end
+  subgraph CI["Build Pipeline"]
+    Prebuild["expo prebuild --platform android"]
+    ExportW["expo export --platform web"]
+    Wrangler["wrangler deploy (Cloudflare)"]
+    BuildAPK["./gradlew assembleRelease"]
+  end
+  subgraph Prod["Produccion"]
+    CF["Cloudflare Workers (web)"]
+    FB["Firebase oceaneyes-5e7b4"]
+    Arb["Arbitrum Sepolia (421614)"]
+    MEGA["MEGA (distribucion APK)"]
+  end
+  Dev-->CI
+  CI-->Prod
+  Prebuild-->BuildAPK
+  BuildAPK-->MEGA
+  ExportW-->Wrangler
+  Wrangler-->CF
+  </div>
+</div>
+
+<div class="section">
+  <h2>Stack Tecnologico</h2>
+  <div class="grid">
+  <div class="card">
+    <h3>Frontend</h3>
+    <ul>
+      <li><span class="tag tag-ts">TS</span> Expo SDK 54 + RN 0.81</li>
+      <li><span class="tag tag-ts">TS</span> Expo Router (file-based)</li>
+      <li><span class="tag tag-ts">TS</span> ViewModel + useSyncExternalStore</li>
+      <li><span class="tag tag-ts">TS</span> react-native-maps + Leaflet</li>
+      <li><span class="tag tag-ts">TS</span> reanimated 4 + gesture-handler</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Backend Firebase</h3>
+    <ul>
+      <li><span class="tag tag-js">JS</span> Auth (email + Google + anon)</li>
+      <li><span class="tag tag-js">JS</span> Firestore (9 collections)</li>
+      <li><span class="tag tag-js">JS</span> Storage (media reportes)</li>
+      <li><span class="tag tag-js">JS</span> FCM (push notifications)</li>
+      <li><span class="tag tag-js">JS</span> Brevo (emails)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Blockchain</h3>
+    <ul>
+      <li><span class="tag tag-sol">SOL</span> PointLedger.sol (Ownable)</li>
+      <li><span class="tag tag-ts">TS</span> ethers.js v6.17</li>
+      <li><span class="tag tag-ts">TS</span> MetaMask (admin wallet)</li>
+      <li><span class="tag tag-sol">SOL</span> Arbitrum Sepolia L2</li>
+      <li><span class="tag tag-ts">TS</span> Hardhat (testing)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>DevOps</h3>
+    <ul>
+      <li><span class="tag tag-js">JS</span> Cloudflare Workers</li>
+      <li><span class="tag tag-js">JS</span> Gradle 8.14 (Android)</li>
+      <li><span class="tag tag-js">JS</span> Firebase Emulators</li>
+      <li><span class="tag tag-ts">TS</span> React Compiler</li>
+      <li><span class="tag tag-js">JS</span> npm scripts deploy</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>APIs Externas</h3>
+    <ul>
+      <li>USGS Earthquakes (tsunami flag)</li>
+      <li>NOAA PTWC (alertas tsunami)</li>
+      <li>Open-Meteo Marine (olas/marea)</li>
+      <li>Brevo (email transaccional)</li>
+      <li>Cloudinary (CDN imagenes)</li>
+    </ul>
+  </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Colecciones Firestore</h2>
+  <div class="grid">
+  <div class="card"><h3>users</h3><ul><li>role, profileType, email, dni</li><li>walletAddress, pointsBalance</li><li>verifiedReportsCount, status</li></ul></div>
+  <div class="card"><h3>reports</h3><ul><li>userId, category, title, description</li><li>location, photoURLs, status</li><li>pointsAwarded, txHash</li></ul></div>
+  <div class="card"><h3>rewards</h3><ul><li>title, description, pointsCost</li><li>stock, active, sponsor, imageURL</li></ul></div>
+  <div class="card"><h3>redemptions</h3><ul><li>userId, rewardId, pointsSpent</li><li>status, shippingAddress</li><li>confirmedAt, shippedAt, deliveredAt</li></ul></div>
+  <div class="card"><h3>pointTransactions</h3><ul><li>userId, type, amount, reportId</li><li>txHash, balanceBefore, balanceAfter</li></ul></div>
+  <div class="card"><h3>bans + bannedDevices</h3><ul><li>reason, bannedBy, startsAt, endsAt</li><li>device hash (SHA-256)</li></ul></div>
+  <div class="card"><h3>alerts</h3><ul><li>title, message, severity</li><li>source (admin|usgs|noaa|user)</li><li>coordinates, radiusKm, active</li></ul></div>
+  <div class="card"><h3>alertReports</h3><ul><li>userId, type, location, photoURL</li><li>status (pending|verified|rejected)</li><li>clusteredWith, verifiedAt</li></ul></div>
+  </div>
+</div>
+
+<script>mermaid.initialize({startOnLoad:true,theme:'dark',themeVariables:{primaryColor:'#208AEF',primaryTextColor:'#fff',lineColor:'#0891B2',tertiaryColor:'#111827'}})</script>
+</body>
+</html>

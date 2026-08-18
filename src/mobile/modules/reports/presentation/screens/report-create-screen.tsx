@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 // import { Redirect } from 'expo-router'; // TODO: reactivar cuando Firebase esté configurado y se requiera forzar login
 import React from 'react';
-import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import {Pressable, StyleSheet, View} from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { KeyboardScrollView } from '@/shared/components/keyboard-scroll-view';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { useGuestStatus } from '@/shared/hooks/use-guest-status';
 import { useBan } from '@/shared/identity/ban-context';
@@ -141,11 +142,9 @@ export function ReportCreateScreen() {
       ) : (
         <View style={styles.frame}>
           <ReportTopBar step={state.step} totalSteps={TOTAL_STEPS} progress={vm.progress} />
-          <ScrollView
+          <KeyboardScrollView
             style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}>
+            contentContainerStyle={styles.scrollContent}>
             <DniStep
               dni={state.dni}
               onDniChange={vm.setDni}
@@ -159,7 +158,7 @@ export function ReportCreateScreen() {
               onContinue={vm.next}
               onCancel={vm.exit}
             />
-          </ScrollView>
+          </KeyboardScrollView>
         </View>
       )}
     </View>
