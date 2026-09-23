@@ -1,61 +1,212 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { headingProps } from '@landing/presentation/components/heading';
+import { Reveal } from '@landing/presentation/components/reveal';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
+import { webTextStyle } from '@landing/styles/web-types';
 
-const heroBg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166250/hero_m3t2al.jpg';
+const heroBg =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_1600/v1786166250/hero_m3t2al.jpg';
+
+/** Short value proposition shown above the description (all breakpoints). */
+const TAGLINE = 'Vigilancia ciudadana para proteger nuestros mares.';
+
+/** Condensed hero paragraph: same message, less vertical bulk on mobile. */
+const SHORT_DESCRIPTION =
+  'Reporta pesca ilegal en tiempo real, adjunta evidencia y sigue cada caso desde tu celular.';
+const FULL_DESCRIPTION =
+  'Empodera a pescadores y comunidades costeras para proteger los océanos. Reporta, monitorea y recibe recompensas por cuidar el mar.';
+
+const CTA_PRIMARY_TEXT = '#0B2E1F';
+
+/* Responsive type scale: keeps "OceanEyes" on a single line from 320px up. */
+const titleMobile = webTextStyle({
+  fontSize: 'clamp(36px, 10.5vw, 46px)',
+  lineHeight: 'clamp(40px, 11.5vw, 52px)',
+});
+const titleTablet = webTextStyle({
+  fontSize: 'clamp(48px, 7.5vw, 64px)',
+  lineHeight: 'clamp(54px, 8vw, 70px)',
+});
+const titleDesktop = webTextStyle({
+  fontSize: 'clamp(64px, 5.5vw, 88px)',
+  lineHeight: 'clamp(68px, 5.8vw, 94px)',
+});
+const taglineMobile = webTextStyle({
+  fontSize: 'clamp(15.5px, 4.2vw, 18px)',
+  lineHeight: 'clamp(23px, 6vw, 27px)',
+});
+const taglineDesktop = webTextStyle({
+  fontSize: 'clamp(18px, 1.6vw, 22px)',
+  lineHeight: 'clamp(27px, 2.2vw, 32px)',
+});
+const descriptionMobile = webTextStyle({
+  fontSize: 'clamp(14.5px, 3.9vw, 16px)',
+  lineHeight: 'clamp(22px, 5.8vw, 25px)',
+});
+const descriptionDesktop = webTextStyle({
+  fontSize: 'clamp(16px, 1.25vw, 18px)',
+  lineHeight: 'clamp(26px, 1.9vw, 30px)',
+});
 
 type HeroSectionProps = {
   onFeaturesPress: () => void;
 };
 
-export function HeroSection({ onFeaturesPress }: HeroSectionProps) {
-  const { isMobile, isTablet } = useBreakpoints();
+function DownloadCta({ stacked }: { stacked: boolean }) {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   return (
-    <View style={[styles.section, isMobile && styles.sectionMobile]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Descargar la aplicación OceanEyes"
+      onPress={() => router.push('/descargas')}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+      style={[
+        styles.cta,
+        styles.ctaPrimary,
+        stacked && styles.ctaStacked,
+        (hovered || pressed) && styles.ctaPrimaryHovered,
+        pressed && styles.ctaPressed,
+      ]}
+    >
+      <FontAwesome5 name="download" size={16} color={CTA_PRIMARY_TEXT} />
+      <Text style={[styles.ctaLabel, styles.ctaPrimaryLabel]}>Descargar aplicación</Text>
+    </Pressable>
+  );
+}
+
+function LearnMoreCta({ stacked, onPress }: { stacked: boolean; onPress: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Conocer más sobre OceanEyes"
+      onPress={onPress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+      style={[
+        styles.cta,
+        styles.ctaSecondary,
+        stacked && styles.ctaStacked,
+        hovered && styles.ctaSecondaryHovered,
+        pressed && styles.ctaPressed,
+      ]}
+    >
+      <Text style={styles.ctaLabel}>Conocer OceanEyes</Text>
+      <FontAwesome5 name="arrow-down" size={15} color="#FFFFFF" />
+    </Pressable>
+  );
+}
+
+export function HeroSection({ onFeaturesPress }: HeroSectionProps) {
+  const { isMobile, isTablet } = useBreakpoints();
+  const isStacked = isMobile || isTablet;
+  const [cueHovered, setCueHovered] = useState(false);
+
+  return (
+    <View id="oe-hero" style={styles.section}>
       <View style={styles.background}>
-        <Image source={heroBg} style={styles.bgImage} contentFit="cover" />
-        <View style={styles.overlay} />
+        <Image
+          source={heroBg}
+          style={styles.bgImage}
+          contentFit="cover"
+          priority="high"
+          aria-hidden
+        />
+        <LinearGradient
+          colors={['rgba(6,20,28,0.72)', 'rgba(6,20,28,0.38)', 'rgba(6,20,28,0.82)']}
+          locations={[0, 0.45, 1]}
+          style={styles.overlay}
+        />
+        <LinearGradient
+          colors={['rgba(239,235,227,0)', 'rgba(239,235,227,0.6)']}
+          style={styles.bottomFade}
+        />
       </View>
 
-      <View style={[styles.content, isMobile && styles.contentMobile, isTablet && styles.contentTablet]}>
-        <View style={[styles.bottom, (isMobile || isTablet) && styles.bottomStacked]}>
+      <View
+        style={[
+          styles.content,
+          isMobile && styles.contentMobile,
+          isTablet && styles.contentTablet,
+        ]}
+      >
+        <View style={[styles.bottom, isStacked && styles.bottomStacked]}>
           <View style={styles.info}>
-            <Text style={[styles.title, isMobile && styles.titleMobile, isTablet && styles.titleTablet]}>
-              <Text style={styles.titleOcean}>Ocean</Text>
-              <Text style={styles.titleEye}>Eyes</Text>
-            </Text>
-            <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
-              App Móvil para Reportar Pesca ilegal en Tiempo Real
-            </Text>
-            <Text style={[styles.description, (isMobile || isTablet) && styles.descriptionFull]}>
-              Empodera a pescadores y comunidades costeras para proteger los océanos. Reporta,
-              monitorea y recibe recompensas por cuidar el mar. Únete a la red de vigilancia marina
-              más grande del Perú y contribuye activamente a la conservación de nuestros recursos
-              marinos. Cada reporte cuenta, cada acción marca la diferencia.
-            </Text>
+            <Reveal delay={0} duration={700}>
+              <Text
+                {...headingProps(1)}
+                style={[
+                  styles.title,
+                  isMobile && titleMobile,
+                  isTablet && titleTablet,
+                  !isStacked && titleDesktop,
+                ]}
+              >
+                <Text style={styles.titleOcean}>Ocean</Text>
+                <Text style={styles.titleEye}>Eyes</Text>
+              </Text>
+            </Reveal>
+
+            <Reveal delay={90} duration={600}>
+              <Text style={[styles.tagline, isMobile ? taglineMobile : taglineDesktop]}>
+                {TAGLINE}
+              </Text>
+            </Reveal>
+
+            <Reveal delay={160} duration={600}>
+              <Text
+                style={[
+                  styles.description,
+                  isMobile ? descriptionMobile : descriptionDesktop,
+                  isTablet && styles.descriptionWide,
+                ]}
+              >
+                {isMobile ? SHORT_DESCRIPTION : FULL_DESCRIPTION}
+              </Text>
+            </Reveal>
           </View>
 
-          <View style={[styles.actions, isMobile && styles.actionsMobile]}>
-            <Pressable style={[styles.infoBtn, isMobile && styles.btnMobile]} onPress={onFeaturesPress}>
-              <Text style={styles.infoBtnText}>Ver más</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.downloadBtn, isMobile && styles.btnMobile]}
-              onPress={() => router.push('/descargas')}
-            >
-              <Text style={styles.downloadBtnText}>Descargar</Text>
-            </Pressable>
-          </View>
+          <Reveal
+            direction="up"
+            delay={240}
+            duration={600}
+            style={[styles.actions, isMobile && styles.actionsStacked]}
+          >
+            <DownloadCta stacked={isMobile} />
+            <LearnMoreCta stacked={isMobile} onPress={onFeaturesPress} />
+          </Reveal>
         </View>
 
-        <Pressable style={styles.scrollDown} onPress={onFeaturesPress}>
-          <Text style={styles.scrollDownIcon}>▼</Text>
-        </Pressable>
+        <Reveal delay={420} duration={600} style={styles.cueWrap}>
+          <Pressable
+            id="oe-scroll-cue"
+            accessibilityRole="button"
+            accessibilityLabel="Desplazarse a la siguiente sección"
+            onPress={onFeaturesPress}
+            onHoverIn={() => setCueHovered(true)}
+            onHoverOut={() => setCueHovered(false)}
+            style={[styles.scrollDown, cueHovered && styles.scrollDownHovered]}
+            hitSlop={8}
+          >
+            <FontAwesome5 name="chevron-down" size={15} color="#FFFFFF" />
+          </Pressable>
+        </Reveal>
       </View>
     </View>
   );
@@ -64,13 +215,11 @@ export function HeroSection({ onFeaturesPress }: HeroSectionProps) {
 const styles = StyleSheet.create({
   section: {
     position: 'relative',
-    minHeight: 760,
+    minHeight: 720,
     justifyContent: 'flex-end',
     alignItems: 'center',
     overflow: 'hidden',
-  },
-  sectionMobile: {
-    minHeight: 680,
+    backgroundColor: '#061418',
   },
   background: {
     position: 'absolute',
@@ -90,7 +239,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  bottomFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 140,
   },
   content: {
     position: 'relative',
@@ -99,11 +254,13 @@ const styles = StyleSheet.create({
     maxWidth: 1600,
     marginHorizontal: 'auto' as unknown as number,
     paddingHorizontal: Spacing.six,
+    paddingTop: 110,
     paddingBottom: 120,
   },
   contentMobile: {
     paddingHorizontal: Spacing.three,
-    paddingBottom: 96,
+    paddingTop: 96,
+    paddingBottom: 100,
   },
   contentTablet: {
     paddingHorizontal: Spacing.four,
@@ -123,22 +280,12 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   title: {
-    fontSize: 80,
-    lineHeight: 80,
     fontFamily: Fonts.headline,
     fontStyle: 'italic',
     fontWeight: '300',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 20,
-  },
-  titleMobile: {
-    fontSize: 44,
-    lineHeight: 44,
-  },
-  titleTablet: {
-    fontSize: 60,
-    lineHeight: 60,
   },
   titleOcean: {
     fontWeight: '300',
@@ -148,100 +295,108 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: BrandColors.secondary,
   },
-  subtitle: {
-    fontSize: 20,
-    color: '#98B9B1',
+  tagline: {
+    color: '#CFE3DD',
     fontWeight: '500',
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowColor: 'rgba(0,0,0,0.45)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
   },
-  subtitleMobile: {
-    fontSize: 17,
-    lineHeight: 24,
-  },
   description: {
-    fontSize: 17,
-    lineHeight: 27,
     color: '#FFFFFF',
-    opacity: 0.95,
-    maxWidth: '75%' as unknown as number,
+    opacity: 0.94,
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
-  descriptionFull: {
-    maxWidth: '100%',
-    width: '100%',
+  descriptionWide: {
+    maxWidth: 640,
   },
   actions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.three,
     alignItems: 'center',
-    paddingTop: Spacing.five,
+    paddingTop: Spacing.four,
   },
-  actionsMobile: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
+  actionsStacked: {
     alignSelf: 'stretch',
-    width: '100%',
-    paddingTop: Spacing.three,
+    justifyContent: 'flex-start',
+    paddingTop: Spacing.two,
   },
-  btnMobile: {
+  cta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    minHeight: 50,
+    minWidth: 230,
+    transitionProperty: 'background-color, border-color, box-shadow, transform',
+    transitionDuration: '220ms',
+    transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  },
+  ctaStacked: {
     width: '100%',
     minWidth: 0,
+    maxWidth: 420,
   },
-  infoBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    minWidth: 200,
+  ctaPressed: {
+    transform: [{ translateY: 1 }],
   },
-  infoBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 17,
-    fontFamily: Fonts.body,
-  },
-  downloadBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 12,
+  ctaPrimary: {
     backgroundColor: '#4ADE80',
-    minWidth: 200,
+    shadowColor: '#06231A',
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
-  downloadBtnText: {
+  ctaPrimaryHovered: {
+    backgroundColor: '#5CE693',
+    shadowOpacity: 0.45,
+  },
+  ctaPrimaryLabel: {
+    color: CTA_PRIMARY_TEXT,
+  },
+  ctaSecondary: {
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.45)',
+  },
+  ctaSecondaryHovered: {
+    backgroundColor: 'rgba(255,255,255,0.26)',
+    borderColor: 'rgba(255,255,255,0.7)',
+  },
+  ctaLabel: {
     color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 17,
+    fontWeight: '700',
+    fontSize: 16,
     fontFamily: Fonts.body,
+    letterSpacing: 0.1,
+  },
+  cueWrap: {
+    position: 'absolute',
+    bottom: 36,
+    left: '50%' as unknown as number,
+    marginLeft: -22,
   },
   scrollDown: {
-    position: 'absolute',
-    bottom: 40,
-    left: '50%' as unknown as number,
-    width: 40,
-    height: 40,
-    borderWidth: 2,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.5)',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: -20,
+    transitionProperty: 'background-color, border-color',
+    transitionDuration: '220ms',
   },
-  scrollDownIcon: {
-    color: '#FFFFFF',
-    fontSize: 18,
+  scrollDownHovered: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.85)',
   },
 });

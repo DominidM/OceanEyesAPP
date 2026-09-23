@@ -7,7 +7,8 @@ import { Image } from 'expo-image';
 import { AppFonts as Fonts, BrandColors } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166247/logotipo_aasun4.png';
+const logoImg =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_300/v1786166247/logotipo_aasun4.png';
 
 const STATUS_MESSAGES = [
   'Estableciendo conexión segura...',

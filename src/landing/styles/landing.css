@@ -1,0 +1,96 @@
+/**
+ * Landing page global refinements (web only).
+ * Imported from `landing-screen.tsx`.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Keyboard focus visibility                                           */
+/* ------------------------------------------------------------------ */
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+[role='link']:focus-visible,
+[role='heading']:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #98b9b1 !important;
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion preferences                                                  */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero: 100svh with a safe vh fallback for older mobile browsers      */
+/* ------------------------------------------------------------------ */
+#oe-hero {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero scroll cue: a soft, slow nudge (never runs with reduced motion)*/
+/* ------------------------------------------------------------------ */
+@keyframes oe-scroll-cue {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+  }
+  85% {
+    transform: translateY(5px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #oe-scroll-cue {
+    animation: oe-scroll-cue 3s ease-in-out infinite;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* In-page scroll targets: keep headings clear of the fixed header     */
+/* ------------------------------------------------------------------ */
+#landing-section-how-it-works,
+#landing-section-ayudar,
+#landing-section-reportes {
+  scroll-margin-top: 84px;
+}
+
+@media (max-width: 640px) {
+  #landing-section-how-it-works,
+  #landing-section-ayudar,
+  #landing-section-reportes {
+    scroll-margin-top: 64px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Small responsive guards                                             */
+/* ------------------------------------------------------------------ */
+html {
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+}

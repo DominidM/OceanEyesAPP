@@ -4,12 +4,18 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { headingProps } from '@landing/presentation/components/heading';
+import { Reveal } from '@landing/presentation/components/reveal';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const barco1 = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166241/barco-1_isp4pb.jpg';
-const barco2 = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166242/barco-2_yynxi8.jpg';
-const barco3 = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166243/barco-3_j28orm.jpg';
-const barco4 = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166246/barco-4_kwf6hl.jpg';
+const barco1 =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_900/v1786166241/barco-1_isp4pb.jpg';
+const barco2 =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_900/v1786166242/barco-2_yynxi8.jpg';
+const barco3 =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_900/v1786166243/barco-3_j28orm.jpg';
+const barco4 =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_900/v1786166246/barco-4_kwf6hl.jpg';
 
 const helpActions = [
   { id: 1, image: barco1, icon: 'exclamation-circle', title: 'Reporta Actividades', description: 'Si observas embarcaciones, redes ilegales o cualquier actividad sospechosa en zonas marinas protegidas, repórtalas de inmediato a las autoridades competentes.' },
@@ -24,17 +30,27 @@ export function HelpSection() {
   return (
     <View style={[styles.section, isMobile && styles.sectionMobile]}>
       <View style={styles.header}>
-        <Text style={[styles.title, isMobile && styles.titleMobile]}>¿Cómo Puedes Ayudar?</Text>
-        <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
-          Cada acción cuenta. Aquí te mostramos cómo puedes hacer la diferencia.
-        </Text>
+        <Reveal delay={0} duration={650}>
+          <Text {...headingProps(2)} style={[styles.title, isMobile && styles.titleMobile]}>
+            ¿Cómo Puedes Ayudar?
+          </Text>
+        </Reveal>
+        <Reveal delay={90} duration={600}>
+          <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
+            Cada acción cuenta. Aquí te mostramos cómo puedes hacer la diferencia.
+          </Text>
+        </Reveal>
       </View>
 
       <View style={[styles.grid, isMobile && styles.gridMobile]}>
         {helpActions.map((action, index) => (
           <React.Fragment key={action.id}>
             {index > 0 && !isMobile && <View style={styles.divider} />}
-            <View style={[styles.item, isMobile && styles.itemMobile]}>
+            <Reveal
+              delay={index * 80}
+              duration={650}
+              style={[styles.item, isMobile && styles.itemMobile]}
+            >
               <View style={[styles.imageWrap, isMobile && styles.imageWrapMobile]}>
                 <Image source={action.image} style={styles.image} contentFit="cover" />
                 <View style={styles.imageOverlay} />
@@ -46,7 +62,7 @@ export function HelpSection() {
                 </View>
                 <Text style={styles.cardDescription}>{action.description}</Text>
               </View>
-            </View>
+            </Reveal>
           </React.Fragment>
         ))}
       </View>

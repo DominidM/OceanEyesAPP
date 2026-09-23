@@ -1,8 +1,13 @@
-import React, { useState } from "react";
-import { LayoutChangeEvent, ScrollView, StyleSheet, View } from "react-native";
+import '@landing/styles/landing.css';
+
+import React, { useEffect, useState } from "react";
+import { LayoutChangeEvent, Platform, ScrollView, StyleSheet, View } from "react-native";
 
 import { BrandColors } from "@landing/config/theme";
-import type { LandingSectionKey } from "@landing/config/landing-nav";
+import {
+  LANDING_SECTION_DOM_ID,
+  type LandingSectionKey,
+} from "@landing/config/landing-nav";
 import { LandingFooter } from "@landing/layout/footer/landing-footer";
 import { LandingSubfooter } from "@landing/layout/footer/landing-subfooter";
 import { LandingLayout } from "@landing/layout/landing-layout";
@@ -35,6 +40,32 @@ export function LandingScreen() {
     setPositions((prev) => (prev[key] === y ? prev : { ...prev, [key]: y }));
   };
 
+  /**
+   * One-time web pass: `expo-image` has no `loading` prop, so hint lazy
+   * decoding/fetching straight on the rendered `<img>` elements. The hero
+   * (LCP) image stays eager with a high fetch priority.
+   */
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+
+    const applyHints = () => {
+      document.querySelectorAll<HTMLImageElement>("img").forEach((img) => {
+        if (img.closest("#oe-hero")) {
+          img.setAttribute("loading", "eager");
+          img.setAttribute("fetchpriority", "high");
+          return;
+        }
+        if (!img.hasAttribute("loading")) img.setAttribute("loading", "lazy");
+        if (!img.hasAttribute("decoding")) img.setAttribute("decoding", "async");
+      });
+    };
+
+    applyHints();
+    // Images mounted right after hydration (splash, menu) get the same pass.
+    const timer = window.setTimeout(applyHints, 700);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <View style={styles.screen}>
       <PageTransition>
@@ -47,14 +78,17 @@ export function LandingScreen() {
             scrollEventThrottle={16}
           >
             <HeroSection onFeaturesPress={toHowItWorks} />
-            <View onLayout={recordPosition("how-it-works")}>
+            <View
+              id={LANDING_SECTION_DOM_ID["how-it-works"]}
+              onLayout={recordPosition("how-it-works")}
+            >
               <FeaturesSection />
             </View>
-            <View onLayout={recordPosition("ayudar")}>
+            <View id={LANDING_SECTION_DOM_ID.ayudar} onLayout={recordPosition("ayudar")}>
               <HelpSection />
             </View>
             <TechnologySection />
-            <View onLayout={recordPosition("reportes")}>
+            <View id={LANDING_SECTION_DOM_ID.reportes} onLayout={recordPosition("reportes")}>
               <ReportesSection />
             </View>
             <ArbitrumSection />

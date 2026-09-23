@@ -5,13 +5,16 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { headingProps } from '@landing/presentation/components/heading';
+import { Reveal } from '@landing/presentation/components/reveal';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786169052/logotipo_q2mkhv.png';
+const logoImg =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_200/v1786169052/logotipo_q2mkhv.png';
 
 const navLinks = [
   { label: 'Inicio', href: '/' },
-  { label: 'Cómo funciona', href: '/#features' },
+  { label: 'Cómo funciona', href: '/?section=how-it-works' },
   { label: 'FAQ', href: '/faq' },
 ];
 
@@ -33,7 +36,7 @@ export function LandingSubfooter() {
 
   return (
     <View style={[styles.subfooter, isMobile && styles.subfooterMobile]}>
-      <View style={[styles.inner, isMobile && styles.innerMobile]}>
+      <Reveal delay={0} duration={650} style={[styles.inner, isMobile && styles.innerMobile]}>
         <View style={[styles.brandCol, isMobile && styles.brandColMobile]}>
           <Image source={logoImg} style={styles.logo} contentFit="contain" />
           <Text style={styles.brandName}>Ocean Eyes</Text>
@@ -44,7 +47,9 @@ export function LandingSubfooter() {
         </View>
 
         <View style={[styles.navCol, isMobile && styles.colHalf]}>
-          <Text style={styles.colTitle}>Navegación</Text>
+          <Text {...headingProps(3)} style={styles.colTitle}>
+            Navegación
+          </Text>
           {navLinks.map((link) => (
             <Link key={link.label} href={link.href as any}>
               <Text style={styles.navLink}>{link.label}</Text>
@@ -53,7 +58,9 @@ export function LandingSubfooter() {
         </View>
 
         <View style={[styles.rutasCol, isMobile && styles.colHalf]}>
-          <Text style={styles.colTitle}>Rutas</Text>
+          <Text {...headingProps(3)} style={styles.colTitle}>
+            Rutas
+          </Text>
           {rutasLinks.map((link) => (
             <Link key={link.label} href={link.href as any}>
               <Text style={styles.navLink}>{link.label}</Text>
@@ -62,27 +69,33 @@ export function LandingSubfooter() {
         </View>
 
         <View style={[styles.contactCol, isMobile && styles.colHalf]}>
-          <Text style={styles.colTitle}>Contacto</Text>
+          <Text {...headingProps(3)} style={styles.colTitle}>
+            Contacto
+          </Text>
           <Text style={styles.contactText}>contacto@oceaneyes.pe</Text>
           <Text style={styles.contactText}>+51 987 654 321</Text>
           <Text style={styles.contactText}>Lima, Perú</Text>
         </View>
 
         <View style={[styles.socialCol, isMobile && styles.colHalf]}>
-          <Text style={styles.colTitle}>Redes Sociales</Text>
+          <Text {...headingProps(3)} style={styles.colTitle}>
+            Redes Sociales
+          </Text>
           <View style={styles.socialRow}>
             {socialLinks.map((s) => (
               <Pressable
                 key={s.name}
                 style={styles.socialBtn}
                 onPress={() => Linking.openURL(s.url)}
+                accessibilityRole="link"
+                accessibilityLabel={`Perfil de Ocean Eyes en ${s.name}`}
               >
                 <FontAwesome5 name={s.icon} size={18} color="#FFFFFF" />
               </Pressable>
             ))}
           </View>
         </View>
-      </View>
+      </Reveal>
     </View>
   );
 }
@@ -106,6 +119,7 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: Spacing.six,
     flexWrap: 'wrap',
+    rowGap: Spacing.six,
   },
   innerMobile: {
     gap: Spacing.five,

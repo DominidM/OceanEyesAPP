@@ -4,11 +4,16 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { headingProps } from '@landing/presentation/components/heading';
+import { Reveal } from '@landing/presentation/components/reveal';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const entornoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166245/entorno-sucio_qzywtp.png';
-const bajoMarImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786166250/hero_m3t2al.jpg';
-const phoneImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786561491/login_dq63q4.jpg';
+const entornoImg =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_1200/v1786166245/entorno-sucio_qzywtp.png';
+const bajoMarImg =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_1200/v1786166250/hero_m3t2al.jpg';
+const phoneImg =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_900/v1786561491/login_dq63q4.jpg';
 
 const cards = [
   {
@@ -37,18 +42,31 @@ export function TechnologySection() {
   return (
     <View style={[styles.section, isMobile && styles.sectionMobile]}>
       <View style={styles.header}>
-        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>
-          Tecnología e Innovación
-        </Text>
-        <Text style={[styles.sectionSubtitle, isMobile && styles.sectionSubtitleMobile]}>
-          Herramientas inteligentes para proteger el ecosistema marino desde la costa hasta el mar abierto.
-        </Text>
+        <Reveal delay={0} duration={650}>
+          <Text
+            {...headingProps(2)}
+            style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}
+          >
+            Tecnología e Innovación
+          </Text>
+        </Reveal>
+        <Reveal delay={90} duration={600}>
+          <Text style={[styles.sectionSubtitle, isMobile && styles.sectionSubtitleMobile]}>
+            Herramientas inteligentes para proteger el ecosistema marino desde la costa hasta el
+            mar abierto.
+          </Text>
+        </Reveal>
       </View>
 
       <View style={[styles.content, isMobile && styles.contentMobile]}>
         <View style={styles.cardsColumn}>
-          {cards.map((card) => (
-            <View key={card.id} style={[styles.card, isMobile && styles.cardMobile]}>
+          {cards.map((card, index) => (
+            <Reveal
+              key={card.id}
+              delay={index * 80}
+              duration={650}
+              style={[styles.card, isMobile && styles.cardMobile]}
+            >
               <View style={[styles.cardImage, isMobile && styles.cardImageMobile]}>
                 <Image source={card.image} style={styles.cardImg} contentFit="cover" />
               </View>
@@ -64,14 +82,20 @@ export function TechnologySection() {
                   </View>
                 ))}
               </View>
-            </View>
+            </Reveal>
           ))}
         </View>
 
         <View style={[styles.phoneColumn, isMobile && styles.phoneColumnMobile]}>
-          <View style={styles.phoneWrap}>
+          <Reveal
+            direction="none"
+            scale={0.97}
+            delay={160}
+            duration={700}
+            style={styles.phoneWrap}
+          >
             <Image source={phoneImg} style={styles.phoneImage} contentFit="cover" />
-          </View>
+          </Reveal>
         </View>
       </View>
     </View>

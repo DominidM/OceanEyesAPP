@@ -4,9 +4,12 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { headingProps } from '@landing/presentation/components/heading';
+import { Reveal } from '@landing/presentation/components/reveal';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 
-const mobileMockup = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786560861/reportar-incidente_zxlbet.jpg';
+const mobileMockup =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_700/v1786560861/reportar-incidente_zxlbet.jpg';
 
 const steps = [
   {
@@ -38,31 +41,37 @@ export function ReportesSection() {
   return (
     <View style={[styles.section, isMobile && styles.sectionMobile]}>
       <View style={[styles.header, isMobile && styles.headerMobile]}>
-        <Text style={[styles.title, isMobile && styles.titleMobile]}>¿Cómo Reportar?</Text>
-        <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
-          Tres pasos simples para enviar tu reporte y generar acción.
-        </Text>
+        <Reveal delay={0} duration={650}>
+          <Text {...headingProps(2)} style={[styles.title, isMobile && styles.titleMobile]}>
+            ¿Cómo Reportar?
+          </Text>
+        </Reveal>
+        <Reveal delay={90} duration={600}>
+          <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
+            Tres pasos simples para enviar tu reporte y generar acción.
+          </Text>
+        </Reveal>
       </View>
 
-      <View style={styles.phoneWrap}>
+      <Reveal direction="none" scale={0.97} delay={120} duration={700} style={styles.phoneWrap}>
         <View style={[styles.phone, isMobile && styles.phoneMobile]}>
           <View style={styles.phoneBezel}>
             <Image source={mobileMockup} style={styles.phoneImage} contentFit="cover" />
           </View>
         </View>
-      </View>
+      </Reveal>
 
       <View style={[styles.steps, isMobile && styles.stepsMobile]}>
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
             {index > 0 && !isMobile && <View style={styles.divider} />}
-            <View style={[styles.step, isMobile && styles.stepMobile]}>
+            <Reveal delay={index * 80} duration={650} style={[styles.step, isMobile && styles.stepMobile]}>
               <View style={[styles.circle, isMobile && styles.circleMobile]}>
                 <FontAwesome5 name={step.icon} size={isMobile ? 24 : 28} color={BrandColors.primary} />
               </View>
               <Text style={[styles.stepTitle, isMobile && styles.stepTitleMobile]}>{step.title}</Text>
               <Text style={styles.stepDescription}>{step.description}</Text>
-            </View>
+            </Reveal>
           </React.Fragment>
         ))}
       </View>

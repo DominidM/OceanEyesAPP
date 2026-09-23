@@ -3,6 +3,8 @@ import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
+import { headingProps } from '@landing/presentation/components/heading';
+import { Reveal } from '@landing/presentation/components/reveal';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 import { FeatureCard } from './feature-card';
 
@@ -10,7 +12,12 @@ const anonimoIcon = require('../../../../../../assets/icons/anonimo-icon.png');
 const camaraIcon = require('../../../../../../assets/icons/camara-icon.png');
 const ubicacionIcon = require('../../../../../../assets/icons/ubicacion-icon.png');
 const alertaIcon = require('../../../../../../assets/icons/alerta-icon.png');
-const mobileOcean = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786560861/inicio_euy7tv.jpg';
+const mobileOcean =
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_800/v1786560861/inicio_euy7tv.jpg';
+
+/** Motivational lead-in that used to close the hero paragraph. */
+const LEAD =
+  'Únete a la red de vigilancia marina más grande del Perú y contribuye activamente a la conservación de nuestros recursos marinos. Cada reporte cuenta, cada acción marca la diferencia.';
 
 const features = [
   { icon: anonimoIcon, title: 'Reportes Anónimos', description: 'Tu identidad está protegida. Solo usamos DNI para validar, nunca se comparte.' },
@@ -25,40 +32,57 @@ export function FeaturesSection() {
   return (
     <View style={styles.section}>
       <View style={[styles.header, isMobile && styles.headerMobile]}>
-        <Text style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>
-          Funcionalidades Principales
-        </Text>
-        <Text style={[styles.sectionSubtitle, isMobile && styles.sectionSubtitleMobile]}>
-          Una app diseñada para pescadores, fácil de usar y poderosa para proteger el océano.
-        </Text>
+        <Reveal delay={0} duration={650}>
+          <Text {...headingProps(2)} style={[styles.sectionTitle, isMobile && styles.sectionTitleMobile]}>
+            Funcionalidades Principales
+          </Text>
+        </Reveal>
+        <Reveal delay={90} duration={600}>
+          <Text style={[styles.sectionSubtitle, isMobile && styles.sectionSubtitleMobile]}>
+            Una app diseñada para pescadores, fácil de usar y poderosa para proteger el océano.
+          </Text>
+        </Reveal>
+        <Reveal delay={170} duration={600}>
+          <Text style={[styles.sectionLead, isMobile && styles.sectionLeadMobile]}>{LEAD}</Text>
+        </Reveal>
       </View>
 
       {isMobile ? (
         <View style={styles.contentMobile}>
-          {features.map((feature) => (
-            <FeatureCard key={feature.title} {...feature} />
+          {features.map((feature, index) => (
+            <Reveal key={feature.title} delay={index * 80} duration={600}>
+              <FeatureCard {...feature} />
+            </Reveal>
           ))}
         </View>
       ) : (
         <View style={styles.content}>
           <View style={styles.columnLeft}>
-            <FeatureCard {...features[0]} />
+            <Reveal direction="left" delay={0} duration={650}>
+              <FeatureCard {...features[0]} />
+            </Reveal>
             <View style={styles.gap} />
-            <FeatureCard {...features[2]} />
+            <Reveal direction="left" delay={160} duration={650}>
+              <FeatureCard {...features[2]} />
+            </Reveal>
           </View>
 
           <View style={styles.columnCenter}>
-            <View style={styles.phone}>
+            <Reveal direction="none" scale={0.97} delay={120} duration={700} style={styles.phone}>
               <View style={styles.phoneBezel}>
                 <Image source={mobileOcean} style={styles.phoneImage} contentFit="cover" />
               </View>
-            </View>
+            </Reveal>
           </View>
 
           <View style={styles.columnRight}>
-            <FeatureCard {...features[1]} />
+            <Reveal direction="right" delay={80} duration={650}>
+              <FeatureCard {...features[1]} />
+            </Reveal>
             <View style={styles.gap} />
-            <FeatureCard {...features[3]} />
+            <Reveal direction="right" delay={240} duration={650}>
+              <FeatureCard {...features[3]} />
+            </Reveal>
           </View>
         </View>
       )}
@@ -105,6 +129,19 @@ const styles = StyleSheet.create({
   sectionSubtitleMobile: {
     fontSize: 16,
     lineHeight: 24,
+  },
+  sectionLead: {
+    fontFamily: Fonts.body,
+    fontSize: 16,
+    lineHeight: 26,
+    color: '#5A7684',
+    textAlign: 'center',
+    maxWidth: 720,
+    marginTop: Spacing.three,
+  },
+  sectionLeadMobile: {
+    fontSize: 14.5,
+    lineHeight: 23,
   },
   content: {
     flexDirection: 'row',
