@@ -21,7 +21,7 @@ export function DescargasSection() {
           <Text style={styles.cardDesc}>
             Descargá el APK directamente e instalá la app en tu dispositivo Android.
           </Text>
-          <Pressable style={styles.btn} onPress={() => Linking.openURL('https://mega.nz/file/sv5wVB6B#cXuwEVgzMkOM0wVXfkN2esa0syN7-M0uCMLV_h38Az8')}>
+          <Pressable style={styles.btn} onPress={() => Linking.openURL('https://mega.nz/file/x7R3HCjJ#AY1Oz1VuQDRX8jXe0H6YnOe2ojHPSsEHyeDIeutfXw4')}>
             <FontAwesome5 name="download" size={14} color={BrandColors.tertiary} />
             <Text style={styles.btnText}>Descargar APK</Text>
           </Pressable>

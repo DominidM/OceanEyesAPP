@@ -13,7 +13,7 @@ const entornoImg =
 const bajoMarImg =
   'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_1200/v1786166250/hero_m3t2al.jpg';
 const phoneImg =
-  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_900/v1786561491/login_dq63q4.jpg';
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1791492694/d88a56f0-ff3c-4168-999a-9628752204b1.png';
 
 /**
  * Intrinsic ratio of the login mockup above (900 × 1778 px).

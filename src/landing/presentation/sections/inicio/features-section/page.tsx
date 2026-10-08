@@ -13,7 +13,7 @@ const camaraIcon = require('../../../../../../assets/icons/camara-icon.png');
 const ubicacionIcon = require('../../../../../../assets/icons/ubicacion-icon.png');
 const alertaIcon = require('../../../../../../assets/icons/alerta-icon.png');
 const mobileOcean =
-  'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_800/v1786560861/inicio_euy7tv.jpg';
+  'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1791492648/7a4e517a-0fad-4890-8c47-fc1c22e8c0c0.png';
 
 /** Motivational lead-in that used to close the hero paragraph. */
 const LEAD =

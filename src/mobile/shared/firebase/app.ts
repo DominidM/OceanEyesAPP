@@ -12,7 +12,9 @@ export const firebaseAuth = isFirebaseConfigured() ? createFirebaseAuth(firebase
 export const firestore = getFirestore(firebaseApp);
 export const storage = getStorage(firebaseApp);
 
-if (typeof window !== 'undefined') {
+// En React Native existe `window` pero no `window.addEventListener`, así que hay que
+// comprobarlo explícitamente para no romper el arranque en Android/iOS.
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('error', (e) => {
     const msg = e.message ?? '';
     if (msg.includes('Database is closing') || msg.includes('Database is hidden')) {
