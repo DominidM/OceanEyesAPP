@@ -17,11 +17,11 @@ export function DescargasSection() {
         <View style={[styles.card, isMobile && styles.cardMobile]}>
           <FontAwesome5 name="android" size={48} color="#3DDC84" />
           <Text style={styles.cardTitle}>Android APK</Text>
-          <Text style={styles.cardMeta}>v2.1.0 · 48 MB · Android 8+</Text>
+          <Text style={styles.cardMeta}>v1.0.0 · 131 MB · Android 8+</Text>
           <Text style={styles.cardDesc}>
             Descargá el APK directamente e instalá la app en tu dispositivo Android.
           </Text>
-          <Pressable style={styles.btn} onPress={() => Linking.openURL('https://mega.nz/file/mgBwhIQa#AWoGGu7jnNjX5F5zcX9YzSz2g9GdkISo5nK-CBRTOHs')}>
+          <Pressable style={styles.btn} onPress={() => Linking.openURL('https://mega.nz/file/sv5wVB6B#cXuwEVgzMkOM0wVXfkN2esa0syN7-M0uCMLV_h38Az8')}>
             <FontAwesome5 name="download" size={14} color={BrandColors.tertiary} />
             <Text style={styles.btnText}>Descargar APK</Text>
           </Pressable>

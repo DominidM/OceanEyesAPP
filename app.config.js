@@ -26,5 +26,13 @@ module.exports = {
   expo: {
     ...appJson.expo,
     plugins: [...plugins, withGoogleMapsApiKey],
+    owner: 'solvegrades',
+    extra: {
+      ...(appJson.expo.extra ?? {}),
+      eas: {
+        ...(appJson.expo.extra?.eas ?? {}),
+        projectId: '2d52637a-7a67-4895-b090-af2792925e6b',
+      },
+    },
   },
 };
