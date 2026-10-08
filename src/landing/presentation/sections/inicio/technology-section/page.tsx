@@ -15,6 +15,17 @@ const bajoMarImg =
 const phoneImg =
   'https://res.cloudinary.com/dp1vgjhsq/image/upload/f_auto,q_auto,w_900/v1786561491/login_dq63q4.jpg';
 
+/**
+ * Intrinsic ratio of the login mockup above (900 × 1778 px).
+ *
+ * `expo-image` on web renders a container `<div>` with an absolutely
+ * positioned `<img>` inside, so the container never derives its height from
+ * the picture: without an explicit height (or ratio) it collapses, and with a
+ * height taken from the surrounding layout the screenshot gets cropped.
+ * Pinning the ratio keeps the mockup phone-shaped and fully visible.
+ */
+const LOGIN_MOCKUP_ASPECT_RATIO = 900 / 1778;
+
 const cards = [
   {
     id: 1,
@@ -94,7 +105,7 @@ export function TechnologySection() {
             duration={700}
             style={styles.phoneWrap}
           >
-            <Image source={phoneImg} style={styles.phoneImage} contentFit="cover" />
+            <Image source={phoneImg} style={styles.phoneImage} contentFit="contain" />
           </Reveal>
         </View>
       </View>
@@ -225,21 +236,22 @@ const styles = StyleSheet.create({
     flex: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 420,
   },
   phoneColumnMobile: {
     flexGrow: 0,
     flexShrink: 0,
     flexBasis: 'auto',
     width: '100%',
-    height: 300,
-    minHeight: 0,
+    alignSelf: 'center',
   },
   phoneWrap: {
-    width: '85%',
-    flex: 1,
+    /* Phone-proportioned frame: height is driven by the screenshot itself
+       (width 100% + height auto), never by the surrounding row/column. */
+    width: '100%',
+    maxWidth: 320,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 26,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(152,185,177,0.35)',
@@ -247,7 +259,7 @@ const styles = StyleSheet.create({
   },
   phoneImage: {
     width: '100%',
-    height: '100%',
-    borderRadius: 14,
+    aspectRatio: LOGIN_MOCKUP_ASPECT_RATIO,
+    borderRadius: 18,
   },
 });
