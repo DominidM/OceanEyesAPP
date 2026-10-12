@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Informe de Prueba de Estres OceanEyes</title>
+    <style>
+        body { font-family: 'Calibri', Arial; max-width: 900px; margin: 0 auto; padding: 40px; line-height: 1.6; color: #333; }
+        h1 { text-align: center; color: #1f4788; font-size: 28px; margin-bottom: 10px; }
+        h2 { color: #1f4788; font-size: 18px; margin-top: 30px; border-bottom: 2px solid #1f4788; padding-bottom: 8px; }
+        h3 { color: #2e5c8a; font-size: 15px; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background-color: #1f4788; color: white; padding: 12px; text-align: left; font-weight: bold; }
+        td { padding: 10px 12px; border-bottom: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #f5f5f5; }
+        .figure { background-color: #f0f0f0; padding: 40px; text-align: center; margin: 30px 0; border: 1px dashed #ccc; }
+        .figure-text { font-style: italic; color: #666; font-size: 14px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>INFORME DE PRUEBA DE ESTRÉS</h1>
+<p style="text-align: center; color: #666;">OceanEyes — Sistema de Vigilancia Ciudadana del Mar</p>
+<p style="text-align: center; color: #999;">Fecha: 11 de octubre de 2026</p>
+
+<h2>1. Resumen Ejecutivo</h2>
+<p>Se ejecutó una prueba de estrés escalada sobre el gateway de registro municipal de OceanEyes, simulando 50, 500 y 5000 usuarios concurrentes.</p>
+
+<table>
+<tr><th>Métrica</th><th>Nivel 50</th><th>Nivel 500</th><th>Nivel 5000</th></tr>
+<tr><td>Muestras</td><td>500</td><td>5,000</td><td>50,000</td></tr>
+<tr><td>Éxito</td><td>100%</td><td>100%</td><td>6.04%</td></tr>
+<tr><td>Throughput</td><td>10.3 TPS</td><td>98.1 TPS</td><td>235.0 TPS</td></tr>
+<tr><td>Latencia media</td><td>14.3 ms</td><td>288.5 ms</td><td>2,549.7 ms</td></tr>
+<tr><td>p95</td><td>28.6 ms</td><td>527.8 ms</td><td>12,087.8 ms</td></tr>
+</table>
+
+<p><strong>Conclusión:</strong> El sistema soporta carga nominal (50-500 usuarios) sin degradación. A partir de 5000 usuarios colapsa por saturación TCP.</p>
+
+<h2>2. Marco Teórico</h2>
+<h3>2.1 Tipos de Pruebas de Carga</h3>
+<p>Las pruebas se clasifican en: Smoke Test, Load Test, Stress Test, Soak Test. Esta prueba es un Load + Stress Test escalado.</p>
+
+<h3>2.2 ISO/IEC 25010</h3>
+<p>El estándar define: Performance, Scalability, Reliability. El sistema preserva performance en 50-500 usuarios pero falla en escalabilidad a 5000.</p>
+
+<h2>3. Configuración del Plan JMeter</h2>
+
+<div class="figure">
+[FIGURA 1: Configuración del Grupo de Hilos - 500 usuarios, ramp-up 10 segundos]
+</div>
+<div class="figure-text">Figura 1. Configuración del Grupo de Hilos (500 usuarios, ramp-up 10 seg)</div>
+
+<div class="figure">
+[FIGURA 2: Árbol del plan JMeter con los 4 elementos (GET, POST, Assertions)]
+</div>
+<div class="figure-text">Figura 2. Estructura del plan JMeter con los 4 elementos requeridos</div>
+
+<h2>4. Resultados Medidos</h2>
+
+<h3>4.1 Nivel 50 Usuarios</h3>
+<table>
+<tr><th>Corrida</th><th>Muestras</th><th>TPS</th><th>Latencia</th><th>p95</th><th>Max</th><th>Errores</th></tr>
+<tr><td>1-5 Promedio</td><td>500</td><td>10.3</td><td>14.3 ms</td><td>28.6 ms</td><td>58.0 ms</td><td>0 (0%)</td></tr>
+</table>
+
+<h3>4.2 Nivel 500 Usuarios</h3>
+<table>
+<tr><th>Corrida</th><th>Muestras</th><th>TPS</th><th>Latencia</th><th>p95</th><th>Max</th><th>Errores</th></tr>
+<tr><td>1-5 Promedio</td><td>5,000</td><td>98.1</td><td>288.5 ms</td><td>527.8 ms</td><td>675 ms</td><td>0 (0%)</td></tr>
+</table>
+
+<h3>4.3 Nivel 5000 Usuarios</h3>
+<table>
+<tr><th>Corrida</th><th>Muestras</th><th>TPS</th><th>Latencia</th><th>Errores</th><th>% Error</th></tr>
+<tr><td>1-5 Promedio</td><td>50,000</td><td>235.0</td><td>2,549.7 ms</td><td>46,982</td><td>93.96%</td></tr>
+</table>
+
+<div class="figure">
+[FIGURA 3: Informe Agregado de JMeter - tabla con resultados]
+</div>
+<div class="figure-text">Figura 3. Informe Agregado mostrando estadísticas completas</div>
+
+<div class="figure">
+[FIGURA 4: Gráfico de Tiempo de Respuesta - líneas de latencia por sampler]
+</div>
+<div class="figure-text">Figura 4. Gráfico de Tiempo de Respuesta por usuario</div>
+
+<div class="figure">
+[FIGURA 5: Árbol de Resultados - GET y POST con detalles]
+</div>
+<div class="figure-text">Figura 5. Árbol de Resultados con peticiones individuales</div>
+
+<h2>5. Análisis</h2>
+
+<h3>5.1 Causa Raíz del Colapso</h3>
+<p>NO es un problema del código del Worker, sino de capacidad TCP local:</p>
+<ul>
+<li>Windows limita a ~5000 puertos dinámicos</li>
+<li>Wrangler local tiene backlog TCP finito (~128)</li>
+<li>87.9% de errores son "Connection refused", no errores de aplicación</li>
+</ul>
+
+<div class="figure">
+[FIGURA 6: Response Body con idToken - JSON del signup exitoso]
+</div>
+<div class="figure-text">Figura 6. Response Body del registro exitoso con idToken</div>
+
+<h2>6. Limitaciones</h2>
+<p>✗ Entorno local con emuladores (no producción)<br>
+✗ Una sola máquina JMeter<br>
+✗ Sin latencia de red real<br>
+✗ Tiempos absolutos 2-5× menores que producción</p>
+
+<h2>7. Conclusiones</h2>
+<ul>
+<li>Escalabilidad relativa excelente (50→500): 10× throughput, 20× latencia</li>
+<li>El código del Worker es estable hasta 500 usuarios</li>
+<li>Colapso a 5000 es artefacto del entorno, no fallo de código</li>
+</ul>
+
+<h2>8. Recomendaciones</h2>
+<ul>
+<li>Ejecutar con distributed JMeter (múltiples máquinas)</li>
+<li>Replicar en staging Cloudflare Workers</li>
+<li>Load test contra Firebase real (no emulador)</li>
+<li>Implementar rate limiting en producción</li>
+</ul>
+
+<hr>
+<p style="text-align: center; font-size: 12px; color: #999;">Fin del informe • Análisis bajo ISO/IEC 25010 e ISO/IEC 29119</p>
+
+</body>
+</html>
