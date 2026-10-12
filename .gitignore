@@ -52,3 +52,20 @@ example
 
 # Wrangler local state
 .wrangler/
+
+# Wrangler dev vars (secretos locales de desarrollo/pruebas)
+.dev.vars
+
+# Prueba de estres con JMeter: artefactos pesados generados por las corridas
+tests/performance/results/*.jtl
+tests/performance/results/*.log
+tests/performance/reports/
+
+# Logs del entorno de pruebas (emuladores, wrangler, jmeter)
+tests/performance/*.log
+jmeter.log
+
+# Logs de emuladores de Firebase generados en local
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

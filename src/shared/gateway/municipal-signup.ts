@@ -13,11 +13,30 @@
 export interface GatewayEnv {
   FIREBASE_API_KEY?: string;
   FIREBASE_PROJECT_ID?: string;
+  /**
+   * Inyección de dependencias para pruebas en entorno controlado.
+   * Si no se definen, el gateway usa los endpoints reales de Google
+   * (comportamiento de producción). Definiéndolas se puede apuntar a los
+   * emuladores locales de Firebase y no salir a Internet. El resto del
+   * handler (parseo, validación y respuesta) no cambia en absoluto.
+   */
+  IDENTITY_TOOLKIT_BASE?: string;
+  FIRESTORE_API_BASE?: string;
 }
 
 const IDENTITY_TOOLKIT = 'https://identitytoolkit.googleapis.com/v1';
-const FIRESTORE_BASE = (projectId: string) =>
-  `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+const FIRESTORE_ROOT = 'https://firestore.googleapis.com';
+
+/** Resuelve la base de Identity Toolkit: emulador si está definido, si no producción. */
+function identityBase(env: GatewayEnv): string {
+  return env.IDENTITY_TOOLKIT_BASE || IDENTITY_TOOLKIT;
+}
+
+/** Resuelve la base de Firestore REST: emulador si está definido, si no producción. */
+function firestoreBase(env: GatewayEnv, projectId: string): string {
+  const root = env.FIRESTORE_API_BASE || FIRESTORE_ROOT;
+  return `${root}/v1/projects/${projectId}/databases/(default)/documents`;
+}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -75,7 +94,7 @@ export async function handleAuthSignup(request: Request, env: GatewayEnv): Promi
   }
 
   const res = await postJson(
-    `${IDENTITY_TOOLKIT}/accounts:signUp?key=${encodeURIComponent(env.FIREBASE_API_KEY)}`,
+    `${identityBase(env)}/accounts:signUp?key=${encodeURIComponent(env.FIREBASE_API_KEY)}`,
     { email, password, returnSecureToken: true },
   );
   const data = await res.json().catch(() => ({}));
@@ -102,7 +121,7 @@ export async function handleAuthDelete(request: Request, env: GatewayEnv): Promi
   }
 
   const res = await postJson(
-    `${IDENTITY_TOOLKIT}/accounts:delete?key=${encodeURIComponent(env.FIREBASE_API_KEY)}`,
+    `${identityBase(env)}/accounts:delete?key=${encodeURIComponent(env.FIREBASE_API_KEY)}`,
     { idToken },
   );
   if (!res.ok) {
@@ -131,7 +150,7 @@ export async function handleMunicipalityApply(request: Request, env: GatewayEnv)
     return json({ error: true, message: 'Datos incompletos' }, 400);
   }
 
-  const base = FIRESTORE_BASE(env.FIREBASE_PROJECT_ID);
+  const base = firestoreBase(env, env.FIREBASE_PROJECT_ID);
   const authHeaders = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${idToken}`,

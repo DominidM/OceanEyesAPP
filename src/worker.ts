@@ -27,6 +27,9 @@ interface Env {
   GEMINI_MODEL?: string;
   FIREBASE_API_KEY?: string;
   FIREBASE_PROJECT_ID?: string;
+  /** Solo para pruebas con los emuladores locales de Firebase. Ver municipal-signup.ts. */
+  IDENTITY_TOOLKIT_BASE?: string;
+  FIRESTORE_API_BASE?: string;
 }
 
 function json(body: unknown, status: number): Response {

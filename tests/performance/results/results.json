@@ -1,0 +1,1192 @@
+{
+  "generatedAt": "2026-10-12T01:56:42.689Z",
+  "levels": [
+    {
+      "nivel": 50,
+      "replicas": 5,
+      "samples": 500,
+      "errors": 0,
+      "errorPct": 0,
+      "avgTps": 10.345794474944999,
+      "avgLat": 14.272,
+      "avgP95": 28.6,
+      "avgP99": 58,
+      "latMin": 13.57,
+      "latMax": 15.1,
+      "variacion": 11.274871039056737,
+      "codigos": {
+        "200": 500
+      },
+      "errTypes": {},
+      "runs": [
+        {
+          "nivel": 50,
+          "corrida": 1,
+          "file": "signup-n50r1.jtl",
+          "samples": 100,
+          "durationSec": 9.646,
+          "throughput": 10.36699149906697,
+          "avg": 15.1,
+          "p50": 13,
+          "p90": 24,
+          "p95": 26,
+          "p99": 66,
+          "max": 66,
+          "min": 7,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 100
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 50,
+              "avg": 13.9,
+              "p95": 26,
+              "max": 66
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 50,
+              "avg": 16.3,
+              "p95": 26,
+              "max": 49
+            }
+          },
+          "errTypes": {}
+        },
+        {
+          "nivel": 50,
+          "corrida": 2,
+          "file": "signup-n50r2.jtl",
+          "samples": 100,
+          "durationSec": 9.65,
+          "throughput": 10.362694300518134,
+          "avg": 13.57,
+          "p50": 12,
+          "p90": 24,
+          "p95": 29,
+          "p99": 62,
+          "max": 62,
+          "min": 5,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 100
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 50,
+              "avg": 14.68,
+              "p95": 26,
+              "max": 62
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 50,
+              "avg": 12.46,
+              "p95": 29,
+              "max": 40
+            }
+          },
+          "errTypes": {}
+        },
+        {
+          "nivel": 50,
+          "corrida": 3,
+          "file": "signup-n50r3.jtl",
+          "samples": 100,
+          "durationSec": 9.663,
+          "throughput": 10.34875297526648,
+          "avg": 14.07,
+          "p50": 13,
+          "p90": 21,
+          "p95": 25,
+          "p99": 49,
+          "max": 49,
+          "min": 4,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 100
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 50,
+              "avg": 14.62,
+              "p95": 25,
+              "max": 49
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 50,
+              "avg": 13.52,
+              "p95": 23,
+              "max": 36
+            }
+          },
+          "errTypes": {}
+        },
+        {
+          "nivel": 50,
+          "corrida": 4,
+          "file": "signup-n50r4.jtl",
+          "samples": 100,
+          "durationSec": 9.671,
+          "throughput": 10.340192327577293,
+          "avg": 14.92,
+          "p50": 12,
+          "p90": 24,
+          "p95": 33,
+          "p99": 57,
+          "max": 57,
+          "min": 7,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 100
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 50,
+              "avg": 14.06,
+              "p95": 27,
+              "max": 57
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 50,
+              "avg": 15.78,
+              "p95": 33,
+              "max": 44
+            }
+          },
+          "errTypes": {}
+        },
+        {
+          "nivel": 50,
+          "corrida": 5,
+          "file": "signup-n50r5.jtl",
+          "samples": 100,
+          "durationSec": 9.699,
+          "throughput": 10.310341272296114,
+          "avg": 13.7,
+          "p50": 13,
+          "p90": 19,
+          "p95": 30,
+          "p99": 56,
+          "max": 56,
+          "min": 4,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 100
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 50,
+              "avg": 14.52,
+              "p95": 26,
+              "max": 56
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 50,
+              "avg": 12.88,
+              "p95": 31,
+              "max": 41
+            }
+          },
+          "errTypes": {}
+        }
+      ]
+    },
+    {
+      "nivel": 500,
+      "replicas": 5,
+      "samples": 5000,
+      "errors": 0,
+      "errorPct": 0,
+      "avgTps": 98.12055753874026,
+      "avgLat": 288.5498,
+      "avgP95": 527.8,
+      "avgP99": 608.2,
+      "latMin": 182.819,
+      "latMax": 353.674,
+      "variacion": 93.45582242545906,
+      "codigos": {
+        "200": 5000
+      },
+      "errTypes": {},
+      "runs": [
+        {
+          "nivel": 500,
+          "corrida": 1,
+          "file": "signup-n500r1.jtl",
+          "samples": 1000,
+          "durationSec": 10.29,
+          "throughput": 97.18172983479107,
+          "avg": 271.964,
+          "p50": 272,
+          "p90": 504,
+          "p95": 551,
+          "p99": 632,
+          "max": 719,
+          "min": 5,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 1000
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 500,
+              "avg": 227.606,
+              "p95": 465,
+              "max": 643
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 500,
+              "avg": 316.322,
+              "p95": 585,
+              "max": 719
+            }
+          },
+          "errTypes": {}
+        },
+        {
+          "nivel": 500,
+          "corrida": 2,
+          "file": "signup-n500r2.jtl",
+          "samples": 1000,
+          "durationSec": 10.244,
+          "throughput": 97.61811792268645,
+          "avg": 182.819,
+          "p50": 65,
+          "p90": 505,
+          "p95": 560,
+          "p99": 660,
+          "max": 709,
+          "min": 4,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 1000
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 500,
+              "avg": 167.274,
+              "p95": 532,
+              "max": 657
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 500,
+              "avg": 198.364,
+              "p95": 603,
+              "max": 709
+            }
+          },
+          "errTypes": {}
+        },
+        {
+          "nivel": 500,
+          "corrida": 3,
+          "file": "signup-n500r3.jtl",
+          "samples": 1000,
+          "durationSec": 10.263,
+          "throughput": 97.43739647276625,
+          "avg": 285.122,
+          "p50": 288,
+          "p90": 408,
+          "p95": 432,
+          "p99": 482,
+          "max": 529,
+          "min": 32,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 1000
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 500,
+              "avg": 237.182,
+              "p95": 355,
+              "max": 428
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 500,
+              "avg": 333.062,
+              "p95": 453,
+              "max": 529
+            }
+          },
+          "errTypes": {}
+        },
+        {
+          "nivel": 500,
+          "corrida": 4,
+          "file": "signup-n500r4.jtl",
+          "samples": 1000,
+          "durationSec": 10.189,
+          "throughput": 98.14505839630975,
+          "avg": 353.674,
+          "p50": 355,
+          "p90": 536,
+          "p95": 575,
+          "p99": 676,
+          "max": 798,
+          "min": 31,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 1000
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 500,
+              "avg": 296.276,
+              "p95": 485,
+              "max": 676
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 500,
+              "avg": 411.072,
+              "p95": 589,
+              "max": 798
+            }
+          },
+          "errTypes": {}
+        },
+        {
+          "nivel": 500,
+          "corrida": 5,
+          "file": "signup-n500r5.jtl",
+          "samples": 1000,
+          "durationSec": 9.978,
+          "throughput": 100.22048506714773,
+          "avg": 349.17,
+          "p50": 345,
+          "p90": 489,
+          "p95": 521,
+          "p99": 591,
+          "max": 625,
+          "min": 65,
+          "errorPct": 0,
+          "errors": 0,
+          "byCode": {
+            "200": 1000
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 500,
+              "avg": 295.532,
+              "p95": 428,
+              "max": 610
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 500,
+              "avg": 402.808,
+              "p95": 538,
+              "max": 625
+            }
+          },
+          "errTypes": {}
+        }
+      ]
+    },
+    {
+      "nivel": 5000,
+      "replicas": 5,
+      "samples": 50000,
+      "errors": 46982,
+      "errorPct": 93.964,
+      "avgTps": 234.9749360291965,
+      "avgLat": 2549.72944,
+      "avgP95": 12087.8,
+      "avgP99": 27414.4,
+      "latMin": 607.2166,
+      "latMax": 5340.1073,
+      "variacion": 779.4402689254543,
+      "codigos": {
+        "200": 3018,
+        "500": 327,
+        "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 43987,
+        "Non HTTP response code: java.net.SocketException": 97,
+        "Non HTTP response code: org.apache.http.NoHttpResponseException": 104,
+        "Non HTTP response code: java.net.SocketTimeoutException": 2467
+      },
+      "errTypes": {
+        "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 43987,
+        "Internal Server Error": 327,
+        "Non HTTP response message: Connection reset": 97,
+        "Non HTTP response message: 127.0.0.1:8787 failed to respond": 104,
+        "Non HTTP response message: Read timed out": 2467
+      },
+      "runs": [
+        {
+          "nivel": 5000,
+          "corrida": 1,
+          "file": "signup-n5000r1.jtl",
+          "samples": 10000,
+          "durationSec": 63.993,
+          "throughput": 156.26709171315613,
+          "avg": 5315.7083,
+          "p50": 4,
+          "p90": 30003,
+          "p95": 30010,
+          "p99": 30017,
+          "max": 30044,
+          "min": 0,
+          "errorPct": 90.38000000000001,
+          "errors": 9038,
+          "byCode": {
+            "200": 962,
+            "500": 89,
+            "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 7571,
+            "Non HTTP response code: java.net.SocketException": 38,
+            "Non HTTP response code: org.apache.http.NoHttpResponseException": 104,
+            "Non HTTP response code: java.net.SocketTimeoutException": 1236
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 5000,
+              "avg": 4772.2942,
+              "p95": 30003,
+              "max": 30044
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 5000,
+              "avg": 5859.1224,
+              "p95": 30013,
+              "max": 30034
+            }
+          },
+          "errTypes": {
+            "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 7571,
+            "Internal Server Error": 89,
+            "Non HTTP response message: Connection reset": 38,
+            "Non HTTP response message: 127.0.0.1:8787 failed to respond": 104,
+            "Non HTTP response message: Read timed out": 1236
+          }
+        },
+        {
+          "nivel": 5000,
+          "corrida": 2,
+          "file": "signup-n5000r2.jtl",
+          "samples": 10000,
+          "durationSec": 30.324,
+          "throughput": 329.7717979158422,
+          "avg": 611.2864,
+          "p50": 2,
+          "p90": 12,
+          "p95": 14,
+          "p99": 30185,
+          "max": 30261,
+          "min": 0,
+          "errorPct": 100,
+          "errors": 10000,
+          "byCode": {
+            "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 9799,
+            "Non HTTP response code: java.net.SocketTimeoutException": 201
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 5000,
+              "avg": 1218.1782,
+              "p95": 94,
+              "max": 30261
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 5000,
+              "avg": 4.3946,
+              "p95": 13,
+              "max": 65
+            }
+          },
+          "errTypes": {
+            "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 9799,
+            "Non HTTP response message: Read timed out": 201
+          }
+        },
+        {
+          "nivel": 5000,
+          "corrida": 3,
+          "file": "signup-n5000r3.jtl",
+          "samples": 10000,
+          "durationSec": 30.529,
+          "throughput": 327.55740443512724,
+          "avg": 607.2166,
+          "p50": 2,
+          "p90": 16,
+          "p95": 210,
+          "p99": 16633,
+          "max": 17804,
+          "min": 0,
+          "errorPct": 95.98,
+          "errors": 9598,
+          "byCode": {
+            "200": 402,
+            "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 9598
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 5000,
+              "avg": 674.3744,
+              "p95": 218,
+              "max": 17804
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 5000,
+              "avg": 540.0588,
+              "p95": 132,
+              "max": 14788
+            }
+          },
+          "errTypes": {
+            "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 9598
+          }
+        },
+        {
+          "nivel": 5000,
+          "corrida": 4,
+          "file": "signup-n5000r4.jtl",
+          "samples": 10000,
+          "durationSec": 65.357,
+          "throughput": 153.00579891977907,
+          "avg": 5340.1073,
+          "p50": 4,
+          "p90": 22844,
+          "p95": 30006,
+          "p99": 30015,
+          "max": 30020,
+          "min": 0,
+          "errorPct": 85.46000000000001,
+          "errors": 8546,
+          "byCode": {
+            "200": 1454,
+            "500": 238,
+            "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 7420,
+            "Non HTTP response code: java.net.SocketException": 59,
+            "Non HTTP response code: java.net.SocketTimeoutException": 829
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 5000,
+              "avg": 5070.6662,
+              "p95": 30002,
+              "max": 30020
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 5000,
+              "avg": 5609.5484,
+              "p95": 30010,
+              "max": 30020
+            }
+          },
+          "errTypes": {
+            "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 7420,
+            "Internal Server Error": 238,
+            "Non HTTP response message: Connection reset": 59,
+            "Non HTTP response message: Read timed out": 829
+          }
+        },
+        {
+          "nivel": 5000,
+          "corrida": 5,
+          "file": "signup-n5000r5.jtl",
+          "samples": 10000,
+          "durationSec": 48.014,
+          "throughput": 208.2725871620777,
+          "avg": 874.3286,
+          "p50": 2,
+          "p90": 12,
+          "p95": 199,
+          "p99": 30222,
+          "max": 30272,
+          "min": 0,
+          "errorPct": 98,
+          "errors": 9800,
+          "byCode": {
+            "200": 200,
+            "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 9599,
+            "Non HTTP response code: java.net.SocketTimeoutException": 201
+          },
+          "labelStats": {
+            "2 - HTTP Request Pagina Principal": {
+              "count": 5000,
+              "avg": 1224.5768,
+              "p95": 218,
+              "max": 30272
+            },
+            "3 - Segunda Peticion: Registro de usuario": {
+              "count": 5000,
+              "avg": 524.0804,
+              "p95": 15,
+              "max": 17736
+            }
+          },
+          "errTypes": {
+            "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 9599,
+            "Non HTTP response message: Read timed out": 201
+          }
+        }
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "nivel": 50,
+      "corrida": 1,
+      "file": "signup-n50r1.jtl",
+      "samples": 100,
+      "durationSec": 9.646,
+      "throughput": 10.36699149906697,
+      "avg": 15.1,
+      "p50": 13,
+      "p90": 24,
+      "p95": 26,
+      "p99": 66,
+      "max": 66,
+      "min": 7,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 100
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 50,
+          "avg": 13.9,
+          "p95": 26,
+          "max": 66
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 50,
+          "avg": 16.3,
+          "p95": 26,
+          "max": 49
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 50,
+      "corrida": 2,
+      "file": "signup-n50r2.jtl",
+      "samples": 100,
+      "durationSec": 9.65,
+      "throughput": 10.362694300518134,
+      "avg": 13.57,
+      "p50": 12,
+      "p90": 24,
+      "p95": 29,
+      "p99": 62,
+      "max": 62,
+      "min": 5,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 100
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 50,
+          "avg": 14.68,
+          "p95": 26,
+          "max": 62
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 50,
+          "avg": 12.46,
+          "p95": 29,
+          "max": 40
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 50,
+      "corrida": 3,
+      "file": "signup-n50r3.jtl",
+      "samples": 100,
+      "durationSec": 9.663,
+      "throughput": 10.34875297526648,
+      "avg": 14.07,
+      "p50": 13,
+      "p90": 21,
+      "p95": 25,
+      "p99": 49,
+      "max": 49,
+      "min": 4,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 100
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 50,
+          "avg": 14.62,
+          "p95": 25,
+          "max": 49
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 50,
+          "avg": 13.52,
+          "p95": 23,
+          "max": 36
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 50,
+      "corrida": 4,
+      "file": "signup-n50r4.jtl",
+      "samples": 100,
+      "durationSec": 9.671,
+      "throughput": 10.340192327577293,
+      "avg": 14.92,
+      "p50": 12,
+      "p90": 24,
+      "p95": 33,
+      "p99": 57,
+      "max": 57,
+      "min": 7,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 100
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 50,
+          "avg": 14.06,
+          "p95": 27,
+          "max": 57
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 50,
+          "avg": 15.78,
+          "p95": 33,
+          "max": 44
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 50,
+      "corrida": 5,
+      "file": "signup-n50r5.jtl",
+      "samples": 100,
+      "durationSec": 9.699,
+      "throughput": 10.310341272296114,
+      "avg": 13.7,
+      "p50": 13,
+      "p90": 19,
+      "p95": 30,
+      "p99": 56,
+      "max": 56,
+      "min": 4,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 100
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 50,
+          "avg": 14.52,
+          "p95": 26,
+          "max": 56
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 50,
+          "avg": 12.88,
+          "p95": 31,
+          "max": 41
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 500,
+      "corrida": 1,
+      "file": "signup-n500r1.jtl",
+      "samples": 1000,
+      "durationSec": 10.29,
+      "throughput": 97.18172983479107,
+      "avg": 271.964,
+      "p50": 272,
+      "p90": 504,
+      "p95": 551,
+      "p99": 632,
+      "max": 719,
+      "min": 5,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 1000
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 500,
+          "avg": 227.606,
+          "p95": 465,
+          "max": 643
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 500,
+          "avg": 316.322,
+          "p95": 585,
+          "max": 719
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 500,
+      "corrida": 2,
+      "file": "signup-n500r2.jtl",
+      "samples": 1000,
+      "durationSec": 10.244,
+      "throughput": 97.61811792268645,
+      "avg": 182.819,
+      "p50": 65,
+      "p90": 505,
+      "p95": 560,
+      "p99": 660,
+      "max": 709,
+      "min": 4,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 1000
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 500,
+          "avg": 167.274,
+          "p95": 532,
+          "max": 657
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 500,
+          "avg": 198.364,
+          "p95": 603,
+          "max": 709
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 500,
+      "corrida": 3,
+      "file": "signup-n500r3.jtl",
+      "samples": 1000,
+      "durationSec": 10.263,
+      "throughput": 97.43739647276625,
+      "avg": 285.122,
+      "p50": 288,
+      "p90": 408,
+      "p95": 432,
+      "p99": 482,
+      "max": 529,
+      "min": 32,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 1000
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 500,
+          "avg": 237.182,
+          "p95": 355,
+          "max": 428
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 500,
+          "avg": 333.062,
+          "p95": 453,
+          "max": 529
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 500,
+      "corrida": 4,
+      "file": "signup-n500r4.jtl",
+      "samples": 1000,
+      "durationSec": 10.189,
+      "throughput": 98.14505839630975,
+      "avg": 353.674,
+      "p50": 355,
+      "p90": 536,
+      "p95": 575,
+      "p99": 676,
+      "max": 798,
+      "min": 31,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 1000
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 500,
+          "avg": 296.276,
+          "p95": 485,
+          "max": 676
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 500,
+          "avg": 411.072,
+          "p95": 589,
+          "max": 798
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 500,
+      "corrida": 5,
+      "file": "signup-n500r5.jtl",
+      "samples": 1000,
+      "durationSec": 9.978,
+      "throughput": 100.22048506714773,
+      "avg": 349.17,
+      "p50": 345,
+      "p90": 489,
+      "p95": 521,
+      "p99": 591,
+      "max": 625,
+      "min": 65,
+      "errorPct": 0,
+      "errors": 0,
+      "byCode": {
+        "200": 1000
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 500,
+          "avg": 295.532,
+          "p95": 428,
+          "max": 610
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 500,
+          "avg": 402.808,
+          "p95": 538,
+          "max": 625
+        }
+      },
+      "errTypes": {}
+    },
+    {
+      "nivel": 5000,
+      "corrida": 1,
+      "file": "signup-n5000r1.jtl",
+      "samples": 10000,
+      "durationSec": 63.993,
+      "throughput": 156.26709171315613,
+      "avg": 5315.7083,
+      "p50": 4,
+      "p90": 30003,
+      "p95": 30010,
+      "p99": 30017,
+      "max": 30044,
+      "min": 0,
+      "errorPct": 90.38000000000001,
+      "errors": 9038,
+      "byCode": {
+        "200": 962,
+        "500": 89,
+        "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 7571,
+        "Non HTTP response code: java.net.SocketException": 38,
+        "Non HTTP response code: org.apache.http.NoHttpResponseException": 104,
+        "Non HTTP response code: java.net.SocketTimeoutException": 1236
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 5000,
+          "avg": 4772.2942,
+          "p95": 30003,
+          "max": 30044
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 5000,
+          "avg": 5859.1224,
+          "p95": 30013,
+          "max": 30034
+        }
+      },
+      "errTypes": {
+        "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 7571,
+        "Internal Server Error": 89,
+        "Non HTTP response message: Connection reset": 38,
+        "Non HTTP response message: 127.0.0.1:8787 failed to respond": 104,
+        "Non HTTP response message: Read timed out": 1236
+      }
+    },
+    {
+      "nivel": 5000,
+      "corrida": 2,
+      "file": "signup-n5000r2.jtl",
+      "samples": 10000,
+      "durationSec": 30.324,
+      "throughput": 329.7717979158422,
+      "avg": 611.2864,
+      "p50": 2,
+      "p90": 12,
+      "p95": 14,
+      "p99": 30185,
+      "max": 30261,
+      "min": 0,
+      "errorPct": 100,
+      "errors": 10000,
+      "byCode": {
+        "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 9799,
+        "Non HTTP response code: java.net.SocketTimeoutException": 201
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 5000,
+          "avg": 1218.1782,
+          "p95": 94,
+          "max": 30261
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 5000,
+          "avg": 4.3946,
+          "p95": 13,
+          "max": 65
+        }
+      },
+      "errTypes": {
+        "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 9799,
+        "Non HTTP response message: Read timed out": 201
+      }
+    },
+    {
+      "nivel": 5000,
+      "corrida": 3,
+      "file": "signup-n5000r3.jtl",
+      "samples": 10000,
+      "durationSec": 30.529,
+      "throughput": 327.55740443512724,
+      "avg": 607.2166,
+      "p50": 2,
+      "p90": 16,
+      "p95": 210,
+      "p99": 16633,
+      "max": 17804,
+      "min": 0,
+      "errorPct": 95.98,
+      "errors": 9598,
+      "byCode": {
+        "200": 402,
+        "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 9598
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 5000,
+          "avg": 674.3744,
+          "p95": 218,
+          "max": 17804
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 5000,
+          "avg": 540.0588,
+          "p95": 132,
+          "max": 14788
+        }
+      },
+      "errTypes": {
+        "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 9598
+      }
+    },
+    {
+      "nivel": 5000,
+      "corrida": 4,
+      "file": "signup-n5000r4.jtl",
+      "samples": 10000,
+      "durationSec": 65.357,
+      "throughput": 153.00579891977907,
+      "avg": 5340.1073,
+      "p50": 4,
+      "p90": 22844,
+      "p95": 30006,
+      "p99": 30015,
+      "max": 30020,
+      "min": 0,
+      "errorPct": 85.46000000000001,
+      "errors": 8546,
+      "byCode": {
+        "200": 1454,
+        "500": 238,
+        "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 7420,
+        "Non HTTP response code: java.net.SocketException": 59,
+        "Non HTTP response code: java.net.SocketTimeoutException": 829
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 5000,
+          "avg": 5070.6662,
+          "p95": 30002,
+          "max": 30020
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 5000,
+          "avg": 5609.5484,
+          "p95": 30010,
+          "max": 30020
+        }
+      },
+      "errTypes": {
+        "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 7420,
+        "Internal Server Error": 238,
+        "Non HTTP response message: Connection reset": 59,
+        "Non HTTP response message: Read timed out": 829
+      }
+    },
+    {
+      "nivel": 5000,
+      "corrida": 5,
+      "file": "signup-n5000r5.jtl",
+      "samples": 10000,
+      "durationSec": 48.014,
+      "throughput": 208.2725871620777,
+      "avg": 874.3286,
+      "p50": 2,
+      "p90": 12,
+      "p95": 199,
+      "p99": 30222,
+      "max": 30272,
+      "min": 0,
+      "errorPct": 98,
+      "errors": 9800,
+      "byCode": {
+        "200": 200,
+        "Non HTTP response code: org.apache.http.conn.HttpHostConnectException": 9599,
+        "Non HTTP response code: java.net.SocketTimeoutException": 201
+      },
+      "labelStats": {
+        "2 - HTTP Request Pagina Principal": {
+          "count": 5000,
+          "avg": 1224.5768,
+          "p95": 218,
+          "max": 30272
+        },
+        "3 - Segunda Peticion: Registro de usuario": {
+          "count": 5000,
+          "avg": 524.0804,
+          "p95": 15,
+          "max": 17736
+        }
+      },
+      "errTypes": {
+        "Non HTTP response message: Connect to 127.0.0.1:8787 [/127.0.0.1] failed: Connection refused: getsockopt": 9599,
+        "Non HTTP response message: Read timed out": 201
+      }
+    }
+  ]
+}
