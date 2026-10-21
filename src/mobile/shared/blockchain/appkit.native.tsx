@@ -15,7 +15,10 @@ import {
 import React from 'react';
 import { View } from 'react-native';
 
-const projectId = process.env.EXPO_PUBLIC_REOWN_PROJECT_ID ?? '';
+// En esta rama la app debe arrancar sin .env: si no hay projectId, usamos un
+// valor de relleno para que createAppKit no rompa el arranque (las funciones
+// de wallet quedan desactivadas por isPointLedgerConfigured en el resto).
+const projectId = process.env.EXPO_PUBLIC_REOWN_PROJECT_ID ?? 'demo-project-id';
 // Version the namespace so incomplete sessions from older WalletConnect builds
 // cannot be restored after an upgrade.
 const storagePrefix = '@oceaneyes/appkit/v3/';
@@ -74,8 +77,8 @@ export const appKit = createAppKit({
   metadata: {
     name: 'OceanEyes',
     description: 'Reportes y recompensas por la protección del océano',
-    url: 'https://ocean-eyes.solvegrades.workers.dev',
-    icons: ['https://ocean-eyes.solvegrades.workers.dev/favicon.ico'],
+    url: 'https://oceaneyes.app',
+    icons: ['https://oceaneyes.app/favicon.ico'],
     redirect: {
       native: 'oceaneyes://',
     },

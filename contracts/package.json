@@ -5,10 +5,7 @@
   "private": true,
   "scripts": {
     "compile": "hardhat compile",
-    "test": "hardhat test",
-    "address": "node scripts/address.js",
-    "deploy:arbitrumSepolia": "hardhat run scripts/deploy.js --network arbitrumSepolia",
-    "verify:arbitrumSepolia": "hardhat verify --network arbitrumSepolia"
+    "test": "hardhat test"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.0",

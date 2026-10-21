@@ -13,9 +13,8 @@ auditables en **Arbitrum**.
 - **Arbitrum Sepolia** — registro on-chain de puntos (pendiente, ver docs)
 
 ## Requisitos
-
-- Node.js ≥ 20 (projecto usa `npm`)
-- Cuenta Firebase con `.env.local` (ver `.env.example`)
+- Node.js >= 20 (proyecto usa `npm`)
+- No se requiere configurar `.env`: esta rama (capstone) arranca sin claves.
 
 ## Comandos
 
@@ -46,3 +45,4 @@ npm run lint        # ESLint
 | [`docs/ARBITRUM_PLAN.md`](docs/ARBITRUM_PLAN.md) | Plan de integración Arbitrum |
 | [`docs/ARBITRUM_README.md`](docs/ARBITRUM_README.md) | Brief para IA (blockchain) |
 | [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md) | Setup de Firebase |
+

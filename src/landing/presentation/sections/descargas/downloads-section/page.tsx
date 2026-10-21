@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
@@ -21,10 +21,10 @@ export function DescargasSection() {
           <Text style={styles.cardDesc}>
             Descargá el APK directamente e instalá la app en tu dispositivo Android.
           </Text>
-          <Pressable style={styles.btn} onPress={() => Linking.openURL('https://mega.nz/file/x7R3HCjJ#AY1Oz1VuQDRX8jXe0H6YnOe2ojHPSsEHyeDIeutfXw4')}>
+          <View style={styles.btn}>
             <FontAwesome5 name="download" size={14} color={BrandColors.tertiary} />
-            <Text style={styles.btnText}>Descargar APK</Text>
-          </Pressable>
+            <Text style={styles.btnText}>APK disponible en el repositorio</Text>
+          </View>
         </View>
       </View>
     </View>
