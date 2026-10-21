@@ -49,3 +49,12 @@ Los puntos por reportes verificados son el incentivo central del sistema. Regist
 - **AuditorÃ­a pÃºblica**: patrocinadores y ONGs verifican las recompensas en Arbiscan.
 - **Inmutabilidad**: el historial de puntos no puede alterarse ni borrarse.
 - **Identidad descentralizada**: cada pescador vincula su wallet y su reputaciÃ³n queda registrada en cadena.
+
+## 6. Pruebas (capítulo 6.2)
+
+- **6.2.1 Pruebas unitarias:** 8 suites, 21 casos, 21/21 OK. Ver 	ests/6.2.1-pruebas-unitarias/.
+- **6.2.2 Pruebas de aceptación:** 1 suite, 2 casos, 2/2 OK. Ver 	ests/6.2.2-pruebas-aceptacion/.
+- **Comando:** `npm test` (Jest 30.5.2 + jest-expo 54.0.18).
+- **Evidencia de ejecución:** 	ests/6.2.1-pruebas-unitarias/evidencias/resultados.md,
+  	ests/6.2.2-pruebas-aceptacion/evidencias/resultados.md.
+- **Resumen global:** 9 suites, 23 casos, 23/23 OK (21/10/2026).
