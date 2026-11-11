@@ -59,15 +59,21 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^14.1.0",
+    "@types/jest": "^30.0.0",
     "@types/leaflet": "^1.9.22",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.10",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~10.0.0",
+    "jest": "^30.5.2",
+    "jest-expo": "^54.0.18",
+    "react-test-renderer": "^19.1.0",
     "typescript": "~5.9.2"
   },
   "overrides": {
-    "@walletconnect/universal-provider": "2.23.10"
+    "@walletconnect/universal-provider": "2.23.10",
+    "@react-native-async-storage/async-storage": "$@react-native-async-storage/async-storage"
   },
   "scripts": {
     "start": "expo start",
@@ -77,7 +83,10 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "deploy:web": "expo export --platform web && node scripts/fix-assets.cjs && npx wrangler deploy",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:rules": "npm --prefix __tests__ run test:rules"
   },
   "private": true
 }

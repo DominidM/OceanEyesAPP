@@ -79,9 +79,10 @@ export async function redeemReward(userId: string, rewardId: string): Promise<st
       tx.update(rewardRef, { stock: increment(-1) });
     }
 
-    tx.update(userRef, { pointsBalance: increment(-reward.pointsCost) });
-
     const redemptionRef = doc(collection(firestore, 'redemptions'));
+    // Las reglas solo aceptan el débito si lastRedemptionId apunta al canje creado en esta transacción.
+    tx.update(userRef, { pointsBalance: increment(-reward.pointsCost), lastRedemptionId: redemptionRef.id });
+
     tx.set(redemptionRef, {
       userId,
       rewardId,
@@ -91,12 +92,13 @@ export async function redeemReward(userId: string, rewardId: string): Promise<st
       updatedAt: serverTimestamp(),
     });
 
-    const txRef = doc(collection(firestore, 'pointTransactions'));
+    const txRef = doc(firestore, 'pointTransactions', `redemption-${redemptionRef.id}`);
     tx.set(txRef, {
       userId,
       type: 'redemption',
       amount: -reward.pointsCost,
       rewardId,
+      redemptionId: redemptionRef.id,
       balanceBefore: user.pointsBalance,
       balanceAfter: user.pointsBalance - reward.pointsCost,
       createdAt: serverTimestamp(),

@@ -1,0 +1,20 @@
+{
+  "name": "oceaneyes-tests",
+  "private": true,
+  "description": "Pruebas unitarias (PU-01..PU-08) y de reglas con emulador (PU-05, PU-08..PU-10). Proyecto aislado: no modifica el package.json raíz.",
+  "scripts": {
+    "test:unit": "jest --selectProjects unit",
+    "test:rules": "cd .. && firebase emulators:exec --only firestore,storage --project demo-oceaneyes \"npm --prefix __tests__ run test:rules:raw\"",
+    "test:rules:raw": "jest --selectProjects rules --runInBand",
+    "test": "npm run test:unit && npm run test:rules"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-typescript": "^7.26.0",
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "babel-jest": "^29.7.0",
+    "firebase": "^11.10.0",
+    "jest": "^29.7.0"
+  }
+}

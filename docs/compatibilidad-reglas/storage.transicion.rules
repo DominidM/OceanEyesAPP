@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /reports/{reportId}/{fileName} {
+      allow read: if request.auth != null
+        && (firestore.get(/databases/(default)/documents/reports/$(reportId)).data.userId == request.auth.uid
+          || request.auth.token.admin == true
+          || firestore.get(/databases/(default)/documents/reports/$(reportId)).data.status == 'verificado');
+      allow write: if request.auth != null
+        && firestore.get(/databases/(default)/documents/reports/$(reportId)).data.userId == request.auth.uid
+        // RNF-09: máximo 25 MB por archivo (igual que src/mobile/shared/offline/media-validation.ts).
+        // TRANSICIÓN (APK de main 9f533c6, sin validación local): videos hasta 50 MB. Retirar tras el corte.
+        && (request.resource.size <= 25 * 1024 * 1024
+          || (request.resource.contentType.matches('video/.*') && request.resource.size < 50 * 1024 * 1024))
+        && request.resource.contentType.matches('image/.*|video/.*|audio/.*');
+    }
+  }
+}

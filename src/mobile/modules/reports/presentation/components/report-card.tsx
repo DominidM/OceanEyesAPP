@@ -25,6 +25,8 @@ export type Report = {
   statusKey?: ReportStatus;
   pointsAwarded?: number;
   txHash?: string;
+  /** 'Sin evidencia' / 'Evidencia incompleta (x de n)'; null si está completa. */
+  evidence?: string | null;
 };
 
 export function ReportCard({ report }: { report: Report }) {
@@ -55,6 +57,14 @@ export function ReportCard({ report }: { report: Report }) {
             bg={report.statusBg}
             color={report.statusText}
           />
+          {report.evidence ? (
+            <StatusBadge
+              icon={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
+              label={report.evidence}
+              bg="rgba(254, 243, 199, 1.0)"
+              color="#92400E"
+            />
+          ) : null}
         </View>
 
         {report.statusKey === 'verificado' && report.txHash ? (
@@ -161,7 +171,9 @@ const styles = StyleSheet.create({
   statusWrap: {
     height: 28,
     paddingTop: 8,
+    flexDirection: 'row',
     alignItems: 'flex-start',
+    gap: 6,
   },
   statusBadge: {
     height: 20,

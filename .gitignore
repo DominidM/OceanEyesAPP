@@ -52,3 +52,6 @@ example
 
 # Wrangler local state
 .wrangler/
+# Cobertura de Jest / Hardhat
+coverage/
+coverage.json

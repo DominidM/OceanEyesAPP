@@ -21,6 +21,7 @@ export type UserProfile = {
   banReason?: string;
   bannedBy?: string;
   bannedAt?: Timestamp;
+  lastRedemptionId?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 };
@@ -91,6 +92,8 @@ export type Report = {
   photoURLs: string[];
   audioURL?: string | null;
   audioDurationMillis?: number | null;
+  /** Archivos (fotos, videos y audio) que el usuario adjuntó al crear el reporte. */
+  mediaExpected?: number | null;
   status: ReportStatus;
   pointsAwarded: number;
   txHash?: string;
@@ -157,6 +160,7 @@ export type PointTransaction = {
   amount: number;
   reportId?: string;
   rewardId?: string;
+  redemptionId?: string;
   balanceBefore: number;
   balanceAfter: number;
   txHash?: string;

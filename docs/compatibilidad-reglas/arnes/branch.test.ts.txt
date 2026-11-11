@@ -1,0 +1,233 @@
+/**
+ * Compatibilidad: código de main (9f533c6, worktree ../main-9f533c6) contra las reglas
+ * indicadas por RULESET (new = fix/cierre-100, old = main). Emulador demo-oceaneyes.
+ */
+import { afterAll, beforeAll, beforeEach, expect, it, jest } from '@jest/globals';
+import { readFileSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
+
+import { initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
+import { addDoc, collection, deleteField, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes } from 'firebase/storage';
+
+jest.mock(
+  'C:/Users/USER/Documents/Proyectos/OceanEyesAPP/src/mobile/shared/firebase/app.ts',
+  () => require('./mocks/app.js'),
+);
+
+const MAIN_FB =
+  'C:/Users/USER/Documents/Proyectos/OceanEyesAPP/src/mobile/shared/firebase';
+const reports = require(`${MAIN_FB}/reports.ts`);
+const rewards = require(`${MAIN_FB}/rewards.ts`);
+const auth = require(`${MAIN_FB}/auth.ts`);
+
+const RULESET = process.env.RULESET ?? 'new';
+const RULES_DIR = resolve(__dirname, `rules-${RULESET}`);
+const WALLET = '0x1111111111111111111111111111111111111111';
+const results: { flow: string; ok: boolean; error?: string }[] = [];
+let env: RulesTestEnvironment;
+
+function host(v: string) {
+  const [h, p] = (process.env[v] as string).split(':');
+  return { host: h, port: Number(p) };
+}
+
+function as(uid: string) {
+  const ctx = env.authenticatedContext(uid);
+  (global as any).__compat = { firestore: ctx.firestore(), storage: ctx.storage(), auth: { currentUser: { uid } } };
+  return ctx;
+}
+
+async function flow(name: string, fn: () => Promise<unknown>) {
+  try {
+    await fn();
+    results.push({ flow: name, ok: true });
+  } catch (e: any) {
+    results.push({ flow: name, ok: false, error: String(e?.message ?? e).replace(/\s+/g, ' ') });
+  }
+}
+
+const input = {
+  category: 'pesca_ilegal',
+  title: 'Pesca con explosivos',
+  description: 'Prueba de compatibilidad',
+  isAnonymous: false,
+  location: { latitude: -12.05, longitude: -77.15 },
+};
+
+beforeAll(async () => {
+  env = await initializeTestEnvironment({
+    projectId: 'demo-oceaneyes',
+    firestore: { rules: readFileSync(resolve(RULES_DIR, 'firestore.rules'), 'utf8'), ...host('FIRESTORE_EMULATOR_HOST') },
+    storage: { rules: readFileSync(resolve(RULES_DIR, 'storage.rules'), 'utf8'), ...host('FIREBASE_STORAGE_EMULATOR_HOST') },
+  });
+});
+
+afterAll(async () => {
+  writeFileSync(resolve(__dirname, `results-branch-${RULESET}.json`), JSON.stringify(results, null, 2));
+  await env?.cleanup();
+});
+
+beforeEach(async () => {
+  await env.clearFirestore();
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    const base = { pointsBalance: 0, totalPointsEarned: 0, verifiedReportsCount: 0, status: 'active', profileType: 'citizen' };
+    await setDoc(doc(db, 'users/alice'), { ...base, role: 'user', displayName: 'Alice', walletAddress: WALLET, pointsBalance: 300, totalPointsEarned: 300 });
+    await setDoc(doc(db, 'users/dave'), { ...base, role: 'user', displayName: 'Dave' });
+    await setDoc(doc(db, 'users/guest'), { ...base, role: 'user', displayName: 'Usuario', email: null, dni: null });
+    await setDoc(doc(db, 'users/admin1'), { ...base, role: 'admin', displayName: 'Admin' });
+    await setDoc(doc(db, 'rewards/kit'), { title: 'Kit', pointsCost: 150, stock: 5, active: true });
+    const report = { userId: 'alice', category: 'pesca_ilegal', title: 'X', pointsAwarded: 0, photoURLs: [], location: input.location };
+    await setDoc(doc(db, 'reports/rPend'), { ...report, status: 'pendiente' });
+    await setDoc(doc(db, 'reports/rRev'), { ...report, status: 'en_revision' });
+  });
+});
+
+it('flujos de main', async () => {
+  // 1. Crear reporte en línea
+  as('alice');
+  await flow('1a createReport (reports.ts:73-81)', () => reports.createReport(input));
+  await flow('1b publishReportOnline con foto+audio (reports.ts:89-166)', () =>
+    reports.publishReportOnline(input, [{ uri: 'file:///f.jpg', kind: 'photo' }], { uri: 'file:///a.m4a', durationMillis: 3000 }));
+
+  // 2. Outbox
+  const pending = {
+    id: 'pending-1',
+    input: { ...input, deviceHash: 'h' },
+    media: [{ localUri: 'file:///f.jpg', kind: 'photo' }],
+    audio: { localUri: 'file:///a.m4a', durationMillis: 3000 },
+  };
+  await flow('2a publishPendingReport sin remoteId (reports.ts:191-248)', () => reports.publishPendingReport(pending));
+  await flow('2b publishPendingReport reintento, remoteId pendiente (reports.ts:247)', () =>
+    reports.publishPendingReport({ ...pending, remoteId: 'rPend' }));
+  await flow('2c publishPendingReport reintento, remoteId ya en_revision (reports.ts:247)', () =>
+    reports.publishPendingReport({ ...pending, remoteId: 'rRev' }));
+  const st = as('alice').storage();
+  await flow('2d Storage foto 3 MB image/jpeg (media.ts:121)', () =>
+    uploadBytes(ref(st, 'reports/rPend/p-0.jpg'), new Uint8Array(3 * 1024 * 1024), { contentType: 'image/jpeg' }));
+  await flow('2e Storage video 30 MB video/mp4 (media.ts:121)', () =>
+    uploadBytes(ref(st, 'reports/rPend/p-1.mp4'), new Uint8Array(30 * 1024 * 1024), { contentType: 'video/mp4' }));
+
+  // 3. Canje
+  as('alice');
+  await flow('3 redeemReward (rewards.ts:59-109)', () => rewards.redeemReward('alice', 'kit'));
+
+  // 4. Verificar desde el panel (report-detail-screen.tsx:66 + :86)
+  const adminDb = as('admin1').firestore();
+  await flow('4 verificar: verifyReport + statusHistory (report-detail-screen.tsx:66,86)', async () => {
+    await reports.verifyReport('rPend', 'admin1', {} as any);
+    await addDoc(collection(adminDb, 'reports', 'rPend', 'statusHistory'), {
+      fromStatus: 'pendiente', toStatus: 'verificado', changedBy: 'admin1', createdAt: serverTimestamp(),
+    });
+  });
+  // 5. Descartar desde el panel (report-detail-screen.tsx:79-91)
+  await flow('5a descartar: updateDoc + statusHistory (report-detail-screen.tsx:79,86)', async () => {
+    await updateDoc(doc(adminDb, 'reports', 'rRev'), {
+      status: 'descartado', reviewedBy: 'admin1', reviewedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    await addDoc(collection(adminDb, 'reports', 'rRev', 'statusHistory'), {
+      fromStatus: 'en_revision', toStatus: 'descartado', changedBy: 'admin1', createdAt: serverTimestamp(),
+    });
+  });
+  await flow('5b updateReportStatus descartado (reports.ts:448-467)', () =>
+    reports.updateReportStatus('rRev', 'descartado', { adminUid: 'admin1', reason: 'Falso' }));
+
+  // 6. Editar perfil (edit-profile-screen.tsx:57)
+  as('alice');
+  await flow('6 updateUserProfile datos (auth.ts:301, edit-profile-screen.tsx:57)', () =>
+    auth.updateUserProfile('alice', { displayName: 'Alicia', phone: '999888777', dni: '12345678', profileType: 'fisher' }));
+
+  // 7. Wallet (profile-section.tsx:392, :463)
+  const daveDb = as('dave').firestore();
+  await flow('7a vincular wallet (auth.ts:301, profile-section.tsx:392)', () => auth.updateUserProfile('dave', { walletAddress: WALLET }));
+  await flow('7b quitar wallet deleteField (profile-section.tsx:463)', () =>
+    updateDoc(doc(daveDb, 'users', 'dave'), { walletAddress: deleteField(), updatedAt: serverTimestamp() }));
+
+  // Adicionales: alta de perfil y vinculación de invitado (auth.ts:74, :212)
+  const newDb = as('newbie').firestore();
+  await flow('8a ensureUserProfile alta (auth.ts:74)', () => setDoc(doc(newDb, 'users', 'newbie'), {
+    role: 'user', profileType: 'citizen', displayName: 'Usuario', email: null, dni: null, pointsBalance: 0,
+    totalPointsEarned: 0, verifiedReportsCount: 0, status: 'active', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  const guestDb = as('guest').firestore();
+  await flow('8b linkAccountWithEmail setDoc merge (auth.ts:212)', () => setDoc(doc(guestDb, 'users', 'guest'), {
+    role: 'user', profileType: 'fisher', displayName: 'Invitado', email: 'g@x.pe', dni: null, status: 'active', updatedAt: serverTimestamp(),
+  }, { merge: true }));
+
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const u = await getDoc(doc(ctx.firestore(), 'users/alice'));
+    results.push({ flow: 'estado: alice.pointsBalance final (inicial 300)', ok: true, error: String(u.data()?.pointsBalance) });
+  });
+  expect(results.length).toBeGreaterThan(0);
+});
+
+// Abusos con un cliente modificado (no con la APK): ¿la regla los bloquea?
+it('abusos', async () => {
+  const db = as('alice').firestore();
+  const { writeBatch } = require('firebase/firestore');
+  const batch = async (fn: (b: any) => void) => {
+    await env.withSecurityRulesDisabled(async (ctx) => { await updateDoc(doc(ctx.firestore(), 'users/alice'), { pointsBalance: 300 }); });
+    const b = writeBatch(db); fn(b); await b.commit();
+  };
+  const now = serverTimestamp();
+  await flow('A1 crédito falso report_verified +500', () => batch((b) => b.set(doc(db, 'pointTransactions/fake'), {
+    userId: 'alice', type: 'report_verified', amount: 500, reportId: 'rPend', createdAt: now })));
+  await flow('A2 subir pointsBalance a 9999', () => batch((b) => b.update(doc(db, 'users/alice'), { pointsBalance: 9999 })));
+  await flow('A3 cambiar role a admin', () => batch((b) => b.update(doc(db, 'users/alice'), { role: 'admin' })));
+  await flow('A4 subir totalPointsEarned', () => batch((b) => b.update(doc(db, 'users/alice'), { totalPointsEarned: 9999 })));
+  await flow('A5 canje sin débito de saldo', () => batch((b) => b.set(doc(db, 'redemptions/free'), {
+    userId: 'alice', rewardId: 'kit', pointsSpent: 150, status: 'pendiente', createdAt: now })));
+  await flow('A6 dos canjes con un solo débito (legacy)', () => batch((b) => {
+    b.update(doc(db, 'users/alice'), { pointsBalance: 150 });
+    b.set(doc(db, 'redemptions/d1'), { userId: 'alice', rewardId: 'kit', pointsSpent: 150, status: 'pendiente', createdAt: now });
+    b.set(doc(db, 'redemptions/d2'), { userId: 'alice', rewardId: 'kit', pointsSpent: 150, status: 'pendiente', createdAt: now });
+  }));
+  await flow('A7 dos canjes con un solo débito (cliente nuevo, lastRedemptionId)', () => batch((b) => {
+    b.update(doc(db, 'users/alice'), { pointsBalance: 150, lastRedemptionId: 'n1' });
+    b.set(doc(db, 'redemptions/n1'), { userId: 'alice', rewardId: 'kit', pointsSpent: 150, status: 'pendiente', createdAt: now });
+    b.set(doc(db, 'redemptions/n2'), { userId: 'alice', rewardId: 'kit', pointsSpent: 150, status: 'pendiente', createdAt: now });
+  }));
+  await flow('A8 débito de canje sin canje (legacy, daño propio)', () => batch((b) => {
+    b.update(doc(db, 'users/alice'), { pointsBalance: 150 });
+    b.set(doc(db, 'pointTransactions/orphan'), { userId: 'alice', type: 'redemption', amount: -150, rewardId: 'kit',
+      balanceBefore: 300, balanceAfter: 150, createdAt: now });
+  }));
+  await flow('A9 transacción legacy con monto positivo', () => batch((b) => {
+    b.update(doc(db, 'users/alice'), { pointsBalance: 150 });
+    b.set(doc(db, 'pointTransactions/pos'), { userId: 'alice', type: 'redemption', amount: 150, rewardId: 'kit',
+      balanceBefore: 300, balanceAfter: 450, createdAt: now });
+  }));
+  await flow('A10 crear reporte ya verificado con puntos (SEC-01)', () => batch((b) => b.set(doc(db, 'reports/forged'), {
+    userId: 'alice', category: 'pesca_ilegal', title: 'X', status: 'verificado', pointsAwarded: 100, photoURLs: [] })));
+  await flow('A11 dueño cambia estado de su reporte (SEC-02)', () => batch((b) => b.update(doc(db, 'reports/rPend'), { status: 'verificado' })));
+});
+
+// Diagnóstico: cada escritura de verifyReport (reports.ts:402-425) por separado, como admin.
+it('verificación de main, escrituras aisladas', async () => {
+  const db = as('admin1').firestore();
+  const { increment } = require('firebase/firestore');
+  await flow('4.1 reports update verificado (reports.ts:402)', () => updateDoc(doc(db, 'reports/rPend'), {
+    status: 'verificado', pointsAwarded: 100, reviewedAt: serverTimestamp(), reviewedBy: 'admin1',
+  }));
+  await flow('4.2 users increment puntos (reports.ts:409)', () => updateDoc(doc(db, 'users/alice'), {
+    pointsBalance: increment(100), totalPointsEarned: increment(100), verifiedReportsCount: increment(1),
+  }));
+  await flow('4.3 pointTransactions set report_verified, userId del reportante (reports.ts:417)', () => setDoc(doc(db, 'pointTransactions/pt1'), {
+    userId: 'alice', type: 'report_verified', amount: 100, reportId: 'rPend', balanceBefore: 300, balanceAfter: 400, createdAt: serverTimestamp(),
+  }));
+});
+
+// Diagnóstico: cada escritura de redeemReward (rewards.ts:78-103) por separado, con el payload de main.
+it('canje de main, escrituras aisladas', async () => {
+  const db = as('alice').firestore();
+  const { increment } = require('firebase/firestore');
+  await flow('3.1 rewards stock increment(-1) (rewards.ts:79)', () => updateDoc(doc(db, 'rewards/kit'), { stock: increment(-1) }));
+  await flow('3.2 users pointsBalance increment(-150) (rewards.ts:82)', () => updateDoc(doc(db, 'users/alice'), { pointsBalance: increment(-150) }));
+  await flow('3.3 redemptions set (rewards.ts:85)', () => setDoc(doc(db, 'redemptions/rd1'), {
+    userId: 'alice', rewardId: 'kit', pointsSpent: 150, status: 'pendiente', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+  await flow('3.4 pointTransactions set id aleatorio (rewards.ts:95)', () => setDoc(doc(db, 'pointTransactions/autoId123'), {
+    userId: 'alice', type: 'redemption', amount: -150, rewardId: 'kit', balanceBefore: 300, balanceAfter: 150, createdAt: serverTimestamp(),
+  }));
+});

@@ -3,6 +3,8 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 import { storage } from '@/shared/firebase/app';
 
+import { assertMediaFile } from './media-validation';
+
 export type StagedMedia = {
   localUri: string;
   kind: 'photo' | 'video' | 'audio';
@@ -117,6 +119,8 @@ export async function uploadMediaToStorage(options: {
   if (!file.exists) {
     throw new Error(`No se encontró el archivo multimedia: ${options.localUri}`);
   }
+  // Se valida por la extensión real (mimeFromExtension aplica valores por defecto).
+  assertMediaFile({ uri: options.localUri, kind: contentType.startsWith('audio/') ? 'audio' : options.kind, size: file.size });
   const blob = await localFileToBlob(options.localUri, contentType);
   await uploadBytes(storageRef, blob, { contentType });
   return getDownloadURL(storageRef);

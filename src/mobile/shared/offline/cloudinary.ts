@@ -1,6 +1,7 @@
 import { File } from 'expo-file-system';
 
 import { uploadMediaToStorage } from './media';
+import { assertMediaFile } from './media-validation';
 
 export type CloudinaryKind = 'photo' | 'audio';
 
@@ -58,6 +59,8 @@ async function readAsDataUri(localUri: string, kind: CloudinaryKind): Promise<st
   if (!file.exists) {
     throw new Error(`No se encontró el archivo a subir: ${localUri}`);
   }
+  // Se valida por la extensión real (mimeFromExtension aplica valores por defecto).
+  assertMediaFile({ uri: localUri, kind, size: file.size });
   const base64 = await file.base64();
   return `data:${mime};base64,${base64}`;
 }

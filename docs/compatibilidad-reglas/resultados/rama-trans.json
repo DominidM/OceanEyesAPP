@@ -1,0 +1,154 @@
+[
+  {
+    "flow": "1a createReport (reports.ts:73-81)",
+    "ok": true
+  },
+  {
+    "flow": "1b publishReportOnline con foto+audio (reports.ts:89-166)",
+    "ok": true
+  },
+  {
+    "flow": "2a publishPendingReport sin remoteId (reports.ts:191-248)",
+    "ok": true
+  },
+  {
+    "flow": "2b publishPendingReport reintento, remoteId pendiente (reports.ts:247)",
+    "ok": true
+  },
+  {
+    "flow": "2c publishPendingReport reintento, remoteId ya en_revision (reports.ts:247)",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L99:24 for 'update' @ L99, false for 'update' @ L99"
+  },
+  {
+    "flow": "2d Storage foto 3 MB image/jpeg (media.ts:121)",
+    "ok": true
+  },
+  {
+    "flow": "2e Storage video 30 MB video/mp4 (media.ts:121)",
+    "ok": true
+  },
+  {
+    "flow": "3 redeemReward (rewards.ts:59-109)",
+    "ok": true
+  },
+  {
+    "flow": "4 verificar: verifyReport + statusHistory (report-detail-screen.tsx:66,86)",
+    "ok": true
+  },
+  {
+    "flow": "5a descartar: updateDoc + statusHistory (report-detail-screen.tsx:79,86)",
+    "ok": true
+  },
+  {
+    "flow": "5b updateReportStatus descartado (reports.ts:448-467)",
+    "ok": true
+  },
+  {
+    "flow": "6 updateUserProfile datos (auth.ts:301, edit-profile-screen.tsx:57)",
+    "ok": true
+  },
+  {
+    "flow": "7a vincular wallet (auth.ts:301, profile-section.tsx:392)",
+    "ok": true
+  },
+  {
+    "flow": "7b quitar wallet deleteField (profile-section.tsx:463)",
+    "ok": true
+  },
+  {
+    "flow": "8a ensureUserProfile alta (auth.ts:74)",
+    "ok": true
+  },
+  {
+    "flow": "8b linkAccountWithEmail setDoc merge (auth.ts:212)",
+    "ok": true
+  },
+  {
+    "flow": "estado: alice.pointsBalance final (inicial 300)",
+    "ok": true,
+    "error": "250"
+  },
+  {
+    "flow": "A1 crédito falso report_verified +500",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L228:24 for 'create' @ L228, evaluation error at L229:32 for 'update' @ L229, false for 'create' @ L228"
+  },
+  {
+    "flow": "A2 subir pointsBalance a 9999",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L80:24 for 'update' @ L80, Property lastRedemptionId is undefined on object. for 'update' @ L80"
+  },
+  {
+    "flow": "A3 cambiar role a admin",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L80:24 for 'update' @ L80, false for 'update' @ L80"
+  },
+  {
+    "flow": "A4 subir totalPointsEarned",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L80:24 for 'update' @ L80, false for 'update' @ L80"
+  },
+  {
+    "flow": "A5 canje sin débito de saldo",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L250:24 for 'create' @ L250, evaluation error at L259:32 for 'update' @ L259, false for 'create' @ L250"
+  },
+  {
+    "flow": "A6 dos canjes con un solo débito (legacy)",
+    "ok": true
+  },
+  {
+    "flow": "A7 dos canjes con un solo débito (cliente nuevo, lastRedemptionId)",
+    "ok": true
+  },
+  {
+    "flow": "A8 débito de canje sin canje (legacy, daño propio)",
+    "ok": true
+  },
+  {
+    "flow": "A9 transacción legacy con monto positivo",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L80:24 for 'update' @ L80, evaluation error at L228:24 for 'create' @ L228, evaluation error at L229:32 for 'update' @ L229, Property redemptionId is undefined on object. for 'create' @ L228"
+  },
+  {
+    "flow": "A10 crear reporte ya verificado con puntos (SEC-01)",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: false for 'create' @ L87, evaluation error at L99:24 for 'update' @ L99, false for 'create' @ L87"
+  },
+  {
+    "flow": "A11 dueño cambia estado de su reporte (SEC-02)",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L99:24 for 'update' @ L99, false for 'update' @ L99"
+  },
+  {
+    "flow": "4.1 reports update verificado (reports.ts:402)",
+    "ok": true
+  },
+  {
+    "flow": "4.2 users increment puntos (reports.ts:409)",
+    "ok": true
+  },
+  {
+    "flow": "4.3 pointTransactions set report_verified, userId del reportante (reports.ts:417)",
+    "ok": true
+  },
+  {
+    "flow": "3.1 rewards stock increment(-1) (rewards.ts:79)",
+    "ok": true
+  },
+  {
+    "flow": "3.2 users pointsBalance increment(-150) (rewards.ts:82)",
+    "ok": true
+  },
+  {
+    "flow": "3.3 redemptions set (rewards.ts:85)",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L250:24 for 'create' @ L250, evaluation error at L259:32 for 'update' @ L259, false for 'create' @ L250"
+  },
+  {
+    "flow": "3.4 pointTransactions set id aleatorio (rewards.ts:95)",
+    "ok": false,
+    "error": "7 PERMISSION_DENIED: evaluation error at L228:24 for 'create' @ L228, evaluation error at L229:32 for 'update' @ L229, Property redemptionId is undefined on object. for 'create' @ L228"
+  }
+]

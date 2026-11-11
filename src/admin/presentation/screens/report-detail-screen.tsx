@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,9 +14,10 @@ import { ReportMap } from '@admin/presentation/components/reports/report-map';
 import { useWallet } from '@admin/presentation/hooks/useWallet';
 import { useAdminTheme } from '@admin/theme/context';
 import { buildArbiscanTxUrl } from '@shared/blockchain/ledger';
+import { attachedMediaCount, evidenceLabel } from '@/modules/reports/domain/valueObjects/report-evidence';
 import { banDevice } from '@/shared/firebase/bans';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
-import { onChainNoticeForReport, verifyReport } from '@/shared/firebase/reports';
+import { onChainNoticeForReport, updateReportStatus, verifyReport } from '@/shared/firebase/reports';
 import { REPORT_CATEGORIES, type Report, type ReportStatus } from '@/shared/firebase/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -76,19 +77,9 @@ export function ReportDetailScreen({ readOnly = false }: { readOnly?: boolean })
           setOnChainNotice(`Reporte verificado en BD. La transacción on-chain falló: ${outcome.error}`);
         }
       } else {
-        await updateDoc(doc(firestore, 'reports', report.id), {
-          status,
-          reviewedBy: firebaseAuth?.currentUser?.uid,
-          reviewedAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
+        // Estado + entrada de statusHistory en una sola transacción.
+        await updateReportStatus(report.id, status, { adminUid: firebaseAuth?.currentUser?.uid ?? 'admin' });
       }
-      await addDoc(collection(firestore, 'reports', report.id, 'statusHistory'), {
-        fromStatus: report.status,
-        toStatus: status,
-        changedBy: firebaseAuth?.currentUser?.uid,
-        createdAt: serverTimestamp(),
-      });
       const snap = await getDoc(doc(firestore, 'reports', report.id));
       if (snap.exists()) setReport({ id: snap.id, ...snap.data() } as Report);
     } catch (e) {
@@ -121,6 +112,11 @@ export function ReportDetailScreen({ readOnly = false }: { readOnly?: boolean })
   const rows: { label: string; value: string }[] = report
     ? [
         { label: 'Título', value: report.title },
+        { label: 'Descripción', value: report.description?.trim() || '—' },
+        {
+          label: 'Evidencia',
+          value: evidenceLabel(report) ?? (attachedMediaCount(report) > 0 ? 'Completa' : 'Sin archivos adjuntos'),
+        },
         { label: 'ID de reporte', value: report.id },
         { label: 'Categoría', value: CATEGORY_LABELS[report.category] ?? report.category },
         { label: 'Fecha', value: dateStr },

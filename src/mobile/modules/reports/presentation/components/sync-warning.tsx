@@ -10,9 +10,11 @@ import { SurfaceColors } from '../theme';
 import { shadow } from '@/shared/utils/shadows';
 
 export function SyncWarning({ onSync }: { onSync?: () => void }) {
-  const { pendingCount, syncing, lastError } = useSync();
+  const { pendingCount, syncing, lastError, lastWarning, dismissWarning } = useSync();
 
-  if (pendingCount === 0 && !syncing) return null;
+  if (pendingCount === 0 && !syncing) {
+    return lastWarning ? <EvidenceWarning message={lastWarning} onDismiss={dismissWarning} /> : null;
+  }
 
   const countLabel = `${pendingCount} reporte${pendingCount === 1 ? '' : 's'}`;
 
@@ -35,7 +37,7 @@ export function SyncWarning({ onSync }: { onSync?: () => void }) {
             {syncing ? 'Sincronizando reportes...' : `${countLabel} sin sincronizar`}
           </AppText>
           <AppText style={styles.syncDescription}>
-            {lastError ??
+            {lastWarning ?? lastError ??
               (pendingCount > 0
                 ? `${pendingCount === 1 ? 'Espera' : 'Esperan'} conexión para enviarse`
                 : '')}
@@ -60,6 +62,33 @@ export function SyncWarning({ onSync }: { onSync?: () => void }) {
   );
 }
 
+// Aviso tras sincronizar: el reporte llegó sin parte de su evidencia (no se pierde en silencio).
+function EvidenceWarning({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <View style={styles.syncPanel} accessibilityRole="alert">
+      <View style={styles.warningInfo}>
+        <View style={styles.syncIconWrap}>
+          <AppSymbol
+            name={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
+            color={BrandColors.primary}
+            size={24}
+          />
+        </View>
+        <View style={styles.syncCopy}>
+          <AppText style={styles.syncTitle}>Reporte enviado sin evidencia completa</AppText>
+          <AppText style={styles.syncDescription}>{message}</AppText>
+        </View>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onDismiss}
+        style={({ pressed }) => [styles.syncButton, pressed && styles.pressed]}>
+        <AppText style={styles.syncButtonText}>Entendido</AppText>
+      </Pressable>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   syncPanel: {
     width: '100%',
@@ -77,6 +106,12 @@ const styles = StyleSheet.create({
   syncInfo: {
     width: '100%',
     height: 45,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  warningInfo: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,

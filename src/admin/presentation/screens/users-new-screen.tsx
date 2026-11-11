@@ -8,6 +8,7 @@ import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
 import { createUserByAdmin } from '@/shared/firebase/auth';
 import type { UserRole } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
+import { isPasswordLongEnough, MIN_PASSWORD_LENGTH } from '@shared/auth/password-policy';
 
 export function UsersNewScreen() {
   const { colors } = useAdminTheme();
@@ -25,8 +26,8 @@ export function UsersNewScreen() {
   const handleSubmit = async () => {
     setError('');
     setSuccess('');
-    if (!displayName.trim() || !email.trim() || password.length < 6) {
-      setError('Completa nombre, correo y una contraseña de al menos 6 caracteres.');
+    if (!displayName.trim() || !email.trim() || !isPasswordLongEnough(password)) {
+      setError(`Completa nombre, correo y una contraseña de al menos ${MIN_PASSWORD_LENGTH} caracteres.`);
       return;
     }
     setBusy(true);

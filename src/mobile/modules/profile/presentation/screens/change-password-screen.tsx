@@ -10,6 +10,7 @@ import { KeyboardScrollView } from '@/shared/components/keyboard-scroll-view';
 import { changePassword } from '@/shared/firebase/auth';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { shadow } from '@/shared/utils/shadows';
+import { isPasswordLongEnough, MIN_PASSWORD_LENGTH } from '@shared/auth/password-policy';
 
 const backIcon: SymbolName = { ios: 'chevron.left', android: 'arrow-back', web: 'arrow-back' };
 
@@ -33,8 +34,8 @@ export function ChangePasswordScreen() {
       ]);
       return;
     }
-    if (next.length < 6) {
-      setError('La nueva contraseña debe tener al menos 6 caracteres.');
+    if (!isPasswordLongEnough(next)) {
+      setError(`La nueva contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`);
       return;
     }
     if (next !== confirm) {
@@ -88,7 +89,7 @@ export function ChangePasswordScreen() {
             value={next}
             onChangeText={setNext}
             secureTextEntry
-            placeholder="Mínimo 6 caracteres"
+            placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
             placeholderTextColor="rgba(44, 44, 44, 0.4)"
             style={styles.input}
           />

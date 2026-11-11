@@ -4,6 +4,7 @@ import { AppState } from 'react-native';
 import { useAuth } from '@/shared/firebase/auth-context';
 import { useConnectivity } from './connectivity-context';
 import {
+  dismissSyncWarning,
   getSyncState,
   initSyncEngine,
   requestSync,
@@ -14,12 +15,14 @@ import {
 type SyncContextValue = SyncState & {
   online: boolean;
   requestSync: () => void;
+  dismissWarning: () => void;
 };
 
 const SyncContext = createContext<SyncContextValue>({
   ...getSyncState(),
   online: true,
   requestSync: () => undefined,
+  dismissWarning: () => undefined,
 });
 
 export function SyncProvider({ children }: React.PropsWithChildren) {
@@ -51,7 +54,12 @@ export function SyncProvider({ children }: React.PropsWithChildren) {
   }, []);
 
   const value = useMemo<SyncContextValue>(
-    () => ({ ...syncState, online, requestSync: () => void requestSync('manual') }),
+    () => ({
+      ...syncState,
+      online,
+      requestSync: () => void requestSync('manual'),
+      dismissWarning: dismissSyncWarning,
+    }),
     [syncState, online],
   );
 

@@ -1,16 +1,18 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as MediaLibrary from 'expo-media-library';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import {DimensionValue, Pressable, StyleSheet, View} from 'react-native';
+import {Alert, DimensionValue, Pressable, StyleSheet, View} from 'react-native';
 import { AppText } from '@/shared/components/app-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { checkMediaFile } from '@/shared/offline/media-validation';
 
 import { CaptureColors as C } from '../theme';
 import { CaptureMedia, MediaPreview } from './media-preview';
@@ -25,6 +27,19 @@ type CaptureStepProps = {
 
 const MAX_DURATION_SECONDS = 60;
 const MAX_MEDIA = 6;
+
+function fileSize(uri: string): number | null {
+  try {
+    const file = new File(uri);
+    return file.exists ? file.size : null;
+  } catch {
+    return null;
+  }
+}
+
+function rejectMedia(reason: string) {
+  Alert.alert('Archivo no válido', reason);
+}
 
 export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) {
   const insets = useSafeAreaInsets();
@@ -89,6 +104,11 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
   }, [recording, seconds]);
 
   const addCaptured = (item: CaptureMedia) => {
+    const check = checkMediaFile({ uri: item.uri, kind: item.type, size: fileSize(item.uri) });
+    if (!check.ok) {
+      rejectMedia(check.reason);
+      return;
+    }
     setMediaList((prev) => {
       if (prev.length >= MAX_MEDIA) return prev;
       return [...prev, item];
@@ -154,9 +174,16 @@ export function CaptureStep({ onClose, onContinue, onMedia }: CaptureStepProps) 
         quality: 0.8,
       });
       if (result.canceled || !result.assets?.length) return;
+      const rejected: string[] = [];
       const picked: CaptureMedia[] = result.assets
-        .filter((asset) => Boolean(asset.uri))
+        .filter((asset) => {
+          if (!asset.uri) return false;
+          const check = checkMediaFile({ uri: asset.uri, kind: 'photo', size: asset.fileSize, mimeType: asset.mimeType });
+          if (!check.ok) rejected.push(check.reason);
+          return check.ok;
+        })
         .map((asset) => ({ type: 'photo', uri: asset.uri }));
+      if (rejected.length > 0) rejectMedia(rejected.join('\n'));
       if (picked.length === 0) return;
       setMediaList((prev) => [...prev, ...picked].slice(0, MAX_MEDIA));
       setGalleryThumb(picked[0].uri);

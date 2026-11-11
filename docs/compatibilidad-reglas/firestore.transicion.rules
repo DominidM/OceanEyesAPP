@@ -1,0 +1,262 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isRole('admin');
+    }
+
+    function isRole(role) {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isPrivileged() {
+      return isRole('admin') || isRole('municipal');
+    }
+
+    function isActiveMunicipality() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/municipalities/$(request.auth.uid))
+        && get(/databases/$(database)/documents/municipalities/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isInMunicipalityBounds(location) {
+      let bounds = get(/databases/$(database)/documents/municipalities/$(request.auth.uid)).data.bounds;
+      return location != null
+        && bounds != null
+        && location.latitude >= bounds.south
+        && location.latitude <= bounds.north
+        && location.longitude >= bounds.west
+        && location.longitude <= bounds.east;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function hasValidWallet() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.walletAddress is string
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.walletAddress.matches('^0x[0-9a-fA-F]{40}$');
+    }
+
+    // Débito de puntos ligado a un canje creado en la misma transacción (rewards.ts › redeemReward).
+    function isRedemptionDebit(userId) {
+      let redemptionId = request.resource.data.lastRedemptionId;
+      let redemption = getAfter(/databases/$(database)/documents/redemptions/$(redemptionId));
+      return redemptionId is string
+        && !exists(/databases/$(database)/documents/redemptions/$(redemptionId))
+        && redemption.data.userId == userId
+        && request.resource.data.pointsBalance == resource.data.pointsBalance - redemption.data.pointsSpent;
+    }
+
+    // SEC-03: lista blanca de campos que el dueño puede editar en su perfil.
+    function isOwnerProfileUpdate(userId) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasOnly(['displayName', 'phone', 'dni', 'profileType', 'email', 'walletAddress',
+          'updatedAt', 'pointsBalance', 'lastRedemptionId'])
+        && (!changed.hasAny(['walletAddress']) || resource.data.status != 'suspended')
+        && (!changed.hasAny(['pointsBalance', 'lastRedemptionId']) || isRedemptionDebit(userId));
+    }
+
+    // TRANSICIÓN (APK de main 9f533c6): débito de canje sin lastRedemptionId. Solo resta puntos.
+    // Retirar cuando la versión mínima obligatoria sea la de fix/cierre-100.
+    function isLegacyRedemptionDebit() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pointsBalance'])
+        && request.resource.data.pointsBalance < resource.data.pointsBalance
+        && request.resource.data.pointsBalance >= 0;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.role in ['user', 'municipal']
+        && request.resource.data.pointsBalance == 0;
+      allow update: if isAdmin()
+        || (isOwner(userId) && (isOwnerProfileUpdate(userId) || isLegacyRedemptionDebit()));
+      allow delete: if isAdmin();
+    }
+
+    match /reports/{reportId} {
+      // SEC-01: el ciudadano solo crea reportes pendientes, sin puntos ni datos de moderación.
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && hasValidWallet()
+        && request.resource.data.status == 'pendiente'
+        && request.resource.data.pointsAwarded == 0
+        && !request.resource.data.keys().hasAny(
+          ['txHash', 'reviewedAt', 'reviewedBy', 'onChainStatus', 'onChainError', 'rejectionReason']);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid)
+        || (resource.data.status == 'verificado')
+        || (isActiveMunicipality() && isInMunicipalityBounds(resource.data.location));
+      // SEC-02: el dueño solo adjunta medios mientras el reporte sigue pendiente.
+      allow update: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid
+          && resource.data.status == 'pendiente'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['photoURLs', 'audioURL', 'audioDurationMillis']));
+      allow delete: if isAdmin();
+
+      match /private/{privateId} {
+        allow read: if isAdmin()
+          || (signedIn() && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid)
+          || get(/databases/$(database)/documents/reports/$(reportId)).data.status == 'verificado'
+          || (isActiveMunicipality()
+            && isInMunicipalityBounds(get(/databases/$(database)/documents/reports/$(reportId)).data.location));
+        allow create: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid
+            && request.resource.data.userId == request.auth.uid);
+        allow update, delete: if isAdmin();
+      }
+
+      match /statusHistory/{historyId} {
+        allow read: if isAdmin()
+          || (signedIn() && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid);
+        // Entrada inicial '— → pendiente', escrita por el dueño en el mismo batch que crea el reporte.
+        allow create: if isAdmin()
+          || (signedIn()
+            && historyId == 'initial'
+            && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid
+            && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.status == 'pendiente'
+            && request.resource.data.fromStatus == null
+            && request.resource.data.toStatus == 'pendiente'
+            && request.resource.data.changedBy == request.auth.uid);
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    match /alerts/{alertId} {
+      allow read: if signedIn() || resource.data.active == true;
+      allow create: if isAdmin() || isRole('municipal');
+      allow update, delete: if isAdmin() || isRole('municipal');
+    }
+
+    match /municipalities/{municipalityId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if signedIn()
+        && municipalityId == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if isAdmin()
+        || (signedIn() && municipalityId == request.auth.uid
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.ownerUid == resource.data.ownerUid);
+      allow delete: if isAdmin();
+    }
+
+    match /campaigns/{campaignId} {
+      allow read: if signedIn() || resource.data.active == true;
+      allow create: if isPrivileged()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.active == true;
+      allow update, delete: if isAdmin()
+        || (isRole('municipal')
+          && resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.municipalityId == resource.data.municipalityId);
+    }
+
+    match /deviceTokens/{token} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    match /alertReports/{reportId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid)
+        || (resource.data.status == 'verified')
+        || isActiveMunicipality();
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.userId == resource.data.userId);
+      allow delete: if isAdmin();
+    }
+
+    function isRedemptionTransaction(transactionId) {
+      let redemptionId = request.resource.data.redemptionId;
+      let redemption = getAfter(/databases/$(database)/documents/redemptions/$(redemptionId));
+      return signedIn()
+        && redemptionId is string
+        && transactionId == 'redemption-' + redemptionId
+        && !exists(/databases/$(database)/documents/redemptions/$(redemptionId))
+        && request.resource.data.type == 'redemption'
+        && request.resource.data.userId == request.auth.uid
+        && redemption.data.userId == request.auth.uid
+        && request.resource.data.amount == -redemption.data.pointsSpent;
+    }
+
+    // TRANSICIÓN (APK de main 9f533c6): débito de canje con id aleatorio. Solo montos negativos
+    // iguales al costo de la recompensa y respaldados por el débito del saldo en el mismo batch.
+    function isLegacyRedemptionTransaction() {
+      let data = request.resource.data;
+      let users = /databases/$(database)/documents/users/$(request.auth.uid);
+      return signedIn()
+        && data.keys().hasOnly(['userId', 'type', 'amount', 'rewardId', 'balanceBefore', 'balanceAfter', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.type == 'redemption'
+        && data.rewardId is string
+        && data.amount == -get(/databases/$(database)/documents/rewards/$(data.rewardId)).data.pointsCost
+        && getAfter(users).data.pointsBalance == get(users).data.pointsBalance + data.amount;
+    }
+
+    match /pointTransactions/{transactionId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid)
+        || (isActiveMunicipality()
+          && resource.data.reportId != null
+          && isInMunicipalityBounds(
+            get(/databases/$(database)/documents/reports/$(resource.data.reportId)).data.location
+          ));
+      // SEC-04: los créditos de puntos solo los registra el admin (verifyReport). El cliente solo
+      // puede asentar el débito de su propio canje, con id fijo y creado en la misma transacción.
+      allow create: if isAdmin() || isRedemptionTransaction(transactionId) || isLegacyRedemptionTransaction();
+      allow update, delete: if isAdmin();
+    }
+
+    match /rewards/{rewardId} {
+      allow read: if signedIn() && resource.data.active == true || isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (signedIn() && request.resource.data.stock <= resource.data.stock);
+    }
+
+    match /bannedDevices/{deviceHash} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /bans/{userId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /redemptions/{redemptionId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pendiente'
+        && request.resource.data.pointsSpent
+          == get(/databases/$(database)/documents/rewards/$(request.resource.data.rewardId)).data.pointsCost
+        // El canje solo existe si el saldo del usuario baja lo mismo en el mismo batch (ambos clientes).
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.pointsBalance
+          == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.pointsBalance
+            - request.resource.data.pointsSpent;
+      allow update, delete: if isAdmin();
+    }
+  }
+}

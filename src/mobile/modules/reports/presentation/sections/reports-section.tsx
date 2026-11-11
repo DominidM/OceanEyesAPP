@@ -13,6 +13,7 @@ import { ReportsHeader, ReportChip } from '../components/reports-header';
 import { StatsStrip, ReportStat } from '../components/stats-strip';
 import { SyncWarning } from '../components/sync-warning';
 import { HistoryHeader } from '../components/history-header';
+import { evidenceLabel } from '../../domain/valueObjects/report-evidence';
 import { resolveIncidentIcon } from '../incident-types';
 import { SurfaceColors } from '../theme';
 import { isFirebaseConfigured } from '@/shared/firebase/config';
@@ -203,6 +204,7 @@ function toCardReport(report: FirestoreReport): Report {
     statusKey: report.status,
     pointsAwarded: report.pointsAwarded ?? 0,
     txHash: report.txHash ?? undefined,
+    evidence: evidenceLabel(report),
   };
 }
 

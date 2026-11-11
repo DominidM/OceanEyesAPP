@@ -5,6 +5,8 @@ import type { ReportStatus } from '../valueObjects/report-status';
 
 export type ReportId = string;
 
+export const REPORT_DESCRIPTION_MAX_LENGTH = 500;
+
 export type NewReport = {
   category: ReportCategoryId;
   title: string;
@@ -50,6 +52,9 @@ export function createNewReport(input: {
   assertReportCategory(input.category);
   if (!input.title || !input.title.trim()) {
     throw new InvalidReportError('El título es obligatorio.');
+  }
+  if ((input.description?.trim().length ?? 0) > REPORT_DESCRIPTION_MAX_LENGTH) {
+    throw new InvalidReportError(`La descripción no puede superar ${REPORT_DESCRIPTION_MAX_LENGTH} caracteres.`);
   }
   return {
     category: input.category,

@@ -1,7 +1,7 @@
 import {
-  addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   increment,
   limit,
@@ -12,12 +12,15 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
+  type DocumentReference,
+  type Transaction,
 } from 'firebase/firestore';
 
 import { isFirebaseConfigured } from './config';
 
 import { firebaseAuth, firestore } from './app';
-import { REPORT_CATEGORIES, type GeoBounds, type Report, type ReportInput } from './types';
+import { REPORT_CATEGORIES, type GeoBounds, type Report, type ReportInput, type ReportStatus } from './types';
 
 import { getDeviceHash } from '@/shared/identity/device-id';
 import { isNetworkError } from '@/shared/offline/errors';
@@ -50,6 +53,7 @@ function buildReportDocFields(
   input: ReportInput,
   userId: string,
   deviceHash: string | null,
+  mediaExpected?: number,
 ): Record<string, unknown> {
   return {
     userId,
@@ -62,6 +66,7 @@ function buildReportDocFields(
     photoURLs: input.photoURLs ?? [],
     audioURL: input.audioURL ?? null,
     audioDurationMillis: input.audioDurationMillis ?? null,
+    mediaExpected: mediaExpected ?? (input.photoURLs?.length ?? 0) + (input.audioURL ? 1 : 0),
     status: 'pendiente',
     pointsAwarded: 0,
     customIcon: input.customIcon ?? null,
@@ -70,12 +75,51 @@ function buildReportDocFields(
   };
 }
 
+/**
+ * Crea el reporte y su entrada inicial de historial ('— → pendiente') en un único batch atómico.
+ * La entrada usa el id fijo 'initial', el único que las reglas permiten escribir al dueño.
+ */
+async function createReportWithHistory(
+  input: ReportInput,
+  userId: string,
+  deviceHash: string | null,
+  options: { reportId?: string; mediaExpected?: number } = {},
+): Promise<DocumentReference> {
+  const reportRef = options.reportId
+    ? doc(firestore, 'reports', options.reportId)
+    : doc(collection(firestore, 'reports'));
+  const batch = writeBatch(firestore);
+  batch.set(reportRef, buildReportDocFields(input, userId, deviceHash, options.mediaExpected));
+  batch.set(doc(firestore, 'reports', reportRef.id, 'statusHistory', 'initial'), {
+    fromStatus: null,
+    toStatus: 'pendiente',
+    changedBy: userId,
+    createdAt: serverTimestamp(),
+  });
+  await batch.commit();
+  return reportRef;
+}
+
+function recordStatusChange(
+  tx: Transaction,
+  reportId: string,
+  change: { fromStatus: ReportStatus; toStatus: ReportStatus; changedBy: string; reason?: string | null },
+): void {
+  tx.set(doc(collection(firestore, 'reports', reportId, 'statusHistory')), {
+    fromStatus: change.fromStatus,
+    toStatus: change.toStatus,
+    changedBy: change.changedBy,
+    reason: change.reason ?? null,
+    createdAt: serverTimestamp(),
+  });
+}
+
 export async function createReport(input: ReportInput): Promise<string> {
   const user = firebaseAuth?.currentUser;
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
   const deviceHash = await getDeviceHash();
-  const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(input, user.uid, deviceHash));
+  const ref = await createReportWithHistory(input, user.uid, deviceHash);
 
   return ref.id;
 }
@@ -95,7 +139,9 @@ export async function publishReportOnline(
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
   const deviceHash = await getDeviceHash();
-  const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(input, user.uid, deviceHash));
+  const ref = await createReportWithHistory(input, user.uid, deviceHash, {
+    mediaExpected: (media?.length ?? 0) + (audio?.uri ? 1 : 0),
+  });
 
   let mediaAttached = false;
   const mediaFailed: string[] = [];
@@ -188,63 +234,131 @@ export async function saveReportOfflineFirst(
   return pending.id;
 }
 
-export async function publishPendingReport(pending: PendingReport): Promise<void> {
+export type PublishPendingResult = {
+  reportId: string;
+  /** Archivos que el usuario adjuntó (fotos, videos y audio). */
+  expectedMedia: number;
+  /** Archivos que no quedaron enlazados en el reporte. */
+  missingMedia: number;
+  /** status_changed: el admin cambió el estado antes de adjuntarlos; upload_failed: la subida falló. */
+  reason: 'status_changed' | 'upload_failed' | null;
+};
+
+function isPermissionDenied(error: unknown): boolean {
+  return (error as { code?: string } | null)?.code === 'permission-denied';
+}
+
+/**
+ * Publica un reporte del outbox. El id se fija antes de subir nada y las URLs subidas se guardan
+ * en el outbox, de modo que los reintentos no repiten subidas ni crean duplicados.
+ *  1. Fotos y audio (Cloudinary) se suben ANTES de crear el documento: el reporte nace con ellos.
+ *  2. Se crea el documento (+ statusHistory/initial) con `mediaExpected`.
+ *  3. Los videos (Storage exige que el documento exista) se adjuntan después. Si el admin ya cambió
+ *     el estado, las reglas impiden adjuntarlos: el reporte queda con evidencia incompleta y el
+ *     resultado lo indica para avisar al usuario, en lugar de reintentar hasta quedar 'stuck'.
+ */
+export async function publishPendingReport(pending: PendingReport): Promise<PublishPendingResult> {
   const user = firebaseAuth?.currentUser;
   if (!user) throw new AuthenticationRequiredError();
 
-  let reportId = pending.remoteId;
+  let reportId = pending.remoteId ?? pending.plannedId;
   if (!reportId) {
-    const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(pending.input, user.uid, pending.input.deviceHash ?? null));
-    reportId = ref.id;
+    reportId = doc(collection(firestore, 'reports')).id;
+    await updatePendingReport(pending.id, { plannedId: reportId });
+  }
+  const reportRef = doc(firestore, 'reports', reportId);
+  const expectedMedia = pending.media.length + (pending.audio?.localUri ? 1 : 0);
+
+  const uploaded: Record<string, string> = { ...(pending.uploaded ?? {}) };
+  const failed = new Set<string>();
+  let uploadedAfterCreate = false;
+  let created = Boolean(pending.remoteId);
+
+  const upload = async (key: string, run: () => Promise<string>) => {
+    if (uploaded[key] || failed.has(key)) return;
+    try {
+      uploaded[key] = await run();
+      if (created) uploadedAfterCreate = true;
+      await updatePendingReport(pending.id, { uploaded: { ...uploaded } });
+    } catch (error) {
+      if (isNetworkError(error)) throw error;
+      console.warn('No se pudo adjuntar el medio del reporte pendiente', reportId, key, error);
+      failed.add(key);
+    }
+  };
+  const mediaKey = (index: number) => `${pending.id}-${index}`;
+  const uploadCloudinary = async () => {
+    for (let index = 0; index < pending.media.length; index += 1) {
+      const media = pending.media[index];
+      if (media.kind === 'video') continue;
+      await upload(mediaKey(index), () =>
+        uploadReportMedia({ localUri: media.localUri, kind: 'photo', reportId: reportId!, mediaId: mediaKey(index) }),
+      );
+    }
+    const audio = pending.audio;
+    if (audio?.localUri) {
+      await upload('audio', () =>
+        uploadReportMedia({ localUri: audio.localUri, kind: 'audio', reportId: reportId!, mediaId: 'audio' }),
+      );
+    }
+  };
+  const mediaFields = () => {
+    const photoURLs = pending.media.map((_, index) => uploaded[mediaKey(index)]).filter(Boolean);
+    const audioURL = uploaded.audio ?? null;
+    return {
+      photoURLs,
+      audioURL,
+      audioDurationMillis: audioURL ? (pending.audio?.durationMillis ?? null) : null,
+    };
+  };
+
+  if (!created) {
+    await uploadCloudinary();
+    try {
+      await createReportWithHistory(
+        { ...pending.input, ...mediaFields() },
+        user.uid,
+        pending.input.deviceHash ?? null,
+        { reportId, mediaExpected: expectedMedia },
+      );
+    } catch (error) {
+      // Un intento anterior pudo crear el documento sin llegar a guardar remoteId (p. ej. timeout).
+      const snap = isPermissionDenied(error) ? await getDoc(reportRef).catch(() => null) : null;
+      if (!snap?.exists() || snap.data().userId !== user.uid) throw error;
+      uploadedAfterCreate = true;
+    }
+    created = true;
     await updatePendingReport(pending.id, { remoteId: reportId });
   }
 
-  const photoURLs: string[] = [];
+  // Reportes encolados por versiones anteriores (con remoteId y sin URLs guardadas) o fotos
+  // pendientes, y los videos, que Storage solo acepta cuando el documento existe.
+  await uploadCloudinary();
   for (let index = 0; index < pending.media.length; index += 1) {
     const media = pending.media[index];
+    if (media.kind !== 'video') continue;
+    await upload(mediaKey(index), () =>
+      uploadMediaToStorage({ localUri: media.localUri, kind: 'video', reportId: reportId!, mediaId: mediaKey(index) }),
+    );
+  }
+
+  const fields = mediaFields();
+  const attached = fields.photoURLs.length + (fields.audioURL ? 1 : 0);
+  if (uploadedAfterCreate) {
     try {
-      const url =
-        media.kind === 'video'
-          ? await uploadMediaToStorage({
-              localUri: media.localUri,
-              kind: 'video',
-              reportId,
-              mediaId: `${pending.id}-${index}`,
-            })
-          : await uploadReportMedia({
-              localUri: media.localUri,
-              kind: 'photo',
-              reportId,
-              mediaId: `${pending.id}-${index}`,
-            });
-      photoURLs.push(url);
+      await updateDoc(reportRef, fields);
     } catch (error) {
-      if (isNetworkError(error)) throw error;
-      console.warn('No se pudo adjuntar el medio del reporte pendiente', reportId, error);
+      if (!isPermissionDenied(error)) throw error;
+      const snap = await getDoc(reportRef);
+      if (!snap.exists() || snap.data().status === 'pendiente') throw error;
+      const inDoc = snap.data() as Report;
+      const linked = (inDoc.photoURLs?.length ?? 0) + (inDoc.audioURL ? 1 : 0);
+      return { reportId, expectedMedia, missingMedia: Math.max(expectedMedia - linked, 0), reason: 'status_changed' };
     }
   }
 
-  let audioURL: string | null = null;
-  if (pending.audio?.localUri) {
-    try {
-      audioURL = await uploadReportMedia({
-        localUri: pending.audio.localUri,
-        kind: 'audio',
-        reportId,
-        mediaId: 'audio',
-      });
-    } catch (error) {
-      if (isNetworkError(error)) throw error;
-      console.warn('No se pudo adjuntar el audio del reporte pendiente', reportId, error);
-    }
-  }
-
-  const updates: Record<string, unknown> = { photoURLs };
-  if (audioURL) {
-    updates.audioURL = audioURL;
-    updates.audioDurationMillis = pending.audio?.durationMillis ?? null;
-  }
-  await updateDoc(doc(firestore, 'reports', reportId), updates);
+  const missingMedia = Math.max(expectedMedia - attached, 0);
+  return { reportId, expectedMedia, missingMedia, reason: missingMedia > 0 ? 'upload_failed' : null };
 }
 
 function reportTimeValue(value: unknown): number {
@@ -405,6 +519,7 @@ export async function verifyReport(
       reviewedAt: serverTimestamp(),
       reviewedBy: adminUid,
     });
+    recordStatusChange(tx, reportId, { fromStatus: report.status, toStatus: 'verificado', changedBy: adminUid });
 
     tx.update(userRef, {
       pointsBalance: increment(categoryPoints),
@@ -456,11 +571,25 @@ export async function updateReportStatus(
     return verifyReport(reportId, options?.adminUid ?? 'admin', options?.signer);
   }
 
-  await updateDoc(reportRef, {
-    status,
-    reviewedAt: serverTimestamp(),
-    reviewedBy: options?.adminUid ?? null,
-    rejectionReason: status === 'descartado' ? options?.reason ?? null : null,
+  const adminUid = options?.adminUid ?? 'admin';
+  await runTransaction(firestore, async (tx) => {
+    const snap = await tx.get(reportRef);
+    if (!snap.exists()) throw new Error('Reporte no encontrado.');
+    const current = (snap.data() as Report).status;
+    if (current === status) return;
+    tx.update(reportRef, {
+      status,
+      reviewedAt: serverTimestamp(),
+      reviewedBy: adminUid,
+      rejectionReason: status === 'descartado' ? options?.reason ?? null : null,
+      updatedAt: serverTimestamp(),
+    });
+    recordStatusChange(tx, reportId, {
+      fromStatus: current,
+      toStatus: status,
+      changedBy: adminUid,
+      reason: status === 'descartado' ? options?.reason ?? null : null,
+    });
   });
 
   return null;
