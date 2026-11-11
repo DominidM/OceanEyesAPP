@@ -21,6 +21,7 @@ export type UserProfile = {
   banReason?: string;
   bannedBy?: string;
   bannedAt?: Timestamp;
+  lastRedemptionId?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 };

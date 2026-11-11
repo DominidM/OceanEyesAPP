@@ -6,6 +6,7 @@
  * PU-09 Ciudadano no lee reporte ajeno (firestore.rules)
  * PU-10 Ciudadano no cambia el estado de su reporte (firestore.rules)
  * SEC-01 Ciudadano no puede crear un reporte ya verificado / con puntos
+ * SEC-03 Dueño solo edita campos permitidos de su perfil
  * SEC-02 Dueño no puede editar datos de un reporte salvo medios, ni tras la verificación
  *
  * Ejecutar desde __tests__/:  npm run test:rules
@@ -20,7 +21,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { addDoc, collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, increment, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 
 const ROOT = resolve(__dirname, '..', '..');
@@ -58,6 +59,8 @@ beforeEach(async () => {
     const baseUser = { pointsBalance: 0, totalPointsEarned: 0, verifiedReportsCount: 0, status: 'active' };
     await setDoc(doc(db, 'users/alice'), { ...baseUser, role: 'user', profileType: 'citizen', walletAddress: WALLET });
     await setDoc(doc(db, 'users/bob'), { ...baseUser, role: 'user', profileType: 'fisher', walletAddress: WALLET });
+    await setDoc(doc(db, 'users/carol'), { ...baseUser, role: 'user', profileType: 'citizen', status: 'suspended', walletAddress: WALLET, pointsBalance: 300 });
+    await setDoc(doc(db, 'rewards/kit'), { title: 'Kit', pointsCost: 150, stock: 5, active: true });
     await setDoc(doc(db, 'users/admin1'), { ...baseUser, role: 'admin', profileType: 'citizen' });
     await setDoc(doc(db, 'reports/rBob'), {
       userId: 'bob',
@@ -221,5 +224,58 @@ describe('SEC-02 edición del reporte por su dueño', () => {
     await assertFails(updateDoc(doc(db, 'reports/rBobVerified'), { pointsAwarded: 500 }));
     await assertFails(updateDoc(doc(db, 'reports/rBobVerified'), { location: { latitude: 0, longitude: 0 } }));
     await assertFails(updateDoc(doc(db, 'reports/rBobVerified'), { photoURLs: ['https://x/otra.jpg'] }));
+  });
+});
+
+describe('SEC-03 edición del perfil por su dueño', () => {
+  it('permite cambiar displayName, phone y walletAddress', async () => {
+    const db = env.authenticatedContext('alice').firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, 'users/alice'), {
+        displayName: 'Alice',
+        phone: '999',
+        walletAddress: '0x2222222222222222222222222222222222222222',
+        updatedAt: new Date(),
+      }),
+    );
+  });
+
+  it('deniega cambiar status, bannedUntil, deviceHash, banReason o role', async () => {
+    const db = env.authenticatedContext('alice').firestore();
+    await assertFails(updateDoc(doc(db, 'users/alice'), { status: 'suspended' }));
+    await assertFails(updateDoc(doc(db, 'users/alice'), { bannedUntil: null }));
+    await assertFails(updateDoc(doc(db, 'users/alice'), { deviceHash: 'otro' }));
+    await assertFails(updateDoc(doc(db, 'users/alice'), { banReason: 'x' }));
+    await assertFails(updateDoc(doc(db, 'users/alice'), { role: 'admin' }));
+  });
+
+  it('deniega que un usuario suspendido se reactive o cambie su wallet', async () => {
+    const db = env.authenticatedContext('carol').firestore();
+    await assertFails(updateDoc(doc(db, 'users/carol'), { status: 'active' }));
+    await assertFails(updateDoc(doc(db, 'users/carol'), { walletAddress: '0x3333333333333333333333333333333333333333' }));
+  });
+
+  it('deniega modificar puntos fuera de un canje', async () => {
+    const db = env.authenticatedContext('alice').firestore();
+    await assertFails(updateDoc(doc(db, 'users/alice'), { pointsBalance: 1000 }));
+    await assertFails(updateDoc(doc(db, 'users/alice'), { totalPointsEarned: 1000 }));
+    await assertFails(updateDoc(doc(db, 'users/alice'), { verifiedReportsCount: 9 }));
+    await assertFails(updateDoc(doc(db, 'users/carol'), { pointsBalance: 0 }));
+  });
+
+  it('permite el débito de puntos ligado a un canje creado en la misma transacción', async () => {
+    const db = env.authenticatedContext('carol').firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'redemptions/red1'), { userId: 'carol', rewardId: 'kit', pointsSpent: 150, status: 'pendiente' });
+    batch.update(doc(db, 'users/carol'), { pointsBalance: increment(-150), lastRedemptionId: 'red1' });
+    await assertSucceeds(batch.commit());
+  });
+
+  it('deniega un débito que no coincide con el canje', async () => {
+    const db = env.authenticatedContext('carol').firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'redemptions/red2'), { userId: 'carol', rewardId: 'kit', pointsSpent: 150, status: 'pendiente' });
+    batch.update(doc(db, 'users/carol'), { pointsBalance: increment(-10), lastRedemptionId: 'red2' });
+    await assertFails(batch.commit());
   });
 });

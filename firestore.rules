@@ -45,16 +45,31 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.walletAddress.matches('^0x[0-9a-fA-F]{40}$');
     }
 
+    // Débito de puntos ligado a un canje creado en la misma transacción (rewards.ts › redeemReward).
+    function isRedemptionDebit(userId) {
+      let redemptionId = request.resource.data.lastRedemptionId;
+      let redemption = getAfter(/databases/$(database)/documents/redemptions/$(redemptionId));
+      return redemptionId is string
+        && !exists(/databases/$(database)/documents/redemptions/$(redemptionId))
+        && redemption.data.userId == userId
+        && request.resource.data.pointsBalance == resource.data.pointsBalance - redemption.data.pointsSpent;
+    }
+
+    // SEC-03: lista blanca de campos que el dueño puede editar en su perfil.
+    function isOwnerProfileUpdate(userId) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasOnly(['displayName', 'phone', 'dni', 'profileType', 'email', 'walletAddress',
+          'updatedAt', 'pointsBalance', 'lastRedemptionId'])
+        && (!changed.hasAny(['walletAddress']) || resource.data.status != 'suspended')
+        && (!changed.hasAny(['pointsBalance', 'lastRedemptionId']) || isRedemptionDebit(userId));
+    }
+
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId)
         && request.resource.data.role in ['user', 'municipal']
         && request.resource.data.pointsBalance == 0;
-      allow update: if isAdmin() || (isOwner(userId)
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.pointsBalance <= resource.data.pointsBalance
-        && request.resource.data.totalPointsEarned == resource.data.totalPointsEarned
-        && request.resource.data.verifiedReportsCount == resource.data.verifiedReportsCount);
+      allow update: if isAdmin() || (isOwner(userId) && isOwnerProfileUpdate(userId));
       allow delete: if isAdmin();
     }
 
