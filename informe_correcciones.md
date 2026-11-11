@@ -1,6 +1,6 @@
 # Informe de correcciones — OceanEyes (rama `fix/cierre-100`)
 
-> Base: `main` @ `9f533c6`. Rama: `fix/cierre-100` (17 commits, sin push ni merge).
+> Base: `main` @ `9f533c6`. Rama: `fix/cierre-100` (17 commits de las tareas 1–15 + 3 posteriores, ver §1.1; subida a GitHub, sin merge).
 > Fecha: 2026-11-11. Nada se ejecutó contra `oceaneyes-5e7b4`: reglas y carga se probaron con los
 > emuladores de Firebase (proyecto `demo-oceaneyes`). Cada cifra sale de un comando ejecutado en
 > esta sesión; los artefactos están en el repositorio (`load-tests/results/`) o se indican.
@@ -28,10 +28,18 @@
 | 14 | `contracts/package-lock.json` | HECHO | `e27a3fb` | `contracts/package-lock.json` (`npm ci` → exit 0) |
 | 15 | k6 PE-01…PE-05 contra emulador | HECHO (2 escenarios no cumplen umbral) | `68f39fe` | `load-tests/results/*`, `load-tests/run-all.js`, `load-tests/README.md` |
 
+### 1.1 Tareas posteriores (compatibilidad y cierre)
+
+| # | Tarea | Estado | Commit | Archivos tocados |
+|---|---|---|---|---|
+| 16 | Compatibilidad de las reglas con la APK de `main` y reglas de transición (decisión: opción (a) y luego corte) | HECHO | `9748d48` | `compatibilidad_reglas.md`, `docs/compatibilidad-reglas/` |
+| 17 | Outbox: fotos y audio antes de crear el reporte; aviso y marca "sin evidencia" si ya no se pueden adjuntar | HECHO | `f0b47fb` | `src/mobile/shared/firebase/reports.ts`, `src/mobile/shared/offline/sync-engine.ts`, `outbox.ts`, `sync-context.tsx`, `sync-warning.tsx`, `report-card.tsx`, `reports-section.tsx`, `report-detail-screen.tsx`, `domain/valueObjects/report-evidence.ts` (nuevo), `src/mobile/shared/offline/__tests__/outbox-evidence.test.ts` (nuevo) |
+| 18 | Registrar SEC-12 (canje con cliente modificado) | HECHO (riesgo **Pendiente**) | commit `docs(security)` de SEC-12 | `informe_correcciones.md` §5.1 |
+
 Notas:
 - **a)** Desviación consciente del enunciado: el canje (`redeemReward`) descuenta puntos y asienta su `pointTransactions` desde el cliente. Para no romperlo, las reglas solo admiten (1) un débito de `pointsBalance` igual a `pointsSpent` de un `redemptions` creado **en la misma transacción** (`lastRedemptionId`), y (2) un asiento `type: 'redemption'`, `amount` negativo, con id fijo `redemption-<redemptionId>`. Los créditos (`report_verified`, `bonus`) son solo admin. También se exige `pointsSpent == rewards.pointsCost` al crear un canje. La lista blanca de `users` incluye además `dni`, `profileType` y `email` porque la app los edita (`updateUserProfile`, `linkAccountWithEmail`).
 - **b)** `max_file_size=26214400` quedó documentado y añadido al script de Cloudinary, pero **no se ejecutó ni se validó contra la API de Cloudinary** (requiere credenciales reales).
-- **c)** El workflow está activo en el YAML, pero **no se ha ejecutado en GitHub**: la rama no se ha subido.
+- **c)** El workflow está activo en el YAML. La rama se subió a GitHub; el resultado del CI se informa fuera de este documento (no se ha registrado aquí).
 
 ### Mapeo de categorías (tarea 4)
 
@@ -53,7 +61,7 @@ Los puntos canjeables siguen siendo los de Firestore. En 4 categorías el puntaj
 
 ## 2. Pruebas por caso
 
-Comandos: `npx jest` (raíz, 15 suites / 74 tests), `cd __tests__ && npx jest --selectProjects unit` (6 suites / 51 tests), `npm run test:rules` (emulador, 32 tests).
+Comandos: `npx jest` (raíz, 16 suites / 83 tests), `cd __tests__ && npx jest --selectProjects unit` (6 suites / 51 tests), `npm run test:rules` (emulador, 32 tests).
 
 | Caso | Archivo | Resultado | Antes (auditoría) |
 |---|---|---|---|
@@ -67,6 +75,7 @@ Comandos: `npx jest` (raíz, 15 suites / 74 tests), `cd __tests__ && npx jest --
 | PU-05 Storage: JPEG ok, PDF ✗, 26 MB ✗, 24 MB ok, 51 MB ✗, reporte ajeno ✗ | `__tests__/rules/security-rules.test.ts` | ✅ 6/6 | ✅ 4/4 (límite 50 MB) |
 | PU-06 Guardado offline (2 casos) | `__tests__/unit/offline-sync.test.ts` | ✅ 2/2 | ✅ |
 | PU-07 Sync 3 pendientes sin duplicar | idem | ✅ | ✅ |
+| PU-07b Outbox: fotos/audio antes de crear el documento; video tras cambio de estado → resultado `status_changed` y evidencia incompleta; reintento sin repetir subidas; aviso persistente y elemento fuera del outbox; `getEvidenceStatus` (5 casos) | `src/mobile/shared/offline/__tests__/outbox-evidence.test.ts` | ✅ 9/9 (4 fallan con el `reports.ts` anterior) | — |
 | PU-08 Pendiente→Verificado con `statusHistory` (2 casos) | reglas | ✅ 2/2 | ✅ |
 | PU-08b Historial inicial `— → pendiente` en batch con el reporte; dueño no escribe otras entradas; admin estado+historial atómico | reglas | ✅ 3/3 | — |
 | PU-09 Ciudadano no lee reporte ajeno (2 casos) | reglas | ✅ 2/2 | ✅ |
@@ -81,7 +90,7 @@ Comandos: `npx jest` (raíz, 15 suites / 74 tests), `cd __tests__ && npx jest --
 | Suites de capstone (distance, geo-location, report-status, report-category, acceptance-report-flow, configs, format-duration) | `src/**/__tests__/` | ✅ 23/23 | solo en rama capstone |
 | Contrato PointLedger | `contracts/test/` | ✅ 29/29 | ✅ 29/29 |
 
-Totales: **Jest raíz 74/74**, **reglas 32/32**, **Hardhat 29/29**. Ningún caso fallido.
+Totales: **Jest raíz 83/83**, **reglas 32/32**, **Hardhat 29/29**. Ningún caso fallido.
 
 ---
 
@@ -90,7 +99,7 @@ Totales: **Jest raíz 74/74**, **reglas 32/32**, **Hardhat 29/29**. Ningún caso
 | Indicador | Resultado | Comando |
 |---|---|---|
 | Contrato | Stmts 100 % · Branch 97,06 % · Funcs 100 % · Lines 100 % | `cd contracts && npx hardhat coverage` |
-| App, global `src/**` | Stmts 5,00 % (351/7012) · Branch 3,97 % (199/5006) · Funcs 4,11 % (77/1873) · **Lines 5,19 % (329/6328)** | `npx jest --coverage` |
+| App, global `src/**` | Stmts 6,31 % (448/7091) · Branch 5,30 % (270/5093) · Funcs 5,02 % (95/1891) · **Lines 6,44 % (412/6394)** (tras la tarea 17; antes 5,19 % líneas) | `npx jest --coverage` |
 | App, archivos con lógica probada | `category-map.ts` 100 % · `password-policy.ts` 100 % · `report.ts` (dominio) 100 % líneas · `media-validation.ts` 95 % · `send-push.ts` 89,06 % · `firebase-token.ts` 83,72 % · `report-create.viewmodel.ts` 82,6 % (runner `__tests__`) · `outbox.ts` 89,89 % · `sync-engine.ts` 62,85 % · `login.viewmodel.ts` 58 % | ambos runners |
 | `npx tsc --noEmit` | 0 errores | — |
 | `npx eslint src` | 0 errores · 32 advertencias (`no-unused-vars` 17, `import/first` 10, `exhaustive-deps` 3, `no-require-imports` 1, `array-type` 1) | — |
@@ -166,7 +175,7 @@ Archivos: `load-tests/results/pe-0X-*.txt` (salida completa) y `*.summary.json`.
 | F29 | Catálogo ONG (HU-040) | Eliminada | Eliminada | No abordada (fuera de las 15 tareas) |
 | F30 | Landing + quiz + contacto | Implementada | Implementada | — |
 | F31 | Accesibilidad, legales | Implementada | Implementada | — |
-| F32 | Pruebas automatizadas (HU-056) | Parcial | **Implementada** | Tarea 11 (cobertura global 5,19 %) |
+| F32 | Pruebas automatizadas (HU-056) | Parcial | **Implementada** | Tarea 11 (cobertura global 6,44 % líneas) |
 | F33 | CI/CD (HU-057) | No implementada | **Parcial** | CI activo en YAML (no ejecutado en GitHub); sin despliegue continuo |
 | F34 | OpenAPI (HU-058) | No implementada | **Implementada** | Tarea 13 |
 | F35 | Puntos por Cloud Function | No funcional | Retirada por diseño | Tarea 5 (los puntos se otorgan en `verifyReport`) |
@@ -186,7 +195,14 @@ Archivos: `load-tests/results/pe-0X-*.txt` (salida completa) y `*.summary.json`.
 | F33 CD: job de despliegue (Worker y reglas) con secretos de GitHub y aprobación manual | 4 | `.github/workflows/` |
 | F29 Catálogo de ONG verificadas (HU-040) | 12 | restaurar desde `c4af22c` |
 | PE-02 / PE-04: repetir en staging (no emulador) antes de concluir sobre rendimiento | 3 | `load-tests/` |
+| SEC-12 canje con cliente modificado (ver §5.1) | 6–8 | `functions/src/index.ts` o `firestore.rules`, `rewards.ts` |
 | Riesgos pendientes: SEC-05 (`rewards.update` por cualquier usuario), SEC-07 (abuso de `/api/contact` y `/api/email-rol`), SEC-08 (contraseña admin en memoria), URLs públicas de Cloudinary | 10 | `firestore.rules`, `src/worker.ts`, `auth.ts` |
+
+### 5.1 Riesgos de seguridad registrados
+
+| ID | Riesgo | Evidencia | Corrección propuesta | Estado |
+|---|---|---|---|---|
+| SEC-12 | **Canje con un cliente modificado.** (1) *Dos canjes pagando uno*: un batch con un único débito de `pointsBalance` y dos documentos `redemptions` del mismo costo es aceptado. (2) *Canje sin descuento*: con las reglas de esta rama se puede crear `redemptions/{id}` sin tocar el saldo, porque la regla de `redemptions` (`firestore.rules:227-231`) solo valida `status` y `pointsSpent == rewards.pointsCost`. No afecta a la APK (que siempre descuenta); requiere un cliente que escriba en Firestore a mano. | Emulador `demo-oceaneyes`, casos A5–A7 de `compatibilidad_reglas.md` §4 (`docs/compatibilidad-reglas/resultados/*.json`). Con las reglas de la rama: A5 (sin descuento) **pasa**, A7 (dos canjes, un débito con `lastRedemptionId`) **pasa**. Con las reglas de transición: A5 bloqueado, A6/A7 pasan. Con las reglas post-corte: A5, A6 y A7 bloqueados. | **Opción 1 (recomendada): descuento en backend.** Una Cloud Function callable `redeemReward` que, en una transacción con privilegios de admin, lee el saldo y la recompensa, descuenta, crea el canje y el asiento; las reglas pasan a `allow create: if false` para `redemptions` y `pointTransactions` desde el cliente, y el dueño ya no puede tocar `pointsBalance`. **Opción 2: regla con contador de canjes.** Campo `users.redemptionCount`; el canje usa el id `<uid>-<redemptionCount>` y la regla exige `getAfter(users).redemptionCount == get(users).redemptionCount + 1`, `getAfter(users).lastRedemptionId == redemptionId` y el débito exacto de `pointsSpent`, de modo que un batch solo puede crear un canje por cada incremento y descuento. Paso intermedio ya probado: `docs/compatibilidad-reglas/firestore.post-corte.rules` (canje ligado a `lastRedemptionId` + débito; A5–A7 bloqueados, suite 32/32), aplicable tras el corte de la APK. | **Pendiente** |
 
 ---
 
@@ -194,10 +210,10 @@ Archivos: `load-tests/results/pe-0X-*.txt` (salida completa) y `*.summary.json`.
 
 | # | Captura | Dónde / comando | Qué debe verse |
 |---|---|---|---|
-| F-1 | Rama y commits | `git log --oneline main..fix/cierre-100` | Los 17 commits `fix(...)` |
+| F-1 | Rama y commits | `git log --oneline main..fix/cierre-100` | Los 17 commits de las tareas 1–15 y los 3 posteriores (§1.1) |
 | F-2 | Reglas en emulador | `npm run test:rules` | 32 passed, incluidos SEC-01…SEC-04 y PU-08b |
-| F-3 | Jest unificado | `npm test` | 15 suites, 74 passed |
-| F-4 | Cobertura app | `npm run test:coverage` | Resumen 5,19 % líneas y tabla por archivo |
+| F-3 | Jest unificado | `npm test` | 16 suites, 83 passed |
+| F-4 | Cobertura app | `npm run test:coverage` | Resumen 6,44 % líneas y tabla por archivo |
 | F-5 | Hardhat | `cd contracts && npx hardhat test && npx hardhat coverage` | 29 passing; 100 % líneas / 97,06 % ramas |
 | F-6 | `npm ci` del contrato | `cd contracts && npm ci` | Instalación sin el error de lockfile |
 | F-7 | Functions compila | `cd functions && npm run build` | Sin errores; solo `promoteAlertCluster` en `lib/index.js` |
