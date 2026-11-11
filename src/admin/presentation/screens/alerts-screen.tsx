@@ -12,6 +12,7 @@ import {
   rejectAlert,
   subscribeAllAlerts,
 } from '@/shared/firebase/alerts';
+import { firebaseAuth } from '@/shared/firebase/app';
 import { getAllDeviceTokens } from '@/shared/firebase/device-tokens';
 import { useAuth } from '@/shared/firebase/auth-context';
 import type { Alert, AlertSeverity } from '@/shared/firebase/types';
@@ -39,9 +40,11 @@ function severityCfg(s: AlertSeverity) {
 async function sendPush(title: string, message: string, severity: AlertSeverity, alertId: string): Promise<number> {
   const tokens = await getAllDeviceTokens();
   if (tokens.length === 0) throw new Error('No hay teléfonos registrados para recibir la alerta.');
+  const idToken = await firebaseAuth?.currentUser?.getIdToken();
+  if (!idToken) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión para enviar la alerta.');
   const response = await fetch('/api/send-push', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
     body: JSON.stringify({
       tokens: tokens.map((t) => t.id),
       title,
