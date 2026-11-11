@@ -72,7 +72,8 @@
     "typescript": "~5.9.2"
   },
   "overrides": {
-    "@walletconnect/universal-provider": "2.23.10"
+    "@walletconnect/universal-provider": "2.23.10",
+    "@react-native-async-storage/async-storage": "$@react-native-async-storage/async-storage"
   },
   "scripts": {
     "start": "expo start",

@@ -28,6 +28,10 @@ jobs:
       - run: npm ci
       - name: ESLint (src)
         run: npx eslint src
+      # expo-env.d.ts (tipos de expo/types, p. ej. react-native-web) está en .gitignore; Expo
+      # indica generarlo en CI con este comando antes de tsc.
+      - name: Generar expo-env.d.ts
+        run: npx expo customize tsconfig.json
       - name: TypeScript
         run: npx tsc --noEmit
 
