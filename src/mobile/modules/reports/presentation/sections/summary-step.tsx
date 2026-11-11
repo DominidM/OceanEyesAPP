@@ -19,6 +19,7 @@ type SummaryStepProps = {
   media: CaptureMedia[];
   location: ReportLocation | null;
   incident: IncidentSelection['incident'] | null;
+  description?: string;
   audio: ReportAudio | null;
   createdAt: Date;
   onBack: () => void;
@@ -44,7 +45,7 @@ function formatDate(date: Date): string {
   return `${day} ${month} ${year}, ${hours}:${minutes} ${meridiem}`;
 }
 
-export function SummaryStep({ media, location, incident, audio, createdAt, onBack, onEdit, onSend, sending = false, sendError = '' }: SummaryStepProps) {
+export function SummaryStep({ media, location, incident, description = '', audio, createdAt, onBack, onEdit, onSend, sending = false, sendError = '' }: SummaryStepProps) {
   const insets = useSafeAreaInsets();
   const [verified, setVerified] = useState(false);
   const { online } = useConnectivity();
@@ -166,6 +167,11 @@ export function SummaryStep({ media, location, incident, audio, createdAt, onBac
                 valueOnly
               />
               <SummaryItem icon={incidentIcon} label="Incidente" value={incident?.label ?? 'Sin definir'} />
+              <SummaryItem
+                icon={{ ios: 'text.alignleft', android: 'notes', web: 'notes' }}
+                label="Descripción"
+                value={description.trim() || 'Sin descripción'}
+              />
               <SummaryItem
                 icon={{ ios: 'mic.fill', android: 'mic', web: 'mic' }}
                 label={null}

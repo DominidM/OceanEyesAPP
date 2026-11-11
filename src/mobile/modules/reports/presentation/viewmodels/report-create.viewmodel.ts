@@ -29,6 +29,7 @@ export type ReportCreateState = {
   media: CaptureMedia[];
   location: ReportLocation | null;
   incident: IncidentSelection['incident'] | null;
+  description: string;
   audio: ReportAudio | null;
   sending: boolean;
   sendError: string;
@@ -47,6 +48,7 @@ function createInitialState(): ReportCreateState {
     media: [],
     location: null,
     incident: null,
+    description: '',
     audio: null,
     sending: false,
     sendError: '',
@@ -125,7 +127,12 @@ export class ReportCreateViewModel extends ViewModel<ReportCreateState, ReportCr
   };
 
   continueIncident = (selection: IncidentSelection) => {
-    this.setState({ incident: selection.incident, audio: selection.audio, step: 5 });
+    this.setState({
+      incident: selection.incident,
+      description: selection.description,
+      audio: selection.audio,
+      step: 5,
+    });
   };
 
   exit = () => {
@@ -133,7 +140,7 @@ export class ReportCreateViewModel extends ViewModel<ReportCreateState, ReportCr
   };
 
   send = async () => {
-    const { incident, anonymous, location, media, audio, sending } = this.state;
+    const { incident, description, anonymous, location, media, audio, sending } = this.state;
     if (!incident || sending) return;
     if (!this.deps.user || !this.deps.profile?.walletAddress) {
       this.setState({ sendError: 'Vincula una wallet en tu perfil antes de enviar el reporte.' });
@@ -149,6 +156,7 @@ export class ReportCreateViewModel extends ViewModel<ReportCreateState, ReportCr
         {
           category: incident.id,
           title: incident.label,
+          description: description.trim() || undefined,
           isAnonymous: anonymous,
           location:
             location?.latitude != null && location.longitude != null

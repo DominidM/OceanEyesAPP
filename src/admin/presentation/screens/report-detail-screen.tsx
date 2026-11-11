@@ -121,6 +121,7 @@ export function ReportDetailScreen({ readOnly = false }: { readOnly?: boolean })
   const rows: { label: string; value: string }[] = report
     ? [
         { label: 'Título', value: report.title },
+        { label: 'Descripción', value: report.description?.trim() || '—' },
         { label: 'ID de reporte', value: report.id },
         { label: 'Categoría', value: CATEGORY_LABELS[report.category] ?? report.category },
         { label: 'Fecha', value: dateStr },

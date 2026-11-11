@@ -87,3 +87,40 @@ describe('PU-04 latitud > 90 inválida', () => {
     expect(createGeoLocation(-90, -180)).toEqual({ latitude: -90, longitude: -180 });
   });
 });
+
+describe('Descripción del reporte', () => {
+  it('send() incluye la descripción recortada en el comando', async () => {
+    const deps = makeDeps();
+    const vm = new ReportCreateViewModel(deps);
+    vm.continueIncident({
+      incident: { id: 'pesca_ilegal', label: 'Pesca ilegal' },
+      description: '  Dos lanchas con redes de arrastre a 200 m de la orilla  ',
+      audio: null,
+    });
+
+    await vm.send();
+
+    expect(deps.submit).toHaveBeenCalledTimes(1);
+    const [command] = deps.submit.mock.calls[0] as unknown as [{ description?: string; title: string }];
+    expect(command.title).toBe('Pesca ilegal');
+    expect(command.description).toBe('Dos lanchas con redes de arrastre a 200 m de la orilla');
+  });
+
+  it('send() omite la descripción vacía', async () => {
+    const deps = makeDeps();
+    const vm = new ReportCreateViewModel(deps);
+    vm.continueIncident({ incident: { id: 'basura_marina', label: 'Basura' }, description: '   ', audio: null });
+
+    await vm.send();
+
+    const [command] = deps.submit.mock.calls[0] as unknown as [{ description?: string }];
+    expect(command.description).toBeUndefined();
+  });
+
+  it('el dominio rechaza descripciones de más de 500 caracteres', () => {
+    expect(() =>
+      createNewReport({ category: 'otro', title: 'X', description: 'a'.repeat(501), isAnonymous: true }),
+    ).toThrow(/500 caracteres/);
+    expect(createNewReport({ category: 'otro', title: 'X', description: 'a'.repeat(500), isAnonymous: true }).description).toHaveLength(500);
+  });
+});

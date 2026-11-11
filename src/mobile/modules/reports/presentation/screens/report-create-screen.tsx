@@ -123,6 +123,7 @@ export function ReportCreateScreen() {
       ) : state.step === 4 ? (
         <IncidentStep
           initial={state.incident}
+          initialDescription={state.description}
           onBack={vm.back}
           onContinue={vm.continueIncident}
         />
@@ -131,6 +132,7 @@ export function ReportCreateScreen() {
           media={state.media}
           location={state.location}
           incident={state.incident}
+          description={state.description}
           audio={state.audio}
           createdAt={state.createdAt}
           onBack={vm.back}

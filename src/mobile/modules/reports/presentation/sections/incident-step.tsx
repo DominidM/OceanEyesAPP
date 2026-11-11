@@ -8,6 +8,7 @@ import { AppFonts as Fonts } from '@/constants/theme';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { KeyboardScrollView } from '@/shared/components/keyboard-scroll-view';
 import { formatDuration } from '@/shared/utils/format-duration';
+import { REPORT_DESCRIPTION_MAX_LENGTH } from '@/modules/reports/domain/entities/report';
 
 import {
   CUSTOM_INCIDENT_ICONS,
@@ -28,18 +29,20 @@ import type { ReportCategory } from '@/shared/firebase/types';
 
 export type IncidentSelection = {
   incident: { id: ReportCategory; label: string; iconKey?: string };
+  description: string;
   audio: ReportAudio | null;
 };
 
 type IncidentStepProps = {
   initial?: IncidentSelection['incident'] | null;
+  initialDescription?: string;
   onBack: () => void;
   onContinue: (selection: IncidentSelection) => void;
 };
 
 const CUSTOM_INCIDENT_MAX_LENGTH = 60;
 
-export function IncidentStep({ initial, onBack, onContinue }: IncidentStepProps) {
+export function IncidentStep({ initial, initialDescription = '', onBack, onContinue }: IncidentStepProps) {
   const insets = useSafeAreaInsets();
   const initialId = initial?.id && getIncidentType(initial.id) ? initial.id : INCIDENT_TYPES[0].id;
   const [selectedId, setSelectedId] = useState<ReportCategory>(initialId);
@@ -47,6 +50,7 @@ export function IncidentStep({ initial, onBack, onContinue }: IncidentStepProps)
   const [customIconKey, setCustomIconKey] = useState<CustomIconKey | null>(
     initial?.iconKey && isCustomIconKey(initial.iconKey) ? initial.iconKey : 'warning',
   );
+  const [description, setDescription] = useState(initialDescription);
   const [micDenied, setMicDenied] = useState(false);
 
   const recorder = Audio.useAudioRecorder(Audio.RecordingPresets.HIGH_QUALITY);
@@ -91,6 +95,7 @@ export function IncidentStep({ initial, onBack, onContinue }: IncidentStepProps)
         label: isCustom ? customText.trim() : incident.label,
         iconKey: isCustom ? customIconKey ?? 'warning' : undefined,
       },
+      description: description.trim(),
       audio: recorder.uri ? { uri: recorder.uri, durationMillis: recorderState.durationMillis } : null,
     });
   };
@@ -198,6 +203,23 @@ export function IncidentStep({ initial, onBack, onContinue }: IncidentStepProps)
             </View>
           </View>
         ) : null}
+
+        <View style={styles.customCard}>
+          <AppText style={styles.customTitle}>Descripción (opcional)</AppText>
+          <TextInput
+            accessibilityLabel="Descripción del incidente"
+            value={description}
+            onChangeText={setDescription}
+            maxLength={REPORT_DESCRIPTION_MAX_LENGTH}
+            multiline
+            placeholder="Cuenta qué viste: cantidad, embarcación, hora, etc."
+            placeholderTextColor={C.textBody}
+            style={[styles.customInput, styles.descriptionInput]}
+          />
+          <AppText style={styles.customHint}>
+            {description.length}/{REPORT_DESCRIPTION_MAX_LENGTH}
+          </AppText>
+        </View>
 
         <View style={styles.audioCard}>
           <View style={styles.audioRow}>
@@ -395,6 +417,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.cardBorder,
     borderRadius: 8,
+  },
+  descriptionInput: {
+    height: 112,
+    paddingTop: 12,
+    textAlignVertical: 'top',
   },
   customHint: {
     color: C.textBody,
