@@ -158,6 +158,7 @@ export type PointTransaction = {
   amount: number;
   reportId?: string;
   rewardId?: string;
+  redemptionId?: string;
   balanceBefore: number;
   balanceAfter: number;
   txHash?: string;

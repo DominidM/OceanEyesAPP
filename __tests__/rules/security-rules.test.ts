@@ -7,6 +7,7 @@
  * PU-10 Ciudadano no cambia el estado de su reporte (firestore.rules)
  * SEC-01 Ciudadano no puede crear un reporte ya verificado / con puntos
  * SEC-03 Dueño solo edita campos permitidos de su perfil
+ * SEC-04 Solo el admin registra créditos de puntos (pointTransactions)
  * SEC-02 Dueño no puede editar datos de un reporte salvo medios, ni tras la verificación
  *
  * Ejecutar desde __tests__/:  npm run test:rules
@@ -277,5 +278,49 @@ describe('SEC-03 edición del perfil por su dueño', () => {
     batch.set(doc(db, 'redemptions/red2'), { userId: 'carol', rewardId: 'kit', pointsSpent: 150, status: 'pendiente' });
     batch.update(doc(db, 'users/carol'), { pointsBalance: increment(-10), lastRedemptionId: 'red2' });
     await assertFails(batch.commit());
+  });
+});
+
+describe('SEC-04 pointTransactions', () => {
+  it('deniega que un usuario cree un crédito de puntos por reporte verificado', async () => {
+    const db = env.authenticatedContext('alice').firestore();
+    await assertFails(
+      setDoc(doc(db, 'pointTransactions/fake'), { userId: 'alice', type: 'report_verified', amount: 100, reportId: 'rAlice' }),
+    );
+    await assertFails(addDoc(collection(db, 'pointTransactions'), { userId: 'alice', type: 'bonus', amount: 500 }));
+  });
+
+  it('deniega un débito de canje sin canje asociado', async () => {
+    const db = env.authenticatedContext('carol').firestore();
+    await assertFails(
+      setDoc(doc(db, 'pointTransactions/redemption-x'), { userId: 'carol', type: 'redemption', amount: -150, redemptionId: 'x' }),
+    );
+  });
+
+  it('permite el canje completo (redemption + débito + asiento) en una transacción', async () => {
+    const db = env.authenticatedContext('carol').firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'redemptions/red3'), { userId: 'carol', rewardId: 'kit', pointsSpent: 150, status: 'pendiente' });
+    batch.update(doc(db, 'users/carol'), { pointsBalance: increment(-150), lastRedemptionId: 'red3' });
+    batch.set(doc(db, 'pointTransactions/redemption-red3'), {
+      userId: 'carol',
+      type: 'redemption',
+      amount: -150,
+      rewardId: 'kit',
+      redemptionId: 'red3',
+    });
+    await assertSucceeds(batch.commit());
+  });
+
+  it('deniega un canje cuyo costo no coincide con la recompensa', async () => {
+    const db = env.authenticatedContext('carol').firestore();
+    await assertFails(setDoc(doc(db, 'redemptions/red4'), { userId: 'carol', rewardId: 'kit', pointsSpent: 1, status: 'pendiente' }));
+  });
+
+  it('permite al admin registrar el crédito de puntos', async () => {
+    const db = env.authenticatedContext('admin1').firestore();
+    await assertSucceeds(
+      addDoc(collection(db, 'pointTransactions'), { userId: 'bob', type: 'report_verified', amount: 100, reportId: 'rBob' }),
+    );
   });
 });

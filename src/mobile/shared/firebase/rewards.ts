@@ -92,12 +92,13 @@ export async function redeemReward(userId: string, rewardId: string): Promise<st
       updatedAt: serverTimestamp(),
     });
 
-    const txRef = doc(collection(firestore, 'pointTransactions'));
+    const txRef = doc(firestore, 'pointTransactions', `redemption-${redemptionRef.id}`);
     tx.set(txRef, {
       userId,
       type: 'redemption',
       amount: -reward.pointsCost,
       rewardId,
+      redemptionId: redemptionRef.id,
       balanceBefore: user.pointsBalance,
       balanceAfter: user.pointsBalance - reward.pointsCost,
       createdAt: serverTimestamp(),

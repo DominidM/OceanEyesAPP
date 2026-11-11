@@ -170,6 +170,19 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function isRedemptionTransaction(transactionId) {
+      let redemptionId = request.resource.data.redemptionId;
+      let redemption = getAfter(/databases/$(database)/documents/redemptions/$(redemptionId));
+      return signedIn()
+        && redemptionId is string
+        && transactionId == 'redemption-' + redemptionId
+        && !exists(/databases/$(database)/documents/redemptions/$(redemptionId))
+        && request.resource.data.type == 'redemption'
+        && request.resource.data.userId == request.auth.uid
+        && redemption.data.userId == request.auth.uid
+        && request.resource.data.amount == -redemption.data.pointsSpent;
+    }
+
     match /pointTransactions/{transactionId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid)
@@ -178,7 +191,9 @@ service cloud.firestore {
           && isInMunicipalityBounds(
             get(/databases/$(database)/documents/reports/$(resource.data.reportId)).data.location
           ));
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      // SEC-04: los créditos de puntos solo los registra el admin (verifyReport). El cliente solo
+      // puede asentar el débito de su propio canje, con id fijo y creado en la misma transacción.
+      allow create: if isAdmin() || isRedemptionTransaction(transactionId);
       allow update, delete: if isAdmin();
     }
 
@@ -200,7 +215,11 @@ service cloud.firestore {
 
     match /redemptions/{redemptionId} {
       allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pendiente'
+        && request.resource.data.pointsSpent
+          == get(/databases/$(database)/documents/rewards/$(request.resource.data.rewardId)).data.pointsCost;
       allow update, delete: if isAdmin();
     }
   }
