@@ -1,0 +1,316 @@
+openapi: 3.1.0
+info:
+  title: OceanEyes API (Cloudflare Worker)
+  version: 1.1.0
+  summary: Endpoints servidor de OceanEyes.
+  description: |
+    Implementados en `src/worker.ts` (producción, Cloudflare Workers) y replicados como rutas
+    `+api` de Expo Router en desarrollo (`src/app/api/**`). Cualquier otra ruta sirve los
+    assets estáticos de `dist/`.
+
+    El Worker no emite cabeceras CORS: los endpoints están pensados para el mismo origen
+    (landing, `/mobile` web y `/admin`).
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://ocean-eyes.solvegrades.workers.dev
+    description: Producción
+  - url: http://localhost:8081
+    description: Desarrollo (expo start --web)
+tags:
+  - name: Contacto
+    description: Formulario de contacto de la landing (Brevo).
+  - name: Rol
+    description: Quiz "Descubre tu rol" (Gemini) y envío del resultado por correo.
+  - name: Alertas
+    description: Difusión de alertas oficiales por Expo Push.
+  - name: Auth
+    description: Proxy de Identity Toolkit para el registro municipal.
+  - name: Municipalidades
+    description: Solicitudes de alta de municipalidades.
+paths:
+  /api/contact:
+    post:
+      tags: [Contacto]
+      operationId: sendContact
+      summary: Envía el formulario de contacto
+      description: Envía un acuse al remitente y los datos al buzón de OceanEyes vía Brevo.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, message]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                phone: { type: string }
+                subject: { type: string }
+                message: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Success' }
+        '400': { $ref: '#/components/responses/Error' }
+        '500': { $ref: '#/components/responses/Error' }
+        '502': { $ref: '#/components/responses/Error' }
+  /api/rol:
+    post:
+      tags: [Rol]
+      operationId: getRol
+      summary: Recomendación o respuesta del quiz "Descubre tu rol" (Gemini)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userData]
+              properties:
+                mode:
+                  type: string
+                  enum: [recommend, reply]
+                  description: "`reply` devuelve un mensaje de chat; cualquier otro valor, la recomendación."
+                userData: { $ref: '#/components/schemas/RolUserData' }
+                message: { type: string, description: Mensaje del usuario (solo `mode=reply`). }
+      responses:
+        '200':
+          description: Recomendación (`result`) o respuesta (`reply`).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    required: [result]
+                    properties:
+                      result: { $ref: '#/components/schemas/RolSugerido' }
+                  - type: object
+                    required: [reply]
+                    properties:
+                      reply: { type: string }
+        '400': { $ref: '#/components/responses/Error' }
+        '500': { $ref: '#/components/responses/Error' }
+  /api/email-rol:
+    post:
+      tags: [Rol]
+      operationId: emailRol
+      summary: Envía por correo el rol obtenido en el quiz
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, result]
+              properties:
+                email: { type: string, format: email }
+                result: { $ref: '#/components/schemas/RolSugerido' }
+      responses:
+        '200':
+          description: Correo enviado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  message: { type: string }
+        '400': { $ref: '#/components/responses/Error' }
+        '500': { $ref: '#/components/responses/Error' }
+        '502': { $ref: '#/components/responses/Error' }
+  /api/send-push:
+    post:
+      tags: [Alertas]
+      operationId: sendPush
+      summary: Envía una alerta oficial por Expo Push
+      description: |
+        Requiere un Firebase ID token de un usuario con `users/{uid}.role` igual a `admin` o
+        `municipal`. Límite: 10 solicitudes por minuto por IP (ventana fija, por instancia).
+        Los tokens que no tengan formato `ExponentPushToken[...]` se descartan.
+      security:
+        - firebaseIdToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tokens:
+                  type: array
+                  items: { type: string, pattern: '^Expo(nent)?PushToken\[.+\]$' }
+                title: { type: string, default: OceanEyes }
+                message: { type: string }
+                severity: { type: string, enum: [info, warning, danger] }
+                data: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Resultado del envío.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, sent, skipped]
+                properties:
+                  success: { type: boolean, const: true }
+                  sent: { type: integer, minimum: 0 }
+                  skipped: { type: integer, minimum: 0 }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '429':
+          description: Demasiadas solicitudes desde la misma IP.
+          headers:
+            Retry-After:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/Error' }
+        '502': { $ref: '#/components/responses/Error' }
+  /api/auth/signup:
+    post:
+      tags: [Auth]
+      operationId: signup
+      summary: Crea una cuenta email/contraseña (proxy de Identity Toolkit)
+      description: Usado por el registro municipal para no llamar a googleapis.com desde el navegador.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '200':
+          description: Respuesta de `accounts:signUp` (idToken, refreshToken, localId…).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idToken: { type: string }
+                  refreshToken: { type: string }
+                  localId: { type: string }
+                  email: { type: string }
+                  expiresIn: { type: string }
+        '400': { $ref: '#/components/responses/AuthError' }
+        '500': { $ref: '#/components/responses/AuthError' }
+  /api/auth/delete:
+    post:
+      tags: [Auth]
+      operationId: deleteAccount
+      summary: Elimina la cuenta dueña del idToken (rollback del registro municipal)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idToken]
+              properties:
+                idToken: { type: string, description: Firebase ID token de la cuenta a eliminar. }
+      responses:
+        '200': { $ref: '#/components/responses/Success' }
+        '400': { $ref: '#/components/responses/AuthError' }
+  /api/municipalities/apply:
+    post:
+      tags: [Municipalidades]
+      operationId: applyMunicipality
+      summary: Registra la solicitud de una municipalidad
+      description: |
+        Escribe `users/{ownerUid}` (rol `municipal`) y `municipalities/{ownerUid}` (estado `pending`)
+        en Firestore REST con el idToken del solicitante, por lo que aplican las reglas de seguridad.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idToken, ownerUid, name, region, province, contactEmail]
+              properties:
+                idToken: { type: string }
+                ownerUid: { type: string }
+                name: { type: string }
+                region: { type: string }
+                province: { type: string }
+                contactEmail: { type: string, format: email }
+                address: { type: string }
+                contactName: { type: string }
+                phone: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Success' }
+        '400': { $ref: '#/components/responses/AuthError' }
+        '502': { $ref: '#/components/responses/AuthError' }
+components:
+  securitySchemes:
+    firebaseIdToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase ID token (RS256, emisor `https://securetoken.google.com/<projectId>`).
+  responses:
+    Success:
+      description: Operación completada.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success]
+            properties:
+              success: { type: boolean, const: true }
+    Error:
+      description: Error con mensaje legible.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    AuthError:
+      description: Error del gateway de autenticación.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, message]
+            properties:
+              error: { type: boolean, const: true }
+              code: { type: string, examples: [auth/weak-password, auth/invalid-email, auth/email-already-in-use] }
+              message: { type: string }
+              detail: { type: string }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+    RolUserData:
+      type: object
+      required: [nombre, preocupaciones, entorno, habilidad, motivacion]
+      properties:
+        nombre: { type: string }
+        preocupaciones: { type: array, items: { type: string } }
+        entorno: { type: string }
+        habilidad: { type: string }
+        motivacion: { type: string }
+    RolSugerido:
+      type: object
+      required: [nombre, rolId, rol, tagline, descripcion, acciones, color, perfil, imagen]
+      properties:
+        nombre: { type: string }
+        rolId: { type: string }
+        rol: { type: string }
+        tagline: { type: string }
+        descripcion: { type: string }
+        acciones: { type: array, items: { type: string } }
+        color: { type: string }
+        perfil: { type: string }
+        imagen: { type: string }
+        closing: { type: string }
