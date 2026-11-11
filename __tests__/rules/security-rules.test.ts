@@ -108,7 +108,25 @@ describe('PU-05 archivo no permitido / pesado (storage.rules)', () => {
     );
   });
 
-  it('rechaza una imagen de 51 MB (límite 50 MB)', async () => {
+  it('rechaza una imagen de 26 MB (límite 25 MB, RNF-09)', async () => {
+    const storage = env.authenticatedContext('alice').storage();
+    await assertFails(
+      uploadBytes(ref(storage, 'reports/rAlice/pesada.jpg'), new Uint8Array(26 * 1024 * 1024), {
+        contentType: 'image/jpeg',
+      }),
+    );
+  });
+
+  it('permite una imagen de 24 MB', async () => {
+    const storage = env.authenticatedContext('alice').storage();
+    await assertSucceeds(
+      uploadBytes(ref(storage, 'reports/rAlice/limite.jpg'), new Uint8Array(24 * 1024 * 1024), {
+        contentType: 'image/jpeg',
+      }),
+    );
+  });
+
+  it('rechaza una imagen de 51 MB', async () => {
     const storage = env.authenticatedContext('alice').storage();
     await assertFails(
       uploadBytes(ref(storage, 'reports/rAlice/grande.jpg'), new Uint8Array(51 * 1024 * 1024), {
