@@ -1,5 +1,6 @@
 import { Contract, JsonRpcProvider, type Signer } from 'ethers';
 
+import { toOnChainCategory } from './category-map';
 import { ARBITRUM_SEPOLIA, isPointLedgerConfigured } from './config';
 import { POINT_LEDGER_ABI } from './point-ledger.abi';
 
@@ -45,7 +46,7 @@ export async function awardPointsOnChain(params: {
   const { signer, reporter, reportId, category } = params;
   const contract = getLedgerContract(signer);
   const overrides = await buildFeeOverrides(signer);
-  const tx = await contract.awardPoints(reporter, reportId, category, overrides);
+  const tx = await contract.awardPoints(reporter, reportId, toOnChainCategory(category), overrides);
   await tx.wait();
   return tx.hash;
 }
