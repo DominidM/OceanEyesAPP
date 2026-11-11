@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   doc,
   getDocs,
@@ -12,12 +11,15 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
+  type DocumentReference,
+  type Transaction,
 } from 'firebase/firestore';
 
 import { isFirebaseConfigured } from './config';
 
 import { firebaseAuth, firestore } from './app';
-import { REPORT_CATEGORIES, type GeoBounds, type Report, type ReportInput } from './types';
+import { REPORT_CATEGORIES, type GeoBounds, type Report, type ReportInput, type ReportStatus } from './types';
 
 import { getDeviceHash } from '@/shared/identity/device-id';
 import { isNetworkError } from '@/shared/offline/errors';
@@ -70,12 +72,48 @@ function buildReportDocFields(
   };
 }
 
+/**
+ * Crea el reporte y su entrada inicial de historial ('— → pendiente') en un único batch atómico.
+ * La entrada usa el id fijo 'initial', el único que las reglas permiten escribir al dueño.
+ */
+async function createReportWithHistory(
+  input: ReportInput,
+  userId: string,
+  deviceHash: string | null,
+): Promise<DocumentReference> {
+  const reportRef = doc(collection(firestore, 'reports'));
+  const batch = writeBatch(firestore);
+  batch.set(reportRef, buildReportDocFields(input, userId, deviceHash));
+  batch.set(doc(firestore, 'reports', reportRef.id, 'statusHistory', 'initial'), {
+    fromStatus: null,
+    toStatus: 'pendiente',
+    changedBy: userId,
+    createdAt: serverTimestamp(),
+  });
+  await batch.commit();
+  return reportRef;
+}
+
+function recordStatusChange(
+  tx: Transaction,
+  reportId: string,
+  change: { fromStatus: ReportStatus; toStatus: ReportStatus; changedBy: string; reason?: string | null },
+): void {
+  tx.set(doc(collection(firestore, 'reports', reportId, 'statusHistory')), {
+    fromStatus: change.fromStatus,
+    toStatus: change.toStatus,
+    changedBy: change.changedBy,
+    reason: change.reason ?? null,
+    createdAt: serverTimestamp(),
+  });
+}
+
 export async function createReport(input: ReportInput): Promise<string> {
   const user = firebaseAuth?.currentUser;
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
   const deviceHash = await getDeviceHash();
-  const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(input, user.uid, deviceHash));
+  const ref = await createReportWithHistory(input, user.uid, deviceHash);
 
   return ref.id;
 }
@@ -95,7 +133,7 @@ export async function publishReportOnline(
   if (!user) throw new Error('Debes iniciar sesión para enviar un reporte.');
 
   const deviceHash = await getDeviceHash();
-  const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(input, user.uid, deviceHash));
+  const ref = await createReportWithHistory(input, user.uid, deviceHash);
 
   let mediaAttached = false;
   const mediaFailed: string[] = [];
@@ -194,7 +232,7 @@ export async function publishPendingReport(pending: PendingReport): Promise<void
 
   let reportId = pending.remoteId;
   if (!reportId) {
-    const ref = await addDoc(collection(firestore, 'reports'), buildReportDocFields(pending.input, user.uid, pending.input.deviceHash ?? null));
+    const ref = await createReportWithHistory(pending.input, user.uid, pending.input.deviceHash ?? null);
     reportId = ref.id;
     await updatePendingReport(pending.id, { remoteId: reportId });
   }
@@ -405,6 +443,7 @@ export async function verifyReport(
       reviewedAt: serverTimestamp(),
       reviewedBy: adminUid,
     });
+    recordStatusChange(tx, reportId, { fromStatus: report.status, toStatus: 'verificado', changedBy: adminUid });
 
     tx.update(userRef, {
       pointsBalance: increment(categoryPoints),
@@ -456,11 +495,25 @@ export async function updateReportStatus(
     return verifyReport(reportId, options?.adminUid ?? 'admin', options?.signer);
   }
 
-  await updateDoc(reportRef, {
-    status,
-    reviewedAt: serverTimestamp(),
-    reviewedBy: options?.adminUid ?? null,
-    rejectionReason: status === 'descartado' ? options?.reason ?? null : null,
+  const adminUid = options?.adminUid ?? 'admin';
+  await runTransaction(firestore, async (tx) => {
+    const snap = await tx.get(reportRef);
+    if (!snap.exists()) throw new Error('Reporte no encontrado.');
+    const current = (snap.data() as Report).status;
+    if (current === status) return;
+    tx.update(reportRef, {
+      status,
+      reviewedAt: serverTimestamp(),
+      reviewedBy: adminUid,
+      rejectionReason: status === 'descartado' ? options?.reason ?? null : null,
+      updatedAt: serverTimestamp(),
+    });
+    recordStatusChange(tx, reportId, {
+      fromStatus: current,
+      toStatus: status,
+      changedBy: adminUid,
+      reason: status === 'descartado' ? options?.reason ?? null : null,
+    });
   });
 
   return null;

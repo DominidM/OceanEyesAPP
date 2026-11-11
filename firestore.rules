@@ -110,7 +110,16 @@ service cloud.firestore {
       match /statusHistory/{historyId} {
         allow read: if isAdmin()
           || (signedIn() && get(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid);
-        allow write: if isAdmin();
+        // Entrada inicial '— → pendiente', escrita por el dueño en el mismo batch que crea el reporte.
+        allow create: if isAdmin()
+          || (signedIn()
+            && historyId == 'initial'
+            && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.userId == request.auth.uid
+            && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.status == 'pendiente'
+            && request.resource.data.fromStatus == null
+            && request.resource.data.toStatus == 'pendiente'
+            && request.resource.data.changedBy == request.auth.uid);
+        allow update, delete: if isAdmin();
       }
     }
 

@@ -3,6 +3,7 @@
  *
  * PU-05 Archivo no permitido / pesado (storage.rules)
  * PU-08 Transición Pendiente → Verificado registra statusHistory (firestore.rules)
+ * PU-08b Entrada inicial '— → pendiente' creada junto con el reporte
  * PU-09 Ciudadano no lee reporte ajeno (firestore.rules)
  * PU-10 Ciudadano no cambia el estado de su reporte (firestore.rules)
  * SEC-01 Ciudadano no puede crear un reporte ya verificado / con puntos
@@ -322,5 +323,45 @@ describe('SEC-04 pointTransactions', () => {
     await assertSucceeds(
       addDoc(collection(db, 'pointTransactions'), { userId: 'bob', type: 'report_verified', amount: 100, reportId: 'rBob' }),
     );
+  });
+});
+
+describe('PU-08b historial inicial al crear el reporte', () => {
+  it('el dueño crea el reporte y la entrada initial en el mismo batch', async () => {
+    const db = env.authenticatedContext('alice').firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'reports/rConHist'), validReport);
+    batch.set(doc(db, 'reports/rConHist/statusHistory/initial'), {
+      fromStatus: null,
+      toStatus: 'pendiente',
+      changedBy: 'alice',
+      createdAt: new Date(),
+    });
+    await assertSucceeds(batch.commit());
+  });
+
+  it('el dueño no puede escribir otras entradas ni una inicial distinta de pendiente', async () => {
+    const db = env.authenticatedContext('bob').firestore();
+    await assertFails(
+      setDoc(doc(db, 'reports/rBob/statusHistory/otra'), { fromStatus: 'pendiente', toStatus: 'verificado', changedBy: 'bob' }),
+    );
+    await assertFails(
+      setDoc(doc(db, 'reports/rBobVerified/statusHistory/initial'), { fromStatus: null, toStatus: 'pendiente', changedBy: 'bob' }),
+    );
+  });
+
+  it('el admin cambia el estado y registra el historial en una sola transacción', async () => {
+    const db = env.authenticatedContext('admin1').firestore();
+    const batch = writeBatch(db);
+    batch.update(doc(db, 'reports/rBob'), { status: 'descartado', reviewedBy: 'admin1' });
+    batch.set(doc(collection(db, 'reports/rBob/statusHistory')), {
+      fromStatus: 'pendiente',
+      toStatus: 'descartado',
+      changedBy: 'admin1',
+      createdAt: new Date(),
+    });
+    await assertSucceeds(batch.commit());
+    const history = await getDocs(collection(db, 'reports/rBob/statusHistory'));
+    expect(history.docs.map((h) => h.data().toStatus)).toEqual(['descartado']);
   });
 });
