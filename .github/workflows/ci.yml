@@ -1,17 +1,20 @@
-# Propuesta de CI para OceanEyes — DESACTIVADA.
-# Solo se dispara manualmente (workflow_dispatch). Para activarla en cada push/PR,
-# agregar:
-#   push:
-#     branches: [main, developer]
-#   pull_request:
-name: CI (propuesta)
+# CI de OceanEyes (HU-057): lint, tipos, pruebas unitarias, reglas con emulador, contrato,
+# Cloud Functions y build web. No despliega nada ni usa credenciales reales.
+name: CI
 
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   lint-typecheck:
@@ -23,8 +26,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: ESLint
-        run: npx eslint . --ignore-pattern "public/**" --ignore-pattern "__tests__/node_modules/**"
+      - name: ESLint (src)
+        run: npx eslint src
       - name: TypeScript
         run: npx tsc --noEmit
 
@@ -35,11 +38,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - run: npm ci
-      - run: npm install --no-audit --no-fund
-        working-directory: __tests__
-      - run: npx jest --selectProjects unit --coverage
-        working-directory: __tests__
+      - name: Jest (src/**/__tests__ + __tests__/unit)
+        run: npm test -- --coverage --coverageReporters=text-summary
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage
+          if-no-files-found: ignore
 
   rules-tests:
     runs-on: ubuntu-latest
@@ -53,9 +61,10 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm install -g firebase-tools
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
         working-directory: __tests__
-      - run: firebase emulators:exec --only firestore,storage --project demo-oceaneyes "npm --prefix __tests__ run test:rules:raw"
+      - name: Reglas Firestore/Storage en emulador (demo-oceaneyes)
+        run: firebase emulators:exec --only firestore,storage --project demo-oceaneyes "npm --prefix __tests__ run test:rules:raw"
 
   contracts:
     runs-on: ubuntu-latest
@@ -67,8 +76,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # package-lock.json de /contracts está desincronizado (npm ci falla); usar npm ci tras regenerarlo.
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
       - run: npx hardhat test
       - run: npx hardhat coverage
 
@@ -98,6 +106,8 @@ jobs:
       - run: npx expo export --platform web && node scripts/fix-assets.cjs
         env:
           EXPO_PUBLIC_POINT_LEDGER_ADDRESS: '0xbA7A9d6cB7581Ef28cD01c77813bA229Cb2B1509'
+      - name: Empaquetado del Worker (sin desplegar)
+        run: npx wrangler deploy --dry-run --outdir worker-dist
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist
