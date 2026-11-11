@@ -27,7 +27,10 @@ import { publishPendingReport } from '@/shared/firebase/reports';
 import { enqueueReport, getPendingReports } from '@/shared/offline/outbox';
 import { initSyncEngine, requestSync } from '@/shared/offline/sync-engine';
 
-const publishMock = publishPendingReport as jest.Mock<(item: { id: string }) => Promise<void>>;
+const publishMock = publishPendingReport as unknown as jest.Mock<
+  (item: { id: string }) => Promise<{ reportId: string; expectedMedia: number; missingMedia: number; reason: null }>
+>;
+const ok = { reportId: 'r', expectedMedia: 0, missingMedia: 0, reason: null };
 
 const input = {
   category: 'pesca_ilegal' as const,
@@ -70,6 +73,7 @@ describe('PU-07 sincronización de 3 pendientes sin duplicar', () => {
     initSyncEngine({ getOnline: () => true });
     publishMock.mockImplementation(async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
+      return ok;
     });
 
     const a = await enqueueReport({ ...input, title: 'A' }, []);

@@ -14,6 +14,7 @@ import { ReportMap } from '@admin/presentation/components/reports/report-map';
 import { useWallet } from '@admin/presentation/hooks/useWallet';
 import { useAdminTheme } from '@admin/theme/context';
 import { buildArbiscanTxUrl } from '@shared/blockchain/ledger';
+import { attachedMediaCount, evidenceLabel } from '@/modules/reports/domain/valueObjects/report-evidence';
 import { banDevice } from '@/shared/firebase/bans';
 import { firebaseAuth, firestore } from '@/shared/firebase/app';
 import { onChainNoticeForReport, updateReportStatus, verifyReport } from '@/shared/firebase/reports';
@@ -112,6 +113,10 @@ export function ReportDetailScreen({ readOnly = false }: { readOnly?: boolean })
     ? [
         { label: 'Título', value: report.title },
         { label: 'Descripción', value: report.description?.trim() || '—' },
+        {
+          label: 'Evidencia',
+          value: evidenceLabel(report) ?? (attachedMediaCount(report) > 0 ? 'Completa' : 'Sin archivos adjuntos'),
+        },
         { label: 'ID de reporte', value: report.id },
         { label: 'Categoría', value: CATEGORY_LABELS[report.category] ?? report.category },
         { label: 'Fecha', value: dateStr },

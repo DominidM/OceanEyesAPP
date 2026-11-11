@@ -1,6 +1,7 @@
 import {
   AuthenticationRequiredError,
   publishPendingReport,
+  type PublishPendingResult,
 } from '@/shared/firebase/reports';
 
 import { isNetworkError } from './errors';
@@ -12,6 +13,8 @@ export type SyncState = {
   pendingCount: number;
   lastSyncedAt: number | null;
   lastError: string | null;
+  /** Aviso que persiste hasta que el usuario lo cierra (p. ej. reporte enviado sin evidencia). */
+  lastWarning: string | null;
 };
 
 const MAX_ATTEMPTS = 5;
@@ -24,6 +27,7 @@ let state: SyncState = {
   pendingCount: 0,
   lastSyncedAt: null,
   lastError: null,
+  lastWarning: null,
 };
 
 const listeners = new Set<(snapshot: SyncState) => void>();
@@ -98,6 +102,24 @@ function scheduleRetry(): void {
   }, delay);
 }
 
+export function evidenceWarningMessage(title: string, result: PublishPendingResult): string | null {
+  if (result.missingMedia <= 0) return null;
+  const what =
+    result.missingMedia >= result.expectedMedia
+      ? 'se envió sin evidencia'
+      : `se envió con evidencia incompleta (faltan ${result.missingMedia} de ${result.expectedMedia} archivos)`;
+  const why =
+    result.reason === 'status_changed'
+      ? 'ya estaba en revisión cuando se intentó adjuntar los archivos'
+      : 'no se pudieron subir algunos archivos';
+  return `Tu reporte "${title}" ${what}: ${why}.`;
+}
+
+export function dismissSyncWarning(): void {
+  state.lastWarning = null;
+  emit();
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return 'No se pudo sincronizar el reporte.';
@@ -132,9 +154,11 @@ async function runSync(): Promise<void> {
           attempts: item.attempts + 1,
           lastError: undefined,
         });
-        await withTimeout(publishPendingReport(item), UPLOAD_TIMEOUT_MS);
+        const result = await withTimeout(publishPendingReport(item), UPLOAD_TIMEOUT_MS);
         await removePendingReport(item.id);
         await removeStagedMedia(item.media.map((media) => media.localUri));
+        const warning = evidenceWarningMessage(item.input.title, result);
+        if (warning) state.lastWarning = warning;
         consecutiveFailures = 0;
         state.lastSyncedAt = Date.now();
         state.lastError = null;

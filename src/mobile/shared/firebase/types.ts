@@ -92,6 +92,8 @@ export type Report = {
   photoURLs: string[];
   audioURL?: string | null;
   audioDurationMillis?: number | null;
+  /** Archivos (fotos, videos y audio) que el usuario adjuntó al crear el reporte. */
+  mediaExpected?: number | null;
   status: ReportStatus;
   pointsAwarded: number;
   txHash?: string;

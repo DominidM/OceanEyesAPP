@@ -18,6 +18,10 @@ export type PendingReport = {
   media: PendingMedia[];
   audio?: PendingAudio | null;
   remoteId?: string;
+  /** Id del reporte fijado antes de subir medios; los reintentos reutilizan las mismas rutas. */
+  plannedId?: string;
+  /** URLs ya subidas por clave de medio (`<id>-<índice>` o `audio`), para no repetir subidas. */
+  uploaded?: Record<string, string>;
   createdAt: number;
   updatedAt: number;
   attempts: number;
