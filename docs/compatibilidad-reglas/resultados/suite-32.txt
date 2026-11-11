@@ -1,0 +1,3 @@
+suite-rama reglas=new: Tests:       32 passed, 32 total
+suite-rama reglas=trans: Tests:       32 passed, 32 total
+suite-rama reglas=post: Tests:       32 passed, 32 total
