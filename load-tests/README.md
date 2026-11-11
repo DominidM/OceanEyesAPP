@@ -25,6 +25,15 @@ k6 run load-tests/pe-04-rampa-300.js
 k6 run load-tests/pe-05-aprobacion-concurrente.js
 ```
 
+## Ejecución automatizada con resúmenes
+
+```bash
+firebase emulators:exec --only auth,firestore,storage --project demo-oceaneyes "node load-tests/run-all.js"
+```
+
+Guarda `results/<escenario>.txt` (salida de k6) y `results/<escenario>.summary.json`
+(`--summary-export`). Resultados de la última ejecución: ver `informe_correcciones.md` §4.
+
 ## Contra staging (proyecto Firebase separado, nunca producción)
 
 ```bash

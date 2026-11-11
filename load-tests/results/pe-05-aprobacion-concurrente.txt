@@ -1,0 +1,72 @@
+# pe-05-aprobacion-concurrente — inicio 2026-11-11T11:54:50.214Z — exit 0
+# k6 v1.0.0 contra emuladores Firebase (demo-oceaneyes)
+
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: C:\Users\USER\Documents\Proyectos\OceanEyesAPP\load-tests\pe-05-aprobacion-concurrente.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 20 max VUs, 1m30s max duration (incl. graceful stop):
+              * aprobaciones: 1 iterations for each of 20 VUs (maxDuration: 1m0s, gracefulStop: 30s)
+
+
+running (0m01.0s), 20/20 VUs, 0 complete and 0 interrupted iterations
+aprobaciones   [   0% ] 20 VUs  0m00.8s/1m0s  00/20 iters, 1 per VU
+
+running (0m02.0s), 13/20 VUs, 7 complete and 0 interrupted iterations
+aprobaciones   [  35% ] 20 VUs  0m01.8s/1m0s  07/20 iters, 1 per VU
+
+running (0m02.9s), 12/20 VUs, 8 complete and 0 interrupted iterations
+aprobaciones   [  40% ] 20 VUs  0m02.7s/1m0s  08/20 iters, 1 per VU
+
+running (0m03.9s), 00/20 VUs, 20 complete and 0 interrupted iterations
+aprobaciones ✓ [ 100% ] 20 VUs  0m03.6s/1m0s  20/20 iters, 1 per VU
+
+
+  █ THRESHOLDS 
+
+    aprobaciones_exitosas
+    ✓ 'count==1' count=1
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......................: 16      4.067134/s
+    checks_succeeded...................: 100.00% 16 out of 16
+    checks_failed......................: 0.00%   0 out of 16
+
+    ✓ signUp 200
+    ✓ commit 200 o conflicto 400/409
+
+    CUSTOM
+    aprobaciones_exitosas...................................................: 1      0.254196/s
+
+    HTTP
+    http_req_duration.......................................................: avg=1.29s    min=2.37ms   med=778.91ms max=3.06s p(90)=2.83s p(95)=2.94s
+      { expected_response:true }............................................: avg=626.76ms min=2.37ms   med=566.62ms max=1.35s p(90)=1.2s  p(95)=1.27s
+    http_req_failed.........................................................: 32.50% 13 out of 40
+    http_reqs...............................................................: 40     10.167834/s
+
+    EXECUTION
+    iteration_duration......................................................: avg=2.57s    min=999.69ms med=3.34s    max=3.57s p(90)=3.54s p(95)=3.55s
+    iterations..............................................................: 20     5.083917/s
+    vus.....................................................................: 12     min=12       max=20
+    vus_max.................................................................: 20     min=20       max=20
+
+    NETWORK
+    data_received...........................................................: 32 kB  8.1 kB/s
+    data_sent...............................................................: 39 kB  9.9 kB/s
+
+
+
+
+running (0m03.9s), 00/20 VUs, 20 complete and 0 interrupted iterations
+aprobaciones ✓ [ 100% ] 20 VUs  0m03.6s/1m0s  20/20 iters, 1 per VU
+
+time="2026-11-11T06:54:54-05:00" level=info msg="pointTransactions para Gr3IHxNTFyJZXwK7dXpA: 1 (esperado 1)" source=console
