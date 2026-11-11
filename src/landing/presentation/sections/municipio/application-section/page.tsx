@@ -6,6 +6,8 @@ import { router } from 'expo-router';
 import { AppFonts as Fonts, BrandColors, Spacing } from '@landing/config/theme';
 import { useBreakpoints } from '@landing/presentation/hooks/useBreakpoints';
 import { SelectField } from './select-field';
+import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_MESSAGE } from '@shared/auth/password-policy';
+
 import { REGIONS, PROVINCES_BY_REGION } from './peru-data';
 
 async function apiPost<T>(path: string, body: unknown): Promise<T> {
@@ -56,8 +58,8 @@ export function MunicipalityApplicationForm() {
 
   const handleSubmit = async () => {
     setError('');
-    if (!name.trim() || !region.trim() || !province.trim() || !email.trim() || password.length < 6) {
-      setError('Completa nombre de la municipalidad, región, provincia, correo y una contraseña de al menos 6 caracteres.');
+    if (!name.trim() || !region.trim() || !province.trim() || !email.trim() || !isPasswordLongEnough(password)) {
+      setError(`Completa nombre de la municipalidad, región, provincia, correo y una contraseña de al menos ${MIN_PASSWORD_LENGTH} caracteres.`);
       return;
     }
     if (password !== confirmPassword) {
@@ -96,7 +98,7 @@ export function MunicipalityApplicationForm() {
       if (raw === 'auth/email-already-in-use') {
         setError('Ese correo ya está registrado. Inicia sesión.');
       } else if (raw === 'auth/weak-password') {
-        setError('La contraseña debe tener al menos 6 caracteres.');
+        setError(PASSWORD_LENGTH_MESSAGE);
       } else {
         setError(String(raw));
       }
@@ -211,7 +213,7 @@ export function MunicipalityApplicationForm() {
                   style={styles.input}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
                   placeholderTextColor="rgba(0,0,0,0.35)"
                   secureTextEntry
                 />

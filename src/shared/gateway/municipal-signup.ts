@@ -10,6 +10,8 @@
 // (Bearer), por lo que las reglas de seguridad se aplican.
 // ============================================================
 
+import { isPasswordLongEnough, PASSWORD_LENGTH_MESSAGE } from '../auth/password-policy';
+
 export interface GatewayEnv {
   FIREBASE_API_KEY?: string;
   FIREBASE_PROJECT_ID?: string;
@@ -67,8 +69,8 @@ export async function handleAuthSignup(request: Request, env: GatewayEnv): Promi
   if (!EMAIL_REGEX.test(email)) {
     return serverError('auth/invalid-email', 'Ingresá un correo válido.');
   }
-  if (password.length < 6) {
-    return serverError('auth/weak-password', 'La contraseña debe tener al menos 6 caracteres.');
+  if (!isPasswordLongEnough(password)) {
+    return serverError('auth/weak-password', PASSWORD_LENGTH_MESSAGE);
   }
   if (!env.FIREBASE_API_KEY) {
     return json({ error: true, code: 'server/misconfigured', message: 'Servicio no configurado' }, 500);

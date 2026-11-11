@@ -2,6 +2,7 @@ import type { User } from 'firebase/auth';
 
 import type { ProfileType } from '@/shared/firebase/types';
 import { ViewModel } from '@/shared/viewmodels/view-model';
+import { isPasswordLongEnough, PASSWORD_LENGTH_MESSAGE } from '@shared/auth/password-policy';
 
 export type LoginDeps = {
   isFirebaseConfigured: () => boolean;
@@ -108,6 +109,10 @@ export class LoginViewModel extends ViewModel<LoginState, LoginDeps> {
       this.setState({ error: 'El DNI debe tener 8 dígitos.' });
       return;
     }
+    if (registering && !isPasswordLongEnough(password)) {
+      this.setState({ error: PASSWORD_LENGTH_MESSAGE });
+      return;
+    }
 
     this.setState({ busy: true });
     try {
@@ -143,6 +148,10 @@ export class LoginViewModel extends ViewModel<LoginState, LoginDeps> {
     }
     if (dni && !/^\d{8}$/.test(dni)) {
       this.setState({ error: 'El DNI debe tener 8 dígitos.' });
+      return;
+    }
+    if (!isPasswordLongEnough(password)) {
+      this.setState({ error: PASSWORD_LENGTH_MESSAGE });
       return;
     }
 
