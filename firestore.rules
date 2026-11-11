@@ -59,17 +59,24 @@ service cloud.firestore {
     }
 
     match /reports/{reportId} {
+      // SEC-01: el ciudadano solo crea reportes pendientes, sin puntos ni datos de moderación.
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
-        && hasValidWallet();
+        && hasValidWallet()
+        && request.resource.data.status == 'pendiente'
+        && request.resource.data.pointsAwarded == 0
+        && !request.resource.data.keys().hasAny(
+          ['txHash', 'reviewedAt', 'reviewedBy', 'onChainStatus', 'onChainError', 'rejectionReason']);
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid)
         || (resource.data.status == 'verificado')
         || (isActiveMunicipality() && isInMunicipalityBounds(resource.data.location));
+      // SEC-02: el dueño solo adjunta medios mientras el reporte sigue pendiente.
       allow update: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid
-          && request.resource.data.userId == resource.data.userId
-          && request.resource.data.status == resource.data.status);
+          && resource.data.status == 'pendiente'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['photoURLs', 'audioURL', 'audioDurationMillis']));
       allow delete: if isAdmin();
 
       match /private/{privateId} {

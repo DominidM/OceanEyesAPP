@@ -5,7 +5,8 @@
  * PU-08 Transición Pendiente → Verificado registra statusHistory (firestore.rules)
  * PU-09 Ciudadano no lee reporte ajeno (firestore.rules)
  * PU-10 Ciudadano no cambia el estado de su reporte (firestore.rules)
- * SEC-01 (hallazgo) Ciudadano crea un reporte directamente en estado 'verificado'
+ * SEC-01 Ciudadano no puede crear un reporte ya verificado / con puntos
+ * SEC-02 Dueño no puede editar datos de un reporte salvo medios, ni tras la verificación
  *
  * Ejecutar desde __tests__/:  npm run test:rules
  */
@@ -64,6 +65,15 @@ beforeEach(async () => {
       title: 'Pesca ilegal',
       status: 'pendiente',
       pointsAwarded: 0,
+      location: { latitude: -12.05, longitude: -77.15 },
+      photoURLs: [],
+    });
+    await setDoc(doc(db, 'reports/rBobVerified'), {
+      userId: 'bob',
+      category: 'pesca_ilegal',
+      title: 'Pesca ilegal',
+      status: 'verificado',
+      pointsAwarded: 100,
       location: { latitude: -12.05, longitude: -77.15 },
       photoURLs: [],
     });
@@ -157,18 +167,59 @@ describe('PU-10 ciudadano no cambia el estado de su reporte', () => {
   });
 });
 
-describe('SEC-01 (hallazgo) creación de reporte con estado arbitrario', () => {
-  it('un ciudadano NO debería poder crear un reporte ya verificado', async () => {
+const validReport = {
+  userId: 'alice',
+  category: 'pesca_ilegal',
+  title: 'Pesca ilegal',
+  status: 'pendiente',
+  pointsAwarded: 0,
+  isAnonymous: true,
+  location: { latitude: -12.05, longitude: -77.15 },
+  photoURLs: [],
+};
+
+describe('SEC-01 creación de reportes', () => {
+  it('permite crear un reporte pendiente sin puntos', async () => {
     const db = env.authenticatedContext('alice').firestore();
-    await assertFails(
-      setDoc(doc(db, 'reports/rForged'), {
-        userId: 'alice',
-        category: 'pesca_ilegal',
-        title: 'Forjado',
-        status: 'verificado',
-        pointsAwarded: 100,
-        photoURLs: [],
-      }),
+    await assertSucceeds(setDoc(doc(db, 'reports/rNew'), validReport));
+  });
+
+  it('deniega crear un reporte ya verificado', async () => {
+    const db = env.authenticatedContext('alice').firestore();
+    await assertFails(setDoc(doc(db, 'reports/rForged'), { ...validReport, status: 'verificado', pointsAwarded: 100 }));
+  });
+
+  it('deniega crear un reporte pendiente con puntos', async () => {
+    const db = env.authenticatedContext('alice').firestore();
+    await assertFails(setDoc(doc(db, 'reports/rForged2'), { ...validReport, pointsAwarded: 100 }));
+  });
+
+  it('deniega crear un reporte con txHash o datos de revisión', async () => {
+    const db = env.authenticatedContext('alice').firestore();
+    await assertFails(setDoc(doc(db, 'reports/rForged3'), { ...validReport, txHash: '0xabc' }));
+    await assertFails(setDoc(doc(db, 'reports/rForged4'), { ...validReport, reviewedBy: 'alice' }));
+    await assertFails(setDoc(doc(db, 'reports/rForged5'), { ...validReport, onChainStatus: 'awarded' }));
+  });
+});
+
+describe('SEC-02 edición del reporte por su dueño', () => {
+  it('permite adjuntar fotos y audio mientras está pendiente', async () => {
+    const db = env.authenticatedContext('bob').firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, 'reports/rBob'), { photoURLs: ['https://x/1.jpg'], audioURL: 'https://x/a.m4a', audioDurationMillis: 1200 }),
     );
+  });
+
+  it('deniega cambiar pointsAwarded o location de un reporte pendiente', async () => {
+    const db = env.authenticatedContext('bob').firestore();
+    await assertFails(updateDoc(doc(db, 'reports/rBob'), { pointsAwarded: 500 }));
+    await assertFails(updateDoc(doc(db, 'reports/rBob'), { location: { latitude: 0, longitude: 0 } }));
+  });
+
+  it('deniega cambiar pointsAwarded, location o medios tras la verificación', async () => {
+    const db = env.authenticatedContext('bob').firestore();
+    await assertFails(updateDoc(doc(db, 'reports/rBobVerified'), { pointsAwarded: 500 }));
+    await assertFails(updateDoc(doc(db, 'reports/rBobVerified'), { location: { latitude: 0, longitude: 0 } }));
+    await assertFails(updateDoc(doc(db, 'reports/rBobVerified'), { photoURLs: ['https://x/otra.jpg'] }));
   });
 });
