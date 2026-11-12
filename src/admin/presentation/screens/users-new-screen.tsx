@@ -5,8 +5,8 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AdminShell } from '@admin/layout/admin-shell';
 import { Button, Card, SectionHeader } from '@admin/presentation/components/ui';
 import { AppFonts as Fonts, Spacing } from '@admin/config/theme';
+import { ADMIN_ACCOUNT_TYPES, type AdminAccountType } from '@/shared/firebase/admin-user-profile';
 import { createUserByAdmin } from '@/shared/firebase/auth';
-import type { UserRole } from '@/shared/firebase/types';
 import { useAdminTheme } from '@admin/theme/context';
 import { isPasswordLongEnough, MIN_PASSWORD_LENGTH } from '@shared/auth/password-policy';
 
@@ -16,14 +16,13 @@ export function UsersNewScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [dni, setDni] = useState('');
-  const [role, setRole] = useState<UserRole>('citizen');
+  const [accountType, setAccountType] = useState<AdminAccountType>('citizen');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  const isAdmin = role === 'admin';
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async () => {
+    if (busy) return;
     setError('');
     setSuccess('');
     if (!displayName.trim() || !email.trim() || !isPasswordLongEnough(password)) {
@@ -36,8 +35,7 @@ export function UsersNewScreen() {
         email: email.trim(),
         password,
         displayName: displayName.trim(),
-        profileType: role === 'fisher' ? 'fisher' : 'citizen',
-        role,
+        accountType,
         dni: dni.trim() || undefined,
       });
       setSuccess(`Usuario ${displayName.trim()} creado correctamente.`);
@@ -45,7 +43,7 @@ export function UsersNewScreen() {
       setEmail('');
       setPassword('');
       setDni('');
-      setRole('citizen');
+      setAccountType('citizen');
     } catch (e: any) {
       const raw = e?.code || e?.message || String(e);
       setError(raw === 'auth/email-already-in-use' ? 'Ese correo ya está registrado.' : raw);
@@ -59,12 +57,13 @@ export function UsersNewScreen() {
     { borderColor: colors.inputBorder, color: colors.inputText, backgroundColor: colors.inputBg },
   ];
 
-  const roleOption = (value: UserRole, label: string) => {
-    const selected = role === value;
+  const accountTypeOption = (value: AdminAccountType) => {
+    const selected = accountType === value;
+    const { label } = ADMIN_ACCOUNT_TYPES[value];
     return (
       <Pressable
         key={value}
-        onPress={() => setRole(value)}
+        onPress={() => setAccountType(value)}
         style={[
           styles.typeBtn,
           { borderColor: selected ? colors.primary : colors.inputBorder },
@@ -82,7 +81,7 @@ export function UsersNewScreen() {
     <AdminShell title="Nuevo usuario" breadcrumb={[{ label: 'Usuarios', href: '/admin/users' }, { label: 'Nuevo' }]}>
       <SectionHeader
         title="Crear usuario"
-        subtitle="Registra una cuenta y asígnale un rol (usuario o admin) y un tipo de perfil."
+        subtitle="Registra una cuenta de ciudadano, pescador o municipal."
       />
 
       <Card style={styles.card}>
@@ -146,11 +145,13 @@ export function UsersNewScreen() {
             <View style={styles.field}>
               <Text style={[styles.label, { color: colors.contentTextMuted }]}>Tipo de cuenta</Text>
               <View style={styles.typeRow}>
-                {roleOption('citizen', 'Ciudadano')}
-                {roleOption('fisher', 'Pescador')}
-                {roleOption('municipal', 'Municipal')}
-                {roleOption('admin', 'Admin')}
+                {accountTypeOption('citizen')}
+                {accountTypeOption('fisher')}
+                {accountTypeOption('municipal')}
               </View>
+              <Text style={[styles.hint, { color: colors.contentTextMuted }]}>
+                Los administradores se asignan solo desde la consola de Firebase.
+              </Text>
             </View>
           </View>
         </View>
@@ -202,6 +203,7 @@ const styles = StyleSheet.create({
     cursor: 'pointer',
   },
   typeLabel: { fontFamily: Fonts.label, fontSize: 14, fontWeight: '600' },
+  hint: { fontFamily: Fonts.body, fontSize: 12 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: Spacing.two, marginTop: Spacing.one },
   error: { fontFamily: Fonts.body, fontSize: 13, textAlign: 'center' },
   success: { fontFamily: Fonts.body, fontSize: 13, textAlign: 'center' },

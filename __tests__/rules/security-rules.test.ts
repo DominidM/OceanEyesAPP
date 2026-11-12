@@ -10,6 +10,7 @@
  * SEC-03 Dueño solo edita campos permitidos de su perfil
  * SEC-04 Solo el admin registra créditos de puntos (pointTransactions)
  * SEC-02 Dueño no puede editar datos de un reporte salvo medios, ni tras la verificación
+ * PU-11 Alta desde el panel: el perfil que escribe createUserByAdmin pasa las reglas; role admin no
  *
  * Ejecutar desde __tests__/:  npm run test:rules
  */
@@ -23,8 +24,25 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { addDoc, collection, doc, getDoc, getDocs, increment, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  increment,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  writeBatch,
+} from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
+
+import {
+  ADMIN_ACCOUNT_TYPES,
+  buildAdminCreatedProfile,
+  type AdminAccountType,
+} from '../../src/mobile/shared/firebase/admin-user-profile';
 
 const ROOT = resolve(__dirname, '..', '..');
 const WALLET = '0x1111111111111111111111111111111111111111';
@@ -381,5 +399,46 @@ describe('PU-08b historial inicial al crear el reporte', () => {
     await assertSucceeds(batch.commit());
     const history = await getDocs(collection(db, 'reports/rBob/statusHistory'));
     expect(history.docs.map((h) => h.data().toStatus)).toEqual(['descartado']);
+  });
+});
+
+describe('PU-11 alta de usuarios desde el panel (createUserByAdmin)', () => {
+  // Mismo documento que escribe createUserByAdmin, con la sesión de la cuenta nueva (instancia secundaria).
+  it.each(Object.keys(ADMIN_ACCOUNT_TYPES) as AdminAccountType[])(
+    '%s: la cuenta nueva crea su propio perfil',
+    async (accountType) => {
+      const uid = `nuevo-${accountType}`;
+      const db = env.authenticatedContext(uid).firestore();
+      const profile = buildAdminCreatedProfile(
+        { email: `${uid}@oceaneyes.test`, displayName: 'Nuevo', accountType, dni: '12345678' },
+        serverTimestamp(),
+      );
+      await assertSucceeds(setDoc(doc(db, `users/${uid}`), profile));
+      const saved = (await getDoc(doc(db, `users/${uid}`))).data();
+      expect(saved).toMatchObject({
+        role: ADMIN_ACCOUNT_TYPES[accountType].role,
+        profileType: ADMIN_ACCOUNT_TYPES[accountType].profileType,
+      });
+    },
+  );
+
+  it("un perfil con role 'admin', 'citizen' o 'fisher' se rechaza", async () => {
+    const db = env.authenticatedContext('nuevo-x').firestore();
+    const base = buildAdminCreatedProfile(
+      { email: 'x@oceaneyes.test', displayName: 'X', accountType: 'citizen' },
+      serverTimestamp(),
+    );
+    for (const role of ['admin', 'citizen', 'fisher']) {
+      await assertFails(setDoc(doc(db, 'users/nuevo-x'), { ...base, role }));
+    }
+  });
+
+  it('la sesión del admin no puede crear el perfil de otra cuenta', async () => {
+    const db = env.authenticatedContext('admin1').firestore();
+    const profile = buildAdminCreatedProfile(
+      { email: 'y@oceaneyes.test', displayName: 'Y', accountType: 'citizen' },
+      serverTimestamp(),
+    );
+    await assertFails(setDoc(doc(db, 'users/nuevo-y'), profile));
   });
 });

@@ -55,3 +55,14 @@ example
 # Cobertura de Jest / Hardhat
 coverage/
 coverage.json
+
+# Logs (firebase-debug.log, etc.)
+*.log
+
+# Documentos internos (no se publican; copia en ..\OceanEyes_docs_privados\)
+informe_insumos_sistema.md
+informe_correcciones.md
+compatibilidad_reglas.md
+
+# Exportaciones CSV de Firestore (datos y salt de anonimización)
+exports/
