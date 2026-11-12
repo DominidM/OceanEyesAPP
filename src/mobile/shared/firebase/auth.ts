@@ -1,12 +1,15 @@
+import { getApps, initializeApp } from 'firebase/app';
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  getAuth,
   linkWithCredential,
   reauthenticateWithCredential,
   signInAnonymously,
   signInWithCredential,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   updatePassword,
   updateProfile,
@@ -14,6 +17,7 @@ import {
 import {
   doc,
   getDoc,
+  getFirestore,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -22,6 +26,7 @@ import { NativeModules, Platform, TurboModuleRegistry } from 'react-native';
 
 import { firebaseAuth, firestore } from './app';
 import { banUser, unbanUser } from './bans';
+import { firebaseConfig } from './config';
 import type { ProfileType, UserProfile, UserRole } from './types';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
@@ -138,10 +143,15 @@ export async function registerMunicipalUser(input: {
   return credential.user;
 }
 
-let adminSession: { email: string; password: string } | null = null;
+const SECONDARY_APP_NAME = 'secondary';
 
-export function rememberAdminSession(email: string, password: string) {
-  adminSession = { email, password };
+/**
+ * Instancia secundaria de Firebase para que el panel cree cuentas sin tocar la sesión del
+ * admin: createUserWithEmailAndPassword deja iniciada la cuenta nueva en la instancia donde
+ * se llama, así que nunca se usa la principal.
+ */
+function getSecondaryApp() {
+  return getApps().find((app) => app.name === SECONDARY_APP_NAME) ?? initializeApp(firebaseConfig, SECONDARY_APP_NAME);
 }
 
 export async function createUserByAdmin(input: {
@@ -152,32 +162,33 @@ export async function createUserByAdmin(input: {
   role?: UserRole;
   dni?: string;
 }) {
-  const credential = await createUserWithEmailAndPassword(requireAuth(), input.email, input.password);
-  await updateProfile(credential.user, { displayName: input.displayName });
+  requireAuth();
+  const secondaryApp = getSecondaryApp();
+  const secondaryAuth = getAuth(secondaryApp);
+  try {
+    const credential = await createUserWithEmailAndPassword(secondaryAuth, input.email, input.password);
+    await updateProfile(credential.user, { displayName: input.displayName });
 
-  await setDoc(doc(firestore, 'users', credential.user.uid), {
-    role: input.role ?? 'user',
-    profileType: input.profileType,
-    displayName: input.displayName,
-    email: input.email,
-    dni: input.dni ?? null,
-    pointsBalance: 0,
-    totalPointsEarned: 0,
-    verifiedReportsCount: 0,
-    status: 'active',
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+    // Las reglas solo permiten que cada cuenta cree su propio perfil: se escribe con la sesión
+    // de la cuenta nueva (instancia secundaria), igual que antes, no con la del admin.
+    await setDoc(doc(getFirestore(secondaryApp), 'users', credential.user.uid), {
+      role: input.role ?? 'user',
+      profileType: input.profileType,
+      displayName: input.displayName,
+      email: input.email,
+      dni: input.dni ?? null,
+      pointsBalance: 0,
+      totalPointsEarned: 0,
+      verifiedReportsCount: 0,
+      status: 'active',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
 
-  if (adminSession) {
-    try {
-      await signInWithEmailAndPassword(requireAuth(), adminSession.email, adminSession.password);
-    } catch {
-      // Si falla el re-inicio de sesión, el admin deberá volver a entrar.
-    }
+    return credential.user.uid;
+  } finally {
+    await signOut(secondaryAuth).catch(() => undefined);
   }
-
-  return credential.user.uid;
 }
 
 export async function loginWithEmail(email: string, password: string) {
@@ -271,6 +282,18 @@ export async function signInWithGoogle() {
   const credential = GoogleAuthProvider.credential(idToken);
   const { user } = await signInWithCredential(requireAuth(), credential);
   await ensureUserProfile(user);
+  return user;
+}
+
+/**
+ * Google en web (panel de administración) con el popup de Firebase Auth. No crea perfiles:
+ * quien llama decide si la cuenta tiene acceso. En móvil se usa signInWithGoogle().
+ */
+export async function signInWithGoogleWeb() {
+  if (Platform.OS !== 'web') {
+    throw new Error('El inicio de sesión con Google por ventana emergente solo está disponible en la web.');
+  }
+  const { user } = await signInWithPopup(requireAuth(), new GoogleAuthProvider());
   return user;
 }
 

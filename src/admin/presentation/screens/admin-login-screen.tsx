@@ -5,33 +5,53 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppFonts as Fonts, BrandColors, Spacing } from '@/constants/theme';
-import { getUserProfile, loginWithEmail, logout, rememberAdminSession } from '@/shared/firebase/auth';
+import { loginWithEmail, signInWithGoogleWeb } from '@/shared/firebase/auth';
 import { PageTransition } from '@landing/presentation/components/page-transition';
+
+import { ACCESS_DENIED_MESSAGE, googleLoginErrorMessage, resolvePanelRoute } from './admin-login-access';
 
 const logoImg = 'https://res.cloudinary.com/dp1vgjhsq/image/upload/v1786169052/logotipo_q2mkhv.png';
 
 export function AdminLoginScreen() {
-  const [email, setEmail] = useState('admin@oceaneyes.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  const enterPanel = async (uid: string) => {
+    const route = await resolvePanelRoute(uid);
+    if (!route) {
+      setError(ACCESS_DENIED_MESSAGE);
+      return;
+    }
+    router.replace(route);
+  };
+
   const handleSubmit = async () => {
+    if (busy) return;
     setError('');
     setBusy(true);
     try {
       const user = await loginWithEmail(email.trim(), password);
-      const profile = await getUserProfile(user.uid);
-      if (!profile || (profile.role !== 'admin' && profile.role !== 'municipal')) {
-        await logout();
-        setError('Acceso denegado. Esta cuenta no tiene permisos de administrador.');
-        return;
-      }
-      rememberAdminSession(email.trim(), password);
-      router.replace(profile.role === 'municipal' ? '/admin/municipio' : '/admin');
+      await enterPanel(user.uid);
     } catch (e: any) {
       const msg = e?.code || e?.message || String(e);
       setError(msg);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    if (busy) return;
+    setError('');
+    setBusy(true);
+    try {
+      const user = await signInWithGoogleWeb();
+      await enterPanel(user.uid);
+    } catch (e) {
+      const msg = googleLoginErrorMessage(e);
+      if (msg) setError(msg);
     } finally {
       setBusy(false);
     }
@@ -83,6 +103,11 @@ export function AdminLoginScreen() {
 
           <Pressable onPress={handleSubmit} style={styles.submit}>
             <Text style={styles.submitLabel}>{busy ? 'Validando...' : 'Entrar al panel'}</Text>
+          </Pressable>
+
+          <Pressable accessibilityRole="button" disabled={busy} onPress={handleGoogle} style={styles.googleBtn}>
+            <FontAwesome5 name="google" size={15} color={BrandColors.primary} />
+            <Text style={styles.googleLabel}>Continuar con Google</Text>
           </Pressable>
           {!!error && <Text style={styles.error}>{error}</Text>}
 
@@ -236,6 +261,23 @@ const styles = StyleSheet.create({
   },
   submitLabel: {
     color: BrandColors.tertiary,
+    fontFamily: Fonts.label,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    borderColor: 'rgba(19, 78, 94, 0.3)',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingVertical: Spacing.three,
+    cursor: 'pointer',
+  },
+  googleLabel: {
+    color: BrandColors.primary,
     fontFamily: Fonts.label,
     fontSize: 15,
     fontWeight: '700',
