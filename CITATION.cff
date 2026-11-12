@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+title: "OceanEyes"
+version: 1.0.0
+license: MIT
+type: software
+repository-code: "https://github.com/DominidM/OceanEyesAPP"
+authors:
+  - given-names: "Juan Dominid"
+    family-names: "Muñoz Eslava"
+  - given-names: "Moisés Antonio"
+    family-names: "Capillo Hidalgo"
+  - given-names: "Milagros Marlen"
+    family-names: "Candela Isla"
+  - given-names: "Juan Diego"
+    family-names: "Gabriel Rios"
+  - given-names: "Jeremy"
+    family-names: "Anton Rojas"
+  - given-names: "Erick"
+    family-names: "Arian Flores"
+  - given-names: "Juan Pablo"
+    family-names: "Amaya Quiroz"
+  - given-names: "Alexia del Pilar"
+    family-names: "Parillo Quilca"
+  - given-names: "Isabel"
+    family-names: "Ore Nuñez"
+  - given-names: "Valeska Maciel"
+    family-names: "Rodriguez Vargas"
