@@ -3,6 +3,7 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  deleteUser,
   getAuth,
   linkWithCredential,
   reauthenticateWithCredential,
@@ -24,10 +25,11 @@ import {
 } from 'firebase/firestore';
 import { NativeModules, Platform, TurboModuleRegistry } from 'react-native';
 
+import { ADMIN_ACCOUNT_TYPES, buildAdminCreatedProfile, type AdminCreatedUserInput } from './admin-user-profile';
 import { firebaseAuth, firestore } from './app';
 import { banUser, unbanUser } from './bans';
 import { firebaseConfig } from './config';
-import type { ProfileType, UserProfile, UserRole } from './types';
+import type { ProfileType, UserProfile } from './types';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
@@ -154,37 +156,28 @@ function getSecondaryApp() {
   return getApps().find((app) => app.name === SECONDARY_APP_NAME) ?? initializeApp(firebaseConfig, SECONDARY_APP_NAME);
 }
 
-export async function createUserByAdmin(input: {
-  email: string;
-  password: string;
-  displayName: string;
-  profileType: ProfileType;
-  role?: UserRole;
-  dni?: string;
-}) {
+export async function createUserByAdmin(input: AdminCreatedUserInput & { password: string }) {
   requireAuth();
+  if (!Object.prototype.hasOwnProperty.call(ADMIN_ACCOUNT_TYPES, input.accountType)) {
+    throw new Error('Tipo de cuenta no permitido. Los administradores se asignan desde la consola de Firebase.');
+  }
   const secondaryApp = getSecondaryApp();
   const secondaryAuth = getAuth(secondaryApp);
   try {
     const credential = await createUserWithEmailAndPassword(secondaryAuth, input.email, input.password);
-    await updateProfile(credential.user, { displayName: input.displayName });
-
-    // Las reglas solo permiten que cada cuenta cree su propio perfil: se escribe con la sesión
-    // de la cuenta nueva (instancia secundaria), igual que antes, no con la del admin.
-    await setDoc(doc(getFirestore(secondaryApp), 'users', credential.user.uid), {
-      role: input.role ?? 'user',
-      profileType: input.profileType,
-      displayName: input.displayName,
-      email: input.email,
-      dni: input.dni ?? null,
-      pointsBalance: 0,
-      totalPointsEarned: 0,
-      verifiedReportsCount: 0,
-      status: 'active',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-
+    try {
+      await updateProfile(credential.user, { displayName: input.displayName });
+      // Las reglas solo permiten que cada cuenta cree su propio perfil: se escribe con la sesión
+      // de la cuenta nueva (instancia secundaria), no con la del admin.
+      await setDoc(
+        doc(getFirestore(secondaryApp), 'users', credential.user.uid),
+        buildAdminCreatedProfile(input, serverTimestamp()),
+      );
+    } catch (error) {
+      // Sin perfil la cuenta quedaría huérfana: se borra (la sesión secundaria es reciente).
+      await deleteUser(credential.user).catch(() => undefined);
+      throw error;
+    }
     return credential.user.uid;
   } finally {
     await signOut(secondaryAuth).catch(() => undefined);
